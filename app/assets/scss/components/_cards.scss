@@ -1,0 +1,65 @@
+@use '../base/variables' as *;
+@use '../base/viewport' as *;
+
+// ================================
+// Card Components
+// ================================
+
+.card {
+  background: $white;
+  border: 1px solid $white20;
+  border-radius: 12px;
+  padding: 20px;
+  transition: box-shadow 0.2s;
+
+  &:hover { box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06); }
+
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+
+  &__title {
+    font-size: 16px;
+    line-height: 24px;
+    font-weight: 700;
+    color: $black;
+    margin: 0;
+  }
+
+  &__body {
+    color: $black80;
+    font-size: 14px;
+    line-height: 20px;
+
+    @include desktop-up { font-size: 16px; line-height: 24px; }
+  }
+
+  &__footer {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid $white60;
+  }
+
+  // Variants
+  &--primary  { border-color: $primary50; }
+  &--compact  { padding: 12px 16px; }
+
+  // List row card
+  &--list-item {
+    border-radius: 8px;
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    cursor: pointer;
+
+    &:hover { background: $white80; }
+  }
+}

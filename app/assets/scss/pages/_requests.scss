@@ -1,0 +1,46 @@
+@use '../base/variables' as *;
+@use '../base/viewport' as *;
+
+// ================================
+// Requests Page — grid columns
+// ================================
+
+// Column layout: checkbox | title | status | supplier | date | menu
+$req-cols-mobile:  40px 1fr 100px 36px;
+$req-cols-tablet:  40px 2fr 120px 160px 44px;
+$req-cols-desktop: 40px 2fr 120px 180px 150px 44px;
+
+.request-list-header,
+.request-list-row {
+  grid-template-columns: $req-cols-mobile;
+
+  @include tablet-up {
+    grid-template-columns: $req-cols-tablet;
+  }
+
+  @include desktop-up {
+    grid-template-columns: $req-cols-desktop;
+  }
+}
+
+// Hide supplier column on mobile/tablet (only desktop shows it)
+.request-col-supplier {
+  display: none;
+
+  @include desktop-up {
+    display: flex;
+    align-items: center;
+  }
+}
+
+// Hide date on mobile (show tablet+)
+.request-col-date {
+  display: none;
+
+  @include tablet-up {
+    display: flex;
+    align-items: center;
+    color: $black60;
+    font-size: 13px;
+  }
+}

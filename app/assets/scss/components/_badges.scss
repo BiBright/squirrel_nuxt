@@ -1,0 +1,23 @@
+@use '../base/variables' as *;
+
+// ================================
+// Badge / Status Tags
+// ================================
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 700;
+  white-space: nowrap;
+
+  &--primary { background: $primary25; color: $primary100; }
+  &--success { background: $green25;   color: $green100; }
+  &--danger  { background: $red25;     color: $red100; }
+  &--warning { background: $yellow25;  color: $yellow100; }
+  &--neutral { background: $white40;   color: $black80; }
+}

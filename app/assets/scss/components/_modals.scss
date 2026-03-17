@@ -1,0 +1,94 @@
+@use '../base/variables' as *;
+@use '../base/viewport' as *;
+
+// ================================
+// Modal System
+// ================================
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: $modal-overlay;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.modal {
+  background: $white;
+  border-radius: 16px;
+  padding: 24px;
+  width: 100%;
+  max-width: 480px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+  position: relative;
+
+  @include tablet-up { padding: 32px; }
+
+  &__header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+
+  &__title {
+    font-size: 20px;
+    line-height: 28px;
+    font-weight: 700;
+    color: $black;
+    margin: 0;
+  }
+
+  &__close {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    border: none;
+    background: none;
+    cursor: pointer;
+    color: $black60;
+    font-size: 20px;
+    transition: background-color 0.2s;
+
+    &:hover { background: $white60; }
+  }
+
+  &__body {
+    margin-bottom: 24px;
+    color: $black80;
+    font-size: 14px;
+    line-height: 20px;
+
+    @include desktop-up { font-size: 16px; line-height: 24px; }
+  }
+
+  &__footer {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 12px;
+  }
+
+  // Size variants
+  &--wide   { max-width: 640px; }
+  &--narrow { max-width: 360px; }
+
+  // State variants
+  &--danger .modal__title { color: $red100; }
+
+  &--premium {
+    background: $primary100;
+
+    .modal__title { color: $white; }
+    .modal__body  { color: rgba($white, 0.9); }
+    .modal__close { color: $white; &:hover { background: $primary75; } }
+  }
+}

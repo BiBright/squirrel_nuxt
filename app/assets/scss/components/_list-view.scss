@@ -1,0 +1,249 @@
+@use '../base/variables' as *;
+@use '../base/viewport' as *;
+
+// ================================
+// List View — shared row/card styles
+// ================================
+
+// Outer container (list mode)
+.list-container {
+  background: $white;
+  border: 1px solid $white20;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+// Column header row
+.list-header {
+  display: grid;
+  padding: 10px 20px;
+  background: $white80;
+  border-bottom: 1px solid $white20;
+  color: $black60;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  user-select: none;
+}
+
+// Individual row
+.list-row {
+  display: grid;
+  padding: 14px 20px;
+  border-bottom: 1px solid $white60;
+  align-items: center;
+  transition: background-color 0.2s;
+  cursor: pointer;
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  &:hover {
+    background: $white80;
+  }
+
+  &--selected {
+    background: $primary25;
+
+    &:hover {
+      background: $primary25;
+    }
+  }
+}
+
+// Title + subtitle cell
+.list-col-title {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+
+  &__name {
+    font-size: 14px;
+    font-weight: 700;
+    color: $black;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+
+    @include desktop-up {
+      font-size: 15px;
+    }
+  }
+
+  &__sub {
+    font-size: 12px;
+    color: $black60;
+  }
+}
+
+// Checkbox cell
+.list-col-check {
+  display: flex;
+  align-items: center;
+
+  input[type='checkbox'] {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+    accent-color: $primary100;
+  }
+}
+
+// Row menu (3-dot actions)
+.list-col-menu {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+
+  .list-row-menu-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: $black60;
+    transition: background-color 0.2s, color 0.2s;
+
+    &:hover {
+      background: $white40;
+      color: $black;
+    }
+
+    .material-icons-round {
+      font-size: 20px;
+    }
+  }
+}
+
+// ================================
+// Mosaic / Grid View
+// ================================
+
+.list-mosaic {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+
+  @include desktop-up {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  @include desktop-big-up {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.list-card {
+  background: $white;
+  border: 1px solid $white20;
+  border-radius: 12px;
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  cursor: pointer;
+  transition: box-shadow 0.2s;
+
+  &:hover {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  }
+
+  &__header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  &__title {
+    font-size: 14px;
+    font-weight: 700;
+    color: $black;
+    line-height: 1.4;
+
+    @include desktop-up {
+      font-size: 15px;
+    }
+  }
+
+  &__meta {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  &__meta-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: $black60;
+    line-height: 1.3;
+
+    .material-icons-round {
+      font-size: 14px;
+      flex-shrink: 0;
+    }
+  }
+
+  &__footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: auto;
+    padding-top: 12px;
+    border-top: 1px solid $white60;
+  }
+}
+
+// ================================
+// AppTable cell helpers
+// ================================
+
+.app-table__cell-link {
+  display: block;
+  font-weight: 500;
+  color: var(--color-primary);
+  text-decoration: none;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 260px;
+
+  &:hover { color: var(--color-primary-75); }
+}
+
+.app-table__cell-sub {
+  display: block;
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  margin-top: 2px;
+}
+
+// Empty state inside a list container
+.list-empty {
+  padding: 48px 20px;
+  text-align: center;
+  color: $black60;
+
+  .material-icons-round {
+    font-size: 40px;
+    margin-bottom: 12px;
+    color: $black40;
+  }
+
+  p {
+    font-size: 14px;
+
+    @include desktop-up {
+      font-size: 16px;
+    }
+  }
+}

@@ -1,0 +1,127 @@
+@use '../base/variables' as *;
+@use '../base/viewport' as *;
+
+// ================================
+// Button Components
+// ================================
+
+%btn-base {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: fit-content;
+  font-family: $font-base;
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 400;
+  padding: 12px 20px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  text-decoration: none;
+  outline: none;
+  transition: background-color 0.3s, color 0.3s;
+
+  @include desktop-up {
+    font-size: 16px;
+    padding: 12px 24px;
+  }
+
+  &:disabled,
+  &[disabled] {
+    cursor: not-allowed;
+    pointer-events: none;
+  }
+}
+
+// Icon inside button
+.btn-icon {
+  font-size: 16px;
+  margin-right: 8px;
+  flex-shrink: 0;
+
+  @include desktop-up {
+    font-size: 20px;
+    margin-right: 12px;
+  }
+}
+
+// Primary — filled blue
+.btn-primary {
+  @extend %btn-base;
+  background: $primary100;
+  color: $white;
+
+  &:hover            { background: $primary75; }
+  &:active, &:focus  { background: $primary75; outline: none; box-shadow: none; }
+  &:disabled         { background: $white20; color: $black60; }
+}
+
+// Secondary — light blue tint
+.btn-secondary {
+  @extend %btn-base;
+  background: $primary25;
+  color: $primary100;
+
+  &:hover            { background: $primary50; }
+  &:active, &:focus  { background: $primary50; outline: none; box-shadow: none; }
+}
+
+// Ghost — transparent / text link
+.btn-ghost {
+  @extend %btn-base;
+  background: none;
+  color: $primary100;
+
+  &:hover            { text-decoration: underline; }
+  &:active, &:focus  { text-decoration: underline; outline: none; }
+}
+
+// Danger — red action
+.btn-danger {
+  @extend %btn-base;
+  background: $red100;
+  color: $white;
+
+  &:hover            { background: $red75; }
+  &:active, &:focus  { background: $red75; }
+}
+
+// View toggle — card / list toggle buttons
+.btn-view {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 44px;
+  width: 44px;
+  border-radius: 8px;
+  border: 1px solid $black20;
+  background: $white40;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  outline: none;
+
+  .icon { font-size: 20px; }
+
+  &[data-active="true"] {
+    background: $primary25;
+    color: $primary100;
+    border-color: $primary50;
+  }
+
+  &[data-active="false"] {
+    background: $white40;
+    color: $black80;
+    &:hover { background: $white20; }
+  }
+}
+
+// Right-aligned button container
+.btn-container-right {
+  display: flex;
+  justify-content: flex-end;
+
+  @include mobile-only {
+    a, button { width: 100%; }
+  }
+}
