@@ -1,12 +1,7 @@
 @use '../base/variables' as *;
 @use '../base/viewport' as *;
 
-// ================================
-// Dashboard Page
-// ================================
-
 .dashboard {
-  // Stats row
   &__stats {
     display: grid;
     grid-template-columns: 1fr;
@@ -15,7 +10,7 @@
 
     @include tablet-up      { grid-template-columns: repeat(2, 1fr); gap: 20px; }
     @include desktop-up     { grid-template-columns: repeat(3, 1fr); gap: 24px; }
-    @include desktop-big-up { grid-template-columns: repeat(4, 1fr); }
+    @include desktop-l-up { grid-template-columns: repeat(4, 1fr); }
   }
 
   &__stat-card {

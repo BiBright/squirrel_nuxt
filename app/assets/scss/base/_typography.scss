@@ -1,14 +1,17 @@
-@use 'variables' as *;
-@use 'viewport' as *;
+@use "variables" as *;
+@use "viewport" as *;
 
-@import url('https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,100;0,300;0,400;0,700;0,900;1,100;1,300;1,400;1,700;1,900&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,100;0,300;0,400;0,700;0,900;1,100;1,300;1,400;1,700;1,900&display=swap");
 
 .title01 {
   font-size: 28px;
   line-height: 36px;
   font-weight: 700;
   margin: 0;
-  @include desktop-big-up { font-size: 32px; line-height: 40px; }
+  @include desktop-l-up {
+    font-size: 32px;
+    line-height: 40px;
+  }
 }
 
 .title02 {
@@ -16,7 +19,10 @@
   line-height: 28px;
   font-weight: 700;
   margin: 0;
-  @include desktop-big-up { font-size: 24px; line-height: 32px; }
+  @include desktop-l-up {
+    font-size: 24px;
+    line-height: 32px;
+  }
 }
 
 .title03 {
@@ -24,7 +30,10 @@
   line-height: 24px;
   font-weight: 700;
   margin: 0;
-  @include desktop-big-up { font-size: 18px; line-height: 24px; }
+  @include desktop-l-up {
+    font-size: 18px;
+    line-height: 24px;
+  }
 }
 
 .body01 {
@@ -32,7 +41,10 @@
   line-height: 20px;
   font-weight: 400;
   margin: 0;
-  @include desktop-up { font-size: 16px; line-height: 24px; }
+  @include desktop-up {
+    font-size: 16px;
+    line-height: 24px;
+  }
 }
 
 .cta1 {
@@ -40,7 +52,9 @@
   line-height: 20px;
   font-weight: 400;
   margin: 0;
-  @include desktop-up { font-size: 16px; }
+  @include desktop-up {
+    font-size: 16px;
+  }
 }
 
 .cta2 {
@@ -70,11 +84,27 @@
   font-weight: 700;
 }
 
-.text-primary { color: $primary100; }
-.text-black   { color: $black; }
-.text-grey    { color: $black80; }
-.text-muted   { color: $black60; }
-.text-danger  { color: $red100; }
-.text-success { color: $green100; }
-.text-warning { color: $yellow100; }
-.text-white   { color: $white; }
+.text-primary {
+  color: $primary100;
+}
+.text-black {
+  color: $black;
+}
+.text-grey {
+  color: $black80;
+}
+.text-muted {
+  color: $black60;
+}
+.text-danger {
+  color: $red100;
+}
+.text-success {
+  color: $green100;
+}
+.text-warning {
+  color: $yellow100;
+}
+.text-white {
+  color: $white;
+}

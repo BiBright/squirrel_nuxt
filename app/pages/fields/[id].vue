@@ -7,11 +7,6 @@
       </AppButton>
     </AppPageHeader>
 
-    <div v-if="submitError" class="login-error">
-      <span class="material-icons-round">error_outline</span>
-      {{ submitError }}
-    </div>
-
     <div v-if="loadingRecord" class="list-container">
       <div class="list-empty">
         <span class="material-icons-round">hourglass_empty</span>
@@ -69,7 +64,7 @@
 </template>
 
 <script setup lang="ts">
-definePageMeta({ middleware: ['auth', 'admin'] })
+definePageMeta({ middleware: ['auth'] })
 
 const route = useRoute()
 const id = computed(() => route.params.id as string | undefined)
@@ -86,9 +81,9 @@ const FIELD_TYPES = [
 
 const form = reactive({ name: '', description: '', type: '', is_active: true })
 const errors = reactive({ name: '', type: '' })
+const toast = useAppToast()
 const loading = ref(false)
 const loadingRecord = ref(false)
-const submitError = ref('')
 
 onMounted(async () => {
   if (!isEdit.value) return
@@ -102,9 +97,7 @@ onMounted(async () => {
     form.type = d.type as string
     form.is_active = d.is_active as boolean
   }
-  catch {
-    submitError.value = 'Could not load field data.'
-  }
+  catch (err) { toast.error(err, 'Could not load field data', { category: 'field' }) }
   finally { loadingRecord.value = false }
 })
 
@@ -120,7 +113,6 @@ function validate(): boolean {
 async function onSubmit() {
   if (!validate()) return
   loading.value = true
-  submitError.value = ''
   try {
     const api = useApi()
     const body = {
@@ -131,15 +123,16 @@ async function onSubmit() {
     }
     if (isEdit.value) {
       await api(`/fields/${id.value}`, { method: 'PATCH', body })
+      toast.success('Field updated', { category: 'field' })
     }
     else {
       await api('/fields', { method: 'POST', body })
+      toast.success('Field created', { category: 'field' })
     }
     await navigateTo('/fields')
   }
   catch (err: unknown) {
-    const msg = (err as { data?: { message?: string } })?.data?.message
-    submitError.value = msg ?? 'Something went wrong. Please try again.'
+    toast.error(err, isEdit.value ? 'Could not update field' : 'Could not create field', { category: 'field' })
   }
   finally { loading.value = false }
 }

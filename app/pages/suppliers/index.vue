@@ -21,7 +21,19 @@
       </div>
     </div>
 
-    <template v-else-if="view === 'list'">
+    <AppBlankState
+      v-else-if="blankState.show.value"
+      :image="blankState.image.value"
+      :title="blankState.title.value"
+      :message="blankState.message.value"
+    >
+      <AppButton to="/suppliers/create">
+        <span class="material-icons-round">add</span>
+        New Supplier
+      </AppButton>
+    </AppBlankState>
+
+    <template v-else-if="effectiveView === 'list'">
       <AppTable
         :columns="columns"
         :rows="tableRows"
@@ -38,24 +50,12 @@
           <AppBadge v-if="value" variant="neutral">{{ value }}</AppBadge>
           <span v-else class="text-muted">—</span>
         </template>
-
-        <template #empty>
-          <span class="material-icons-round">local_shipping</span>
-          <p>No suppliers found.</p>
-        </template>
       </AppTable>
     </template>
 
     <!-- MOSAIC VIEW -->
     <template v-else>
-      <div v-if="filtered.length === 0" class="list-container">
-        <div class="list-empty">
-          <span class="material-icons-round">local_shipping</span>
-          <p>No suppliers found.</p>
-        </div>
-      </div>
-
-      <div v-else class="list-mosaic">
+      <div class="list-mosaic">
         <div v-for="supplier in filtered" :key="supplier.id" class="list-card">
           <div class="list-card__header">
             <NuxtLink :to="`/suppliers/${supplier.id}`" class="list-card__title">{{ supplier.name }}</NuxtLink>
@@ -91,7 +91,7 @@
 </template>
 
 <script setup lang="ts">
-definePageMeta({ middleware: ['auth', 'admin'] })
+definePageMeta({ middleware: ['auth'] })
 
 interface Supplier {
   id: number
@@ -127,9 +127,17 @@ interface PaginatedResponse<T> {
   meta: PaginationMeta
 }
 
+const toast = useAppToast()
 const suppliers = ref<Supplier[]>([])
 const loading = ref(true)
 const { search, sort, view, selectedCount, onSelect, onDelete } = useListToolbar()
+const isMobile = ref(false)
+onMounted(() => {
+  const mq = window.matchMedia('(max-width: 767px)')
+  isMobile.value = mq.matches
+  mq.addEventListener('change', e => { isMobile.value = e.matches })
+})
+const effectiveView = computed(() => isMobile.value ? 'grid' : view.value)
 const { page, lastPage, total, setMeta, goTo } = useListPagination()
 
 async function fetchData() {
@@ -165,6 +173,12 @@ const filtered = computed(() => {
   return result
 })
 
+const blankState = useBlankState(filtered, search, {
+  image: '/images/blankPages/suppliers.svg',
+  title: 'No suppliers yet',
+  message: 'Register your first supplier to send requests.',
+})
+
 const tableRows = computed(() =>
   filtered.value.map(s => ({
     name: s.name,
@@ -177,7 +191,18 @@ const tableRows = computed(() =>
   })),
 )
 
-function onDeleteRow(_row: Record<string, unknown>, _idx: number) { /* TODO */ }
+async function onDeleteRow(row: Record<string, unknown>, _idx: number) {
+  const supplier = row._raw as Supplier
+  try {
+    const api = useApi()
+    await api(`/suppliers/${supplier.id}`, { method: 'DELETE' })
+    suppliers.value = suppliers.value.filter(s => s.id !== supplier.id)
+    toast.success('Supplier deleted', { category: 'supplier' })
+  }
+  catch (err) {
+    toast.error(err, 'Could not delete supplier', { category: 'supplier' })
+  }
+}
 
 function formatDate(date: string) {
   return new Date(date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })

@@ -1,12 +1,15 @@
 <template>
   <div class="login-visual">
-    <img src="/favicon.ico" alt="Squirrel" class="login-visual__logo" />
+    <img src="/images/image_login.png" alt="" class="login-visual__bg" />
+    <div class="login-visual__container">
+      <img src="/images/logo.png" alt="Squirrel" class="login-visual__logo" />
+    </div>
   </div>
 
   <div class="login-form-wrapper">
     <!-- Logo shown only on mobile (left panel is hidden) -->
     <div class="login-mobile-logo">
-      <img src="/favicon.ico" alt="Squirrel" />
+      <img src="/images/logo.png" alt="Squirrel" />
     </div>
 
     <h1 class="title01">Login</h1>

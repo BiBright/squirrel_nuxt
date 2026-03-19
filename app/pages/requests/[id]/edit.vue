@@ -15,11 +15,6 @@
     </div>
 
     <template v-else>
-      <div v-if="submitError" class="login-error">
-        <span class="material-icons-round">error_outline</span>
-        {{ submitError }}
-      </div>
-
       <form novalidate class="create-form" @submit.prevent="onSubmit">
         <AppCard title="Details">
           <AppInput
@@ -130,11 +125,11 @@ const availableForms = ref<FormOption[]>([])
 const availableSuppliers = ref<SupplierOption[]>([])
 const formSearch = ref('')
 const supplierSearch = ref('')
+const toast = useAppToast()
 const loadingRequest = ref(true)
 const loadingForms = ref(true)
 const loadingSuppliers = ref(true)
 const loading = ref(false)
-const submitError = ref('')
 
 const filteredForms = computed(() => {
   if (!formSearch.value) return availableForms.value
@@ -205,7 +200,6 @@ async function onSubmit() {
   if (!validate()) return
 
   loading.value = true
-  submitError.value = ''
 
   try {
     const api = useApi()
@@ -218,11 +212,11 @@ async function onSubmit() {
       },
     })
 
+    toast.success('Request updated', { category: 'request' })
     await navigateTo('/requests')
   }
   catch (err: unknown) {
-    const msg = (err as { data?: { message?: string } })?.data?.message
-    submitError.value = msg ?? 'Something went wrong. Please try again.'
+    toast.error(err, 'Could not update request', { category: 'request' })
   }
   finally {
     loading.value = false

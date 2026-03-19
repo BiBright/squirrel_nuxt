@@ -128,15 +128,15 @@
 
 .list-mosaic {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr;
   gap: 16px;
+
+  @include tablet-up {
+    grid-template-columns: 1fr 1fr;
+  }
 
   @include desktop-up {
     grid-template-columns: repeat(3, 1fr);
-  }
-
-  @include desktop-big-up {
-    grid-template-columns: repeat(4, 1fr);
   }
 }
 

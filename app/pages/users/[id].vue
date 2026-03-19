@@ -7,11 +7,6 @@
       </AppButton>
     </AppPageHeader>
 
-    <div v-if="submitError" class="login-error">
-      <span class="material-icons-round">error_outline</span>
-      {{ submitError }}
-    </div>
-
     <div v-if="loadingRecord" class="list-container">
       <div class="list-empty">
         <span class="material-icons-round">hourglass_empty</span>
@@ -44,9 +39,9 @@ const isEdit = computed(() => !!id.value && id.value !== 'create')
 
 const form = reactive({ name: '', email: '', phone: '', job_sector: '' })
 const errors = reactive({ name: '', email: '' })
+const toast = useAppToast()
 const loading = ref(false)
 const loadingRecord = ref(false)
-const submitError = ref('')
 
 onMounted(async () => {
   if (!isEdit.value) return
@@ -82,7 +77,7 @@ onMounted(async () => {
     form.phone = (d.phone as string) ?? ''
     form.job_sector = (d.job_sector as string) ?? ''
   }
-  catch { submitError.value = 'Could not load user data.' }
+  catch (err) { toast.error(err, 'Could not load user data', { category: 'user' }) }
   finally { loadingRecord.value = false }
 })
 
@@ -99,7 +94,6 @@ function validate(): boolean {
 async function onSubmit() {
   if (!validate()) return
   loading.value = true
-  submitError.value = ''
   try {
     const api = useApi()
     const body = {
@@ -110,15 +104,16 @@ async function onSubmit() {
     }
     if (isEdit.value) {
       await api(`/users/${id.value}`, { method: 'PATCH', body })
+      toast.success('User updated', { category: 'user' })
     }
     else {
       await api('/users', { method: 'POST', body })
+      toast.success('User created', { category: 'user' })
     }
     await navigateTo('/users')
   }
   catch (err: unknown) {
-    const msg = (err as { data?: { message?: string } })?.data?.message
-    submitError.value = msg ?? 'Something went wrong. Please try again.'
+    toast.error(err, isEdit.value ? 'Could not update user' : 'Could not create user', { category: 'user' })
   }
   finally { loading.value = false }
 }

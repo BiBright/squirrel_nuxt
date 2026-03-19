@@ -10,16 +10,13 @@
     <div v-for="req in requests" :key="req.id" class="rt__group">
 
       <!-- Group header -->
-      <div class="rt__header" :class="{ 'rt__header--selected': isGroupSelected(req) }">
+      <div class="rt__header"
+        :class="{ 'rt__header--selected': isGroupSelected(req), 'rt__header--closed': !expanded.has(req.id) }">
 
         <!-- Checkbox -->
         <div class="rt__col rt__col--check">
-          <input
-            type="checkbox"
-            :checked="isGroupSelected(req)"
-            :indeterminate="isGroupIndeterminate(req)"
-            @change="toggleGroup(req)"
-          />
+          <input type="checkbox" :checked="isGroupSelected(req)" :indeterminate="isGroupIndeterminate(req)"
+            @change="toggleGroup(req)" />
         </div>
 
         <!-- Chevron -->
@@ -40,17 +37,13 @@
         </span>
 
         <!-- More button -->
-        <div class="rt__more-wrapper">
-          <button
-            class="rt__more-btn"
-            :class="{ 'is-active': openMenu === req.id }"
-            @click.stop="toggleMenu(req.id)"
-          >
+        <div class="rt__more-wrapper" @click.stop>
+          <button class="rt__more-btn" :class="{ 'is-active': openMenu === req.id }" @click.stop="toggleMenu(req.id)">
             <span class="material-icons-round">more_horiz</span>
           </button>
 
           <!-- More panel -->
-          <div v-if="openMenu === req.id" v-click-outside="closeMenu" class="rt__more-panel">
+          <div v-if="openMenu === req.id" class="rt__more-panel">
 
             <!-- 1. Selected count -->
             <div class="rt__more-item rt__more-item--info">
@@ -59,26 +52,24 @@
             </div>
 
             <!-- 2. Assignee -->
-            <div class="rt__more-item rt__more-item--section">
+            <button class="rt__more-item rt__more-item--expandable"
+              @click="groupMenuSection = groupMenuSection === 'assign' ? 'none' : 'assign'">
               <span class="material-icons-round">person</span>
-              <span>Assign to</span>
-            </div>
-            <div class="rt__assignee-list">
+              Assign to
+              <span class="material-icons-round rt__more-chevron">{{ groupMenuSection === 'assign' ? 'expand_less' :
+                'expand_more' }}</span>
+            </button>
+            <div v-if="groupMenuSection === 'assign'" class="rt__assignee-list">
               <div v-if="loadingUsers" class="rt__assignee-loading">Loading users...</div>
-              <button
-                v-for="user in users"
-                :key="user.id"
-                class="rt__assignee-option"
-                :class="{ 'is-selected': req.assigned_to?.id === user.id }"
-                @click="emit('assign', req, user)"
-              >
+              <button v-for="user in users" :key="user.id" class="rt__assignee-option"
+                :class="{ 'is-selected': req.assigned_to?.id === user.id }" @click="emit('assign', req, user)">
                 <span class="material-icons-round">person_outline</span>
                 {{ user.name }}
-                <span v-if="req.assigned_to?.id === user.id" class="material-icons-round rt__assignee-check">check</span>
+                <span v-if="req.assigned_to?.id === user.id"
+                  class="material-icons-round rt__assignee-check">check</span>
               </button>
             </div>
 
-            <!-- 3. Remove -->
             <button class="rt__more-item rt__more-item--danger" @click="emit('remove', req); closeMenu()">
               <span class="material-icons-round">delete</span>
               Remove request
@@ -88,7 +79,6 @@
         </div>
       </div>
 
-      <!-- Entries sub-table -->
       <div v-if="expanded.has(req.id)" class="rt__entries">
         <div class="rt__entries-header">
           <div class="rt__col rt__col--check">Select</div>
@@ -101,21 +91,14 @@
         </div>
 
         <div v-for="form in req.forms" :key="form.form_id" class="rt__form-group">
-          <div
-            v-for="entry in form.suppliers"
-            :key="entry.id"
-            class="rt__entry"
-            :class="{ 'rt__entry--selected': selectedEntries.has(entry.id) }"
-          >
+          <div v-for="entry in form.suppliers" :key="entry.id" class="rt__entry"
+            :class="{ 'rt__entry--selected': selectedEntries.has(entry.id) }">
             <div class="rt__col rt__col--check">
-              <input
-                type="checkbox"
-                :checked="selectedEntries.has(entry.id)"
-                @change="toggleEntry(entry.id)"
-              />
+              <input type="checkbox" :checked="selectedEntries.has(entry.id)" @change="toggleEntry(entry.id)" />
             </div>
             <div class="rt__col rt__col--supplier">
-              <NuxtLink :to="`/suppliers/${entry.supplier.id}`" class="rt__supplier-link">{{ entry.supplier.name }}</NuxtLink>
+              <NuxtLink :to="`/suppliers/${entry.supplier.id}`" class="rt__supplier-link">{{ entry.supplier.name }}
+              </NuxtLink>
             </div>
             <div class="rt__col rt__col--date">{{ formatDate(entry.created_at) }}</div>
             <div class="rt__col rt__col--date">{{ formatDate(entry.updated_at) }}</div>
@@ -128,16 +111,13 @@
 
             <!-- Entry more button -->
             <div class="rt__col rt__col--action">
-              <div class="rt__more-wrapper">
-                <button
-                  class="rt__more-btn"
-                  :class="{ 'is-active': openEntryMenu === entry.id }"
-                  @click.stop="toggleEntryMenu(entry.id)"
-                >
+              <div class="rt__more-wrapper" @click.stop>
+                <button class="rt__more-btn" :class="{ 'is-active': openEntryMenu === entry.id }"
+                  @click.stop="toggleEntryMenu(entry.id)">
                   <span class="material-icons-round">more_horiz</span>
                 </button>
 
-                <div v-if="openEntryMenu === entry.id" v-click-outside="closeEntryMenu" class="rt__more-panel rt__more-panel--entry">
+                <div v-if="openEntryMenu === entry.id" class="rt__more-panel rt__more-panel--entry">
 
                   <!-- ── MULTI-SELECT: this entry is selected with others ── -->
                   <template v-if="selectedEntries.has(entry.id) && selectedEntries.size > 1">
@@ -147,38 +127,39 @@
                     <div class="rt__more-item rt__more-item--selected-count">
                       <AppBadge variant="neutral">{{ selectedEntries.size }} Selected</AppBadge>
                       <button class="rt__clear-btn" @click="clearSelection">
-                        Clear <span class="material-icons-round" style="font-size:12px;vertical-align:middle">close</span>
+                        Clear <span class="material-icons-round"
+                          style="font-size:12px;vertical-align:middle">close</span>
                       </button>
                     </div>
 
                     <button class="rt__more-item rt__more-item--expandable" @click="toggleEntrySection('bulk-assign')">
                       <span class="material-icons-round">person</span>
                       Assignee User
-                      <span class="material-icons-round rt__more-chevron">{{ entryMenuSection === 'bulk-assign' ? 'expand_less' : 'expand_more' }}</span>
+                      <span class="material-icons-round rt__more-chevron">{{ entryMenuSection === 'bulk-assign' ?
+                        'expand_less' : 'expand_more' }}</span>
                     </button>
                     <div v-if="entryMenuSection === 'bulk-assign'" class="rt__assignee-list">
                       <div v-if="loadingUsers" class="rt__assignee-loading">Loading users...</div>
-                      <button
-                        v-for="user in users"
-                        :key="user.id"
-                        class="rt__assignee-option"
-                        @click="emit('bulkAssign', [...selectedEntries], user); closeEntryMenu()"
-                      >
+                      <button v-for="user in users" :key="user.id" class="rt__assignee-option"
+                        @click="emit('bulkAssign', [...selectedEntries], user); closeEntryMenu()">
                         <span class="material-icons-round">person_outline</span>
                         {{ user.name }}
                       </button>
                     </div>
 
-                    <button class="rt__more-item rt__more-item--danger" @click="emit('bulkRemove', [...selectedEntries]); closeEntryMenu()">
+                    <button class="rt__more-item rt__more-item--danger"
+                      @click="emit('bulkRemove', [...selectedEntries]); closeEntryMenu()">
                       <span class="material-icons-round">delete</span>
                       Remove requests
                     </button>
 
-                    <div class="rt__more-item rt__more-item--section" style="border-top: 1px solid var(--color-border); margin-top: 2px;">This Request</div>
+                    <div class="rt__more-item rt__more-item--section"
+                      style="border-top: 1px solid var(--color-border); margin-top: 2px;">This Request</div>
                   </template>
 
                   <!-- ── SINGLE / THIS REQUEST actions ── -->
-                  <NuxtLink :to="`/requests/${req.id}/edit`" class="rt__more-item rt__more-item--link" @click="closeEntryMenu()">
+                  <NuxtLink :to="`/requests/${req.id}/edit`" class="rt__more-item rt__more-item--link"
+                    @click="closeEntryMenu()">
                     <span class="material-icons-round">edit</span>
                     Edit Request
                   </NuxtLink>
@@ -186,20 +167,19 @@
                   <button class="rt__more-item rt__more-item--expandable" @click="toggleEntrySection('single-assign')">
                     <span class="material-icons-round">person</span>
                     Assignee User
-                    <span class="material-icons-round rt__more-chevron">{{ entryMenuSection === 'single-assign' ? 'expand_less' : 'expand_more' }}</span>
+                    <span class="material-icons-round rt__more-chevron">{{ entryMenuSection === 'single-assign' ?
+                      'expand_less' :
+                      'expand_more' }}</span>
                   </button>
                   <div v-if="entryMenuSection === 'single-assign'" class="rt__assignee-list">
                     <div v-if="loadingUsers" class="rt__assignee-loading">Loading users...</div>
-                    <button
-                      v-for="user in users"
-                      :key="user.id"
-                      class="rt__assignee-option"
+                    <button v-for="user in users" :key="user.id" class="rt__assignee-option"
                       :class="{ 'is-selected': req.assigned_to?.id === user.id }"
-                      @click="emit('assign', req, user); closeEntryMenu()"
-                    >
+                      @click="emit('assign', req, user); closeEntryMenu()">
                       <span class="material-icons-round">person_outline</span>
                       {{ user.name }}
-                      <span v-if="req.assigned_to?.id === user.id" class="material-icons-round rt__assignee-check">check</span>
+                      <span v-if="req.assigned_to?.id === user.id"
+                        class="material-icons-round rt__assignee-check">check</span>
                     </button>
                   </div>
 
@@ -265,10 +245,13 @@ const emit = defineEmits<{
   bulkRemove: [entryIds: number[]]
 }>()
 
+useEventListener('click', () => { closeMenu(); closeEntryMenu() })
+
 const expanded = ref<Set<number>>(new Set())
 const selectedEntries = ref<Set<number>>(new Set())
 const openMenu = ref<number | null>(null)
 const openEntryMenu = ref<number | null>(null)
+const groupMenuSection = ref<'none' | 'assign'>('none')
 const entryMenuSection = ref<'none' | 'single-assign' | 'bulk-assign'>('none')
 
 // ── Helpers ──────────────────────────────────────────────────────────
@@ -335,11 +318,13 @@ function toggleExpand(id: number) {
 
 function toggleMenu(id: number) {
   openMenu.value = openMenu.value === id ? null : id
+  groupMenuSection.value = 'none'
   openEntryMenu.value = null
 }
 
 function closeMenu() {
   openMenu.value = null
+  groupMenuSection.value = 'none'
 }
 
 function toggleEntryMenu(id: number) {
@@ -391,30 +376,23 @@ function formatDate(date: string): string {
   font-size: var(--text-sm);
 }
 
-/* Group */
 .rt__group {
-  border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
-  background: var(--color-surface);
+  background: var(--color-white);
   position: relative;
 }
 
-.rt__group > .rt__header:first-child {
-  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
-}
-
-.rt__group > *:last-child {
-  border-radius: 0 0 var(--radius-lg) var(--radius-lg);
-}
-
-/* Group header */
 .rt__header {
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
   display: flex;
   align-items: center;
   gap: var(--space-3);
   padding: var(--space-3) var(--space-4);
-  background: var(--color-surface-raised);
   transition: background 0.1s;
+}
+
+.rt__header--closed {
+  border-radius: var(--radius-lg);
 }
 
 .rt__header--selected {
@@ -422,17 +400,63 @@ function formatDate(date: string): string {
 }
 
 /* Columns */
-.rt__col { display: flex; align-items: center; }
-.rt__col--check   { width: 32px; flex-shrink: 0; justify-content: center; }
-.rt__col--supplier { flex: 1; min-width: 160px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
-.rt__col--date    { width: 110px; flex-shrink: 0; font-size: var(--text-xs); color: var(--color-text-muted); }
-.rt__col--assigned { width: 120px; flex-shrink: 0; font-size: var(--text-xs); color: var(--color-text-muted); overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
-.rt__col--status  { width: 130px; flex-shrink: 0; }
-.rt__col--action  { width: 36px; flex-shrink: 0; justify-content: center; }
+.rt__col {
+  display: flex;
+  align-items: center;
+}
+
+.rt__col--check {
+  width: 32px;
+  flex-shrink: 0;
+  justify-content: center;
+}
+
+.rt__col--supplier {
+  flex: 1;
+  min-width: 160px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.rt__col--date {
+  width: 110px;
+  flex-shrink: 0;
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}
+
+.rt__col--assigned {
+  width: 120px;
+  flex-shrink: 0;
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.rt__col--status {
+  width: 130px;
+  flex-shrink: 0;
+}
+
+.rt__col--action {
+  width: 36px;
+  flex-shrink: 0;
+  justify-content: center;
+}
 
 /* Supplier link */
-.rt__supplier-link { color: var(--color-primary); font-weight: 500; text-decoration: none; }
-.rt__supplier-link:hover { text-decoration: underline; }
+.rt__supplier-link {
+  color: var(--color-primary);
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.rt__supplier-link:hover {
+  text-decoration: underline;
+}
 
 /* Chevron */
 .rt__chevron {
@@ -447,7 +471,9 @@ function formatDate(date: string): string {
   transition: color 0.15s;
 }
 
-.rt__chevron:hover { color: var(--color-text); }
+.rt__chevron:hover {
+  color: var(--color-text);
+}
 
 /* Title */
 .rt__title {
@@ -461,7 +487,9 @@ function formatDate(date: string): string {
   text-overflow: ellipsis;
 }
 
-.rt__title:hover { color: var(--color-primary); }
+.rt__title:hover {
+  color: var(--color-primary);
+}
 
 /* Progress */
 .rt__progress {
@@ -504,7 +532,7 @@ function formatDate(date: string): string {
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
-  box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
   min-width: 220px;
   overflow: hidden;
 }
@@ -545,7 +573,9 @@ function formatDate(date: string): string {
   transition: background 0.1s;
 }
 
-.rt__more-item--danger:hover { background: var(--color-danger-subtle); }
+.rt__more-item--danger:hover {
+  background: var(--color-danger-subtle);
+}
 
 .rt__more-item--link {
   text-decoration: none;
@@ -553,16 +583,23 @@ function formatDate(date: string): string {
   transition: background 0.1s;
 }
 
-.rt__more-item--link:hover { background: var(--color-surface-hover); }
+.rt__more-item--link:hover {
+  background: var(--color-surface-hover);
+}
 
 .rt__more-item--expandable {
   cursor: pointer;
   transition: background 0.1s;
 }
 
-.rt__more-item--expandable:hover { background: var(--color-surface-hover); }
+.rt__more-item--expandable:hover {
+  background: var(--color-surface-hover);
+}
 
-.rt__more-chevron { margin-left: auto; font-size: 16px !important; }
+.rt__more-chevron {
+  margin-left: auto;
+  font-size: 16px !important;
+}
 
 .rt__more-item--selected-count {
   display: flex;
@@ -587,7 +624,9 @@ function formatDate(date: string): string {
   transition: background 0.1s;
 }
 
-.rt__clear-btn:hover { background: var(--color-surface-hover); }
+.rt__clear-btn:hover {
+  background: var(--color-surface-hover);
+}
 
 /* Assignee list */
 .rt__assignee-list {
@@ -617,15 +656,26 @@ function formatDate(date: string): string {
   color: var(--color-text);
 }
 
-.rt__assignee-option:hover { background: var(--color-surface-hover); }
+.rt__assignee-option:hover {
+  background: var(--color-surface-hover);
+}
 
-.rt__assignee-option.is-selected { color: var(--color-primary); }
+.rt__assignee-option.is-selected {
+  color: var(--color-primary);
+}
 
-.rt__assignee-check { margin-left: auto; font-size: 16px; }
+.rt__assignee-check {
+  margin-left: auto;
+  font-size: 16px;
+}
 
 /* Entries sub-table */
 .rt__entries {
   border-top: 1px solid var(--color-border);
+}
+
+.rt__form-group:last-child .rt__entry:last-child {
+  border-radius: 0 0 var(--radius-lg) var(--radius-lg);
 }
 
 .rt__form-group {}
@@ -657,8 +707,103 @@ function formatDate(date: string): string {
   font-size: var(--text-sm);
 }
 
-.rt__entry:last-child { border-bottom: none; }
-.rt__entry:hover { background: var(--color-surface-hover); }
+.rt__entry:last-child {
+  border-bottom: none;
+}
 
-.rt__entry--selected { background: var(--color-primary-subtle); }
+.rt__entry:hover {
+  background: var(--color-surface-hover);
+}
+
+.rt__entry--selected {
+  background: var(--color-primary-subtle);
+}
+
+/* ── Mobile layout (< 768px) ── */
+@media (max-width: 767px) {
+
+  /* Group header → 2-row grid */
+  .rt__header {
+    display: grid;
+    grid-template-areas:
+      "check chevron title more"
+      ".     .       prog  .   ";
+    grid-template-columns: 32px 28px 1fr 36px;
+    gap: 2px var(--space-2);
+    padding: var(--space-3);
+  }
+
+  .rt__col--check {
+    grid-area: check;
+    width: auto;
+  }
+
+  .rt__chevron {
+    grid-area: chevron;
+  }
+
+  .rt__title {
+    grid-area: title;
+  }
+
+  .rt__progress {
+    grid-area: prog;
+    margin-left: 0;
+    color: var(--color-primary);
+    font-weight: 500;
+    font-size: var(--text-xs);
+  }
+
+  .rt__header>.rt__more-wrapper {
+    grid-area: more;
+  }
+
+  /* Entries: hide column header, switch to card grid */
+  .rt__entries-header {
+    display: none;
+  }
+
+  .rt__entry {
+    display: grid;
+    grid-template-areas:
+      "check supplier action"
+      ".     assigned status ";
+    grid-template-columns: 32px 1fr 36px;
+    gap: var(--space-1) var(--space-2);
+    padding: var(--space-3);
+    align-items: center;
+  }
+
+  .rt__entry .rt__col--check {
+    grid-area: check;
+    width: auto;
+  }
+
+  .rt__entry .rt__col--supplier {
+    grid-area: supplier;
+    width: auto;
+    min-width: 0;
+  }
+
+  .rt__entry .rt__col--date {
+    display: none;
+  }
+
+  .rt__entry .rt__col--assigned {
+    grid-area: assigned;
+    width: auto;
+    font-size: var(--text-xs);
+  }
+
+  .rt__entry .rt__col--status {
+    grid-area: status;
+    width: auto;
+    justify-content: flex-end;
+  }
+
+  .rt__entry .rt__col--action {
+    grid-area: action;
+    width: auto;
+  }
+}
 </style>

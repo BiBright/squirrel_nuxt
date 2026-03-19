@@ -15,7 +15,7 @@
     />
 
     <!-- LIST VIEW -->
-    <template v-if="view === 'list'">
+    <template v-if="effectiveView === 'list'">
       <div class="list-container">
         <div v-if="loading" class="list-empty">
           <span class="material-icons-round">hourglass_empty</span>
@@ -157,6 +157,13 @@ const loading = ref(true)
 const search = ref('')
 const sort = ref('recent')
 const view = ref<'list' | 'grid'>('list')
+const isMobile = ref(false)
+onMounted(() => {
+  const mq = window.matchMedia('(max-width: 767px)')
+  isMobile.value = mq.matches
+  mq.addEventListener('change', e => { isMobile.value = e.matches })
+})
+const effectiveView = computed(() => isMobile.value ? 'grid' : view.value)
 const selected = ref<number[]>([])
 
 onMounted(async () => {

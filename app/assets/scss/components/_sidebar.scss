@@ -1,5 +1,5 @@
-@use '../base/variables' as *;
-@use '../base/viewport' as *;
+@use "../base/variables" as *;
+@use "../base/viewport" as *;
 
 .app-sidebar {
   position: fixed;
@@ -8,31 +8,104 @@
   bottom: 0;
   width: $sidebar-width;
   background: $white;
-  border-right: 1px solid $white60;
+  border: none;
   display: flex;
   flex-direction: column;
   z-index: 200;
   transform: translateX(-100%);
   transition: transform 0.3s ease;
 
-  @include desktop-up { transform: translateX(0); }
+  @include desktop-up {
+    transform: translateX(0);
+  }
+
+  // Mobile + tablet: slide down from below navbar
+  @media (max-width: #{$desktop - 1px}) {
+    top: $header-height;
+    bottom: auto;
+    height: calc(100vh - #{$header-height});
+    width: 100%;
+    border-right: none;
+    border-radius: 0;
+    transform: translateY(-110%);
+    transition: transform 0.3s ease;
+    box-shadow: none;
+  }
+
+  // Tablet: 75vh height
+  @include tablet-only {
+    height: 50vh;
+  }
 
   &.is-open {
     transform: translateX(0);
     box-shadow: 4px 0 20px rgba(0, 0, 0, 0.1);
+
+    @media (max-width: #{$desktop - 1px}) {
+      transform: translateY(0);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+    }
+  }
+
+  &__close {
+    display: none;
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: $black60;
+    padding: 4px;
+    border-radius: 50%;
+    transition:
+      background 0.15s,
+      color 0.15s;
+
+    .material-icons-round {
+      font-size: 22px;
+      display: block;
+    }
+    &:hover {
+      background: $white60;
+      color: $black;
+    }
+
+    @include mobile-only {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
   }
 
   &__logo {
-    padding: 22px 24px;
-    flex-shrink: 0;
+    display: none;
+
+    @include desktop-up {
+      height: 64px;
+      padding: 0 24px;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+    }
 
     a {
       display: flex;
       align-items: center;
       text-decoration: none;
 
-      img  { height: 48px; }
-      span { font-size: 18px; font-weight: 700; color: $primary100; }
+      img {
+        height: 40px;
+      }
+    }
+  }
+
+  &__search {
+    padding: 16px 24px 16px;
+    flex-shrink: 0;
+
+    @include tablet-up {
+      display: none;
     }
   }
 
@@ -67,10 +140,15 @@
     background: transparent;
     border: none;
     cursor: pointer;
-    transition: background 0.3s, color 0.3s;
+    transition:
+      background 0.3s,
+      color 0.3s;
     text-align: left;
 
-    .material-icons-round { font-size: 24px; flex-shrink: 0; }
+    .material-icons-round {
+      font-size: 24px;
+      flex-shrink: 0;
+    }
 
     &:hover,
     &.router-link-active {
@@ -91,8 +169,8 @@
   // ── Models dropdown ───────────────────────────
   &__dropdown-toggle {
     &::after {
-      content: '\e5cf'; // expand_more
-      font-family: 'Material Icons Round';
+      content: "\e5cf"; // expand_more
+      font-family: "Material Icons Round";
       font-size: 20px;
       margin-left: auto;
     }
@@ -101,7 +179,9 @@
       background: $primary25;
       color: $primary100;
 
-      &::after { content: '\e5ce'; } 
+      &::after {
+        content: "\e5ce";
+      }
     }
   }
 
@@ -123,8 +203,13 @@
     text-decoration: none;
     transition: color 0.3s;
 
-    &:hover { color: $primary100; }
-    &.router-link-active { color: $primary100; text-decoration: underline; }
+    &:hover {
+      color: $primary100;
+    }
+    &.router-link-active {
+      color: $primary100;
+      text-decoration: underline;
+    }
   }
 
   &_footer {
@@ -140,10 +225,19 @@
   display: none;
   position: fixed;
   inset: 0;
+  top: $header-height;
   background: rgba(0, 0, 0, 0.4);
   z-index: 150;
 
-  &.is-open { display: block; }
+  &.is-open {
+    display: block;
+  }
 
-  @include desktop-up { display: none !important; }
+  @include desktop-up {
+    display: none !important;
+  }
+
+  @include tablet-only {
+    top: $header-height;
+  }
 }

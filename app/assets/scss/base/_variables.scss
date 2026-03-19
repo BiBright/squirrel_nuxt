@@ -35,8 +35,8 @@ $modal-overlay: rgba(155, 155, 155, 0.24);
 $mobile:      360px;
 $tablet:      768px;
 $desktop:     1280px;
-$desktop-big: 1536px;
-$desktop-xxl: 1920px;
+$desktop-l: 1536px;
+$desktop-xl: 1920px;
 
 $font-base: 'Lato', sans-serif;
 
@@ -63,7 +63,11 @@ $header-height: 64px;
   --color-white20: #{$white20};
 
   --color-red:    #{$red100};
+  --color-red-75: #{$red75};
+  --color-red-25: #{$red25};
   --color-green:  #{$green100};
+  --color-green-75: #{$green75};
+  --color-green-25: #{$green25};
   --color-yellow: #{$yellow100};
 
   // ── Semantic surface / text / border ──────────────

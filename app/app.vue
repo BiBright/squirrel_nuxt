@@ -4,5 +4,6 @@
     <NuxtLayout>
       <NuxtPage />
     </NuxtLayout>
+    <ClientOnly><AppToastContainer /></ClientOnly>
   </UApp>
 </template>

@@ -3,8 +3,12 @@
 
     <div class="app-sidebar__logo">
       <NuxtLink :to="isMaster ? '/admin' : '/'" @click="emit('close')">
-        <span>Squirrel</span>
+        <img src="/images/logo.png" alt="Squirrel" />
       </NuxtLink>
+    </div>
+
+    <div class="app-sidebar__search">
+      <AppSearch />
     </div>
 
     <nav class="app-sidebar__nav">
@@ -55,37 +59,35 @@
             </NuxtLink>
           </li>
 
-          <template v-if="!isCompanyUser">
-            <li>
-              <button class="app-sidebar__link app-sidebar__dropdown-toggle" :class="{ 'is-open': modelsOpen }"
-                @click="modelsOpen = !modelsOpen">
-                <span class="material-icons-round">format_list_bulleted</span>
-                Models
-              </button>
-              <ul v-show="modelsOpen" class="app-sidebar__submenu">
-                <li>
-                  <NuxtLink to="/fields" class="app-sidebar__sublink" @click="emit('close')">Fields</NuxtLink>
-                </li>
-                <li>
-                  <NuxtLink to="/forms" class="app-sidebar__sublink" @click="emit('close')">Forms</NuxtLink>
-                </li>
-              </ul>
-            </li>
+          <li>
+            <button class="app-sidebar__link app-sidebar__dropdown-toggle" :class="{ 'is-open': modelsOpen }"
+              @click="modelsOpen = !modelsOpen">
+              <span class="material-icons-round">format_list_bulleted</span>
+              Models
+            </button>
+            <ul v-show="modelsOpen" class="app-sidebar__submenu">
+              <li>
+                <NuxtLink to="/fields" class="app-sidebar__sublink" @click="emit('close')">Fields</NuxtLink>
+              </li>
+              <li>
+                <NuxtLink to="/forms" class="app-sidebar__sublink" @click="emit('close')">Forms</NuxtLink>
+              </li>
+            </ul>
+          </li>
 
-            <li>
-              <NuxtLink to="/suppliers" class="app-sidebar__link" @click="emit('close')">
-                <span class="material-icons-round">local_shipping</span>
-                Suppliers
-              </NuxtLink>
-            </li>
+          <li>
+            <NuxtLink to="/suppliers" class="app-sidebar__link" @click="emit('close')">
+              <span class="material-icons-round">local_shipping</span>
+              Suppliers
+            </NuxtLink>
+          </li>
 
-            <li>
-              <NuxtLink to="/users" class="app-sidebar__link" @click="emit('close')">
-                <span class="material-icons-round">person</span>
-                Users
-              </NuxtLink>
-            </li>
-          </template>
+          <li v-if="!isCompanyUser">
+            <NuxtLink to="/users" class="app-sidebar__link" @click="emit('close')">
+              <span class="material-icons-round">person</span>
+              Users
+            </NuxtLink>
+          </li>
 
         </template>
 

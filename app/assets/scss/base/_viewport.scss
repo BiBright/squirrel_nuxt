@@ -1,35 +1,37 @@
-@use 'variables' as *;
+@use "variables" as *;
 
-// ================================
-// Responsive Breakpoint Mixins
-// ================================
-
-// Mobile only — below tablet
 @mixin mobile-only {
-  @media (max-width: #{$tablet - 1px}) { @content; }
+  @media (max-width: #{$tablet - 1px}) {
+    @content;
+  }
 }
 
-// Tablet and up
 @mixin tablet-up {
-  @media (min-width: $tablet) { @content; }
+  @media (min-width: $tablet) {
+    @content;
+  }
 }
 
-// Tablet only — between tablet and desktop
 @mixin tablet-only {
-  @media (min-width: $tablet) and (max-width: #{$desktop - 1px}) { @content; }
+  @media (min-width: $tablet) and (max-width: #{$desktop - 1px}) {
+    @content;
+  }
 }
 
-// Desktop and up
 @mixin desktop-up {
-  @media (min-width: $desktop) { @content; }
+  @media (min-width: $desktop) {
+    @content;
+  }
 }
 
-// Desktop big and up
-@mixin desktop-big-up {
-  @media (min-width: $desktop-big) { @content; }
+@mixin desktop-l-up {
+  @media (min-width: $desktop-l) {
+    @content;
+  }
 }
 
-// Desktop XXL and up
 @mixin desktop-xxl-up {
-  @media (min-width: $desktop-xxl) { @content; }
+  @media (min-width: $desktop-xl) {
+    @content;
+  }
 }

@@ -1,15 +1,12 @@
 <template>
   <header class="app-header">
-    <button type="button" class="app-header__hamburger" aria-label="Open menu" @click="emit('toggleSidebar')">
-      <span class="material-icons-round">menu</span>
-    </button>
 
-    <NuxtLink to="/" class="app-header__logo">
+    <NuxtLink to="/" class="app-header__logo" @click="emit('closeSidebar')">
       <span>Squirrel</span>
     </NuxtLink>
 
     <div class="app-header__search">
-      <input type="search" class="input-search" placeholder="Search..." />
+      <AppSearch />
     </div>
 
     <div class="app-header__actions">
@@ -18,6 +15,11 @@
         <span class="name">{{ user?.name ?? 'Account' }}</span>
       </div>
     </div>
+
+    <button type="button" class="app-header__hamburger" :aria-label="sidebarOpen ? 'Close menu' : 'Open menu'" @click="emit('toggleSidebar')">
+      <span class="material-icons-round">{{ sidebarOpen ? 'close' : 'menu' }}</span>
+    </button>
+    
   </header>
 </template>
 
@@ -34,8 +36,11 @@ const initials = computed(() => {
     .toUpperCase() || 'U'
 })
 
+defineProps<{ sidebarOpen?: boolean }>()
+
 const emit = defineEmits<{
   toggleSidebar: []
   toggleUserMenu: []
+  closeSidebar: []
 }>()
 </script>

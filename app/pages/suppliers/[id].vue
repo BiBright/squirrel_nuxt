@@ -7,11 +7,6 @@
       </AppButton>
     </AppPageHeader>
 
-    <div v-if="submitError" class="login-error">
-      <span class="material-icons-round">error_outline</span>
-      {{ submitError }}
-    </div>
-
     <div v-if="loadingRecord" class="list-container">
       <div class="list-empty">
         <span class="material-icons-round">hourglass_empty</span>
@@ -44,7 +39,7 @@
 </template>
 
 <script setup lang="ts">
-definePageMeta({ middleware: ['auth', 'admin'] })
+definePageMeta({ middleware: ['auth'] })
 
 const route = useRoute()
 const id = computed(() => route.params.id as string | undefined)
@@ -56,9 +51,9 @@ const form = reactive({
   contact_person: '', contact_email: '', contact_phone: '',
 })
 const errors = reactive({ name: '', email: '', contact_email: '' })
+const toast = useAppToast()
 const loading = ref(false)
 const loadingRecord = ref(false)
-const submitError = ref('')
 
 onMounted(async () => {
   if (!isEdit.value) return
@@ -77,7 +72,7 @@ onMounted(async () => {
     form.contact_email = (d.contact_email as string) ?? ''
     form.contact_phone = (d.contact_phone as string) ?? ''
   }
-  catch { submitError.value = 'Could not load supplier data.' }
+  catch (err) { toast.error(err, 'Could not load supplier data', { category: 'supplier' }) }
   finally { loadingRecord.value = false }
 })
 
@@ -96,7 +91,6 @@ function validate(): boolean {
 async function onSubmit() {
   if (!validate()) return
   loading.value = true
-  submitError.value = ''
   try {
     const api = useApi()
     const body = {
@@ -112,15 +106,16 @@ async function onSubmit() {
     }
     if (isEdit.value) {
       await api(`/suppliers/${id.value}`, { method: 'PATCH', body })
+      toast.success('Supplier updated', { category: 'supplier' })
     }
     else {
       await api('/suppliers', { method: 'POST', body })
+      toast.success('Supplier created', { category: 'supplier' })
     }
     await navigateTo('/suppliers')
   }
   catch (err: unknown) {
-    const msg = (err as { data?: { message?: string } })?.data?.message
-    submitError.value = msg ?? 'Something went wrong. Please try again.'
+    toast.error(err, isEdit.value ? 'Could not update supplier' : 'Could not create supplier', { category: 'supplier' })
   }
   finally { loading.value = false }
 }

@@ -5,37 +5,15 @@
     <AppListToolbar
       v-model:search="search"
       v-model:sort="sort"
-      v-model:view="view"
+      :view="'list'"
+      hide-view-toggle
       label="request"
       add-label="New Request"
       :total-count="filtered.length"
       :selected-count="selectedCount"
       @add="onAdd"
       @delete="onDelete"
-    >
-      <template #bulk-actions>
-        <div class="toolbar-assign">
-          <button class="toolbar-assign__btn" @click.stop="assignMenuOpen = !assignMenuOpen">
-            <span class="material-icons-round">person</span>
-            Assign to
-            <span class="material-icons-round">{{ assignMenuOpen ? 'expand_less' : 'expand_more' }}</span>
-          </button>
-          <div v-if="assignMenuOpen" v-click-outside="() => assignMenuOpen = false" class="toolbar-assign__panel">
-            <div class="toolbar-assign__header">Assign {{ selectedCount }} selected</div>
-            <div v-if="loadingUsers" class="toolbar-assign__loading">Loading users...</div>
-            <button
-              v-for="user in users"
-              :key="user.id"
-              class="toolbar-assign__option"
-              @click="onToolbarAssign(user)"
-            >
-              <span class="material-icons-round">person_outline</span>
-              {{ user.name }}
-            </button>
-          </div>
-        </div>
-      </template>
-    </AppListToolbar>
+    />
 
     <div v-if="loading" class="list-container">
       <div class="list-empty">
@@ -44,56 +22,29 @@
       </div>
     </div>
 
-    <template v-else-if="view === 'list'">
-      <RequestsTable
-        :requests="filtered"
-        :users="users"
-        :loading-users="loadingUsers"
-        @assign="onAssign"
-        @remove="onRemove"
-        @bulk-assign="onBulkAssign"
-        @bulk-remove="onBulkRemove"
-        @selection-change="onSelectionChange"
-      />
-    </template>
+    <AppBlankState
+      v-else-if="blankState.show.value"
+      :image="blankState.image.value"
+      :title="blankState.title.value"
+      :message="blankState.message.value"
+    >
+      <AppButton @click="onAdd">
+        <span class="material-icons-round">add</span>
+        New Request
+      </AppButton>
+    </AppBlankState>
 
-    <!-- MOSAIC VIEW -->
-    <template v-else>
-      <div v-if="filtered.length === 0" class="list-container">
-        <div class="list-empty">
-          <span class="material-icons-round">inbox</span>
-          <p>No requests found.</p>
-        </div>
-      </div>
-
-      <div v-else class="list-mosaic">
-        <div v-for="req in filtered" :key="req.id" class="list-card">
-          <div class="list-card__header">
-            <span class="list-card__title">{{ displayTitle(req) }}</span>
-            <button class="list-row-menu-btn" title="Actions">
-              <span class="material-icons-round">more_vert</span>
-            </button>
-          </div>
-          <div class="list-card__meta">
-            <div class="list-card__meta-row">
-              <span class="material-icons-round">description</span>
-              {{ req.forms.length }} form{{ req.forms.length !== 1 ? 's' : '' }}
-            </div>
-            <div class="list-card__meta-row">
-              <span class="material-icons-round">check_circle</span>
-              {{ totalCompleted(req) }}/{{ totalEntries(req) }} completed
-            </div>
-            <div class="list-card__meta-row">
-              <span class="material-icons-round">calendar_today</span>
-              {{ formatDate(req.created_at) }}
-            </div>
-          </div>
-          <div class="list-card__footer">
-            <AppBadge :variant="overallStatusVariant(req)">{{ overallStatusLabel(req) }}</AppBadge>
-          </div>
-        </div>
-      </div>
-    </template>
+    <RequestsTable
+      v-else
+      :requests="filtered"
+      :users="users"
+      :loading-users="loadingUsers"
+      @assign="onAssign"
+      @remove="onRemove"
+      @bulk-assign="onBulkAssign"
+      @bulk-remove="onBulkRemove"
+      @selection-change="onSelectionChange"
+    />
   </div>
 </template>
 
@@ -130,6 +81,7 @@ interface User {
 }
 
 const authStore = useAuthStore()
+const toast = useAppToast()
 const requests = ref<Request[]>([])
 const users = ref<User[]>([])
 const loading = ref(true)
@@ -139,7 +91,6 @@ const sort = ref('recent')
 const view = ref<'list' | 'grid'>('list')
 const selectedCount = ref(0)
 const selectedEntryIds = ref<number[]>([])
-const assignMenuOpen = ref(false)
 
 onMounted(async () => {
   const api = useApi()
@@ -165,7 +116,7 @@ onMounted(async () => {
 const filtered = computed(() => {
   let result = [...requests.value]
   if (authStore.user?.roles === 'company-user') {
-    result = result.filter(r => r.assigned_to?.id === (authStore.user?.id as number))
+    result = result.filter(r => r.created_by?.id === (authStore.user?.id as number))
   }
   if (search.value) {
     const q = search.value.toLowerCase()
@@ -181,28 +132,26 @@ const filtered = computed(() => {
   return result
 })
 
+const blankState = useBlankState(filtered, search, {
+  image: '/images/blankPages/requests.svg',
+  title: 'No requests yet',
+  message: 'Create your first request to get started.',
+})
+
 function onSelectionChange(entryIds: number[]) {
   selectedEntryIds.value = entryIds
   selectedCount.value = entryIds.length
-  if (entryIds.length === 0) assignMenuOpen.value = false
-}
-
-async function onToolbarAssign(user: User) {
-  assignMenuOpen.value = false
-  await onBulkAssign(selectedEntryIds.value, user)
 }
 
 async function onAssign(req: Request, user: User) {
   try {
     const api = useApi()
-    await api(`/requests/${req.id}/assign`, {
-      method: 'PATCH',
-      body: { user_id: user.id },
-    })
+    await api(`/requests/${req.id}/assign`, { method: 'PATCH', body: { user_id: user.id } })
     const target = requests.value.find(r => r.id === req.id)
     if (target) target.assigned_to = { id: user.id, name: user.name }
+    toast.success(`Request assigned to ${user.name}`, { category: 'request' })
   }
-  catch { /* TODO: show error */ }
+  catch (err) { toast.error(err, 'Failed to assign request', { category: 'request' }) }
 }
 
 async function onRemove(req: Request) {
@@ -210,15 +159,15 @@ async function onRemove(req: Request) {
     const api = useApi()
     await api(`/requests/${req.id}`, { method: 'DELETE' })
     requests.value = requests.value.filter(r => r.id !== req.id)
+    toast.success('Request removed', { category: 'request' })
   }
-  catch { /* TODO: show error */ }
+  catch (err) { toast.error(err, 'Failed to remove request', { category: 'request' }) }
 }
 
 function onAdd() { navigateTo('/requests/create') }
 function onDelete() { selectedCount.value = 0 }
 
 async function onBulkAssign(_entryIds: number[], user: User) {
-  // Assign all unique requests that contain any of the selected entries
   const affectedReqs = requests.value.filter(r =>
     r.forms.some(f => f.suppliers.some(s => _entryIds.includes(s.id))),
   )
@@ -231,8 +180,9 @@ async function onBulkAssign(_entryIds: number[], user: User) {
       const target = requests.value.find(req => req.id === r.id)
       if (target) target.assigned_to = { id: user.id, name: user.name }
     })
+    toast.success(`${affectedReqs.length} request${affectedReqs.length !== 1 ? 's' : ''} assigned to ${user.name}`, { category: 'request' })
   }
-  catch { /* TODO: show error */ }
+  catch (err) { toast.error(err, 'Failed to assign requests', { category: 'request' }) }
 }
 
 async function onBulkRemove(entryIds: number[]) {
@@ -246,8 +196,9 @@ async function onBulkRemove(entryIds: number[]) {
     ))
     const removedIds = new Set(affectedReqs.map(r => r.id))
     requests.value = requests.value.filter(r => !removedIds.has(r.id))
+    toast.success(`${affectedReqs.length} request${affectedReqs.length !== 1 ? 's' : ''} removed`, { category: 'request' })
   }
-  catch { /* TODO: show error */ }
+  catch (err) { toast.error(err, 'Failed to remove requests', { category: 'request' }) }
 }
 
 function displayTitle(req: Request): string {
@@ -287,71 +238,3 @@ function formatDate(date: string): string {
 }
 </script>
 
-<style scoped>
-.toolbar-assign {
-  position: relative;
-}
-
-.toolbar-assign__btn {
-  display: flex;
-  align-items: center;
-  gap: var(--space-1);
-  padding: var(--space-2) var(--space-3);
-  font-size: var(--text-sm);
-  font-weight: 500;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  cursor: pointer;
-  color: var(--color-text);
-  transition: background 0.15s;
-}
-
-.toolbar-assign__btn:hover { background: var(--color-surface-hover); }
-
-.toolbar-assign__panel {
-  position: absolute;
-  top: calc(100% + 6px);
-  left: 0;
-  z-index: 50;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  box-shadow: 0 4px 16px rgba(0,0,0,0.12);
-  min-width: 200px;
-  overflow: hidden;
-}
-
-.toolbar-assign__header {
-  padding: var(--space-2) var(--space-3);
-  font-size: var(--text-xs);
-  font-weight: 600;
-  color: var(--color-text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  border-bottom: 1px solid var(--color-border);
-}
-
-.toolbar-assign__loading {
-  padding: var(--space-2) var(--space-3);
-  font-size: var(--text-xs);
-  color: var(--color-text-muted);
-}
-
-.toolbar-assign__option {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  width: 100%;
-  padding: var(--space-2) var(--space-3);
-  font-size: var(--text-sm);
-  background: none;
-  border: none;
-  cursor: pointer;
-  text-align: left;
-  color: var(--color-text);
-  transition: background 0.1s;
-}
-
-.toolbar-assign__option:hover { background: var(--color-surface-hover); }
-</style>

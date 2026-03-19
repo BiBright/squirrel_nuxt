@@ -6,7 +6,7 @@
       :class="{ 'is-open': sidebarOpen }"
       @click="sidebarOpen = false"
     />
-    <AppHeader @toggle-sidebar="sidebarOpen = !sidebarOpen" />
+    <AppHeader :sidebar-open="sidebarOpen" @toggle-sidebar="sidebarOpen = !sidebarOpen" @close-sidebar="sidebarOpen = false" />
     <main class="app-main">
       <slot />
     </main>

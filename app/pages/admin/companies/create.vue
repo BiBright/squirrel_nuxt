@@ -7,11 +7,6 @@
       </AppButton>
     </AppPageHeader>
 
-    <div v-if="submitError" class="login-error">
-      <span class="material-icons-round">error_outline</span>
-      {{ submitError }}
-    </div>
-
     <form novalidate class="create-form" @submit.prevent="onSubmit">
       <AppCard title="Company Details">
         <AppInput
@@ -121,8 +116,8 @@ const errors = reactive({
   admin_email: '',
 })
 
+const toast = useAppToast()
 const loading = ref(false)
-const submitError = ref('')
 
 onMounted(async () => {
   try {
@@ -131,8 +126,8 @@ onMounted(async () => {
     const res = await api<{ data: Plan[] }>('/master/plans')
     plans.value = res.data
   }
-  catch {
-    submitError.value = 'Failed to load plans.'
+  catch (err) {
+    toast.error(err, 'Failed to load plans', { category: 'general' })
   }
 })
 
@@ -164,7 +159,6 @@ async function onSubmit() {
   if (!validate()) return
 
   loading.value = true
-  submitError.value = ''
 
   try {
     const api = useApi()
@@ -173,11 +167,11 @@ async function onSubmit() {
       body: { ...form },
     })
 
+    toast.success('Company created', { category: 'general' })
     await navigateTo('/admin/companies')
   }
   catch (err: unknown) {
-    const msg = (err as { data?: { message?: string } })?.data?.message
-    submitError.value = msg ?? 'Something went wrong. Please try again.'
+    toast.error(err, 'Could not create company', { category: 'general' })
   }
   finally {
     loading.value = false

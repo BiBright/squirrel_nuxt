@@ -7,11 +7,6 @@
       </AppButton>
     </AppPageHeader>
 
-    <div v-if="submitError" class="login-error">
-      <span class="material-icons-round">error_outline</span>
-      {{ submitError }}
-    </div>
-
     <div v-if="loadingRecord" class="list-container">
       <div class="list-empty">
         <span class="material-icons-round">hourglass_empty</span>
@@ -142,7 +137,7 @@
 </template>
 
 <script setup lang="ts">
-definePageMeta({ middleware: ['auth', 'admin'] })
+definePageMeta({ middleware: ['auth'] })
 
 const route = useRoute()
 const id = computed(() => route.params.id as string | undefined)
@@ -177,10 +172,10 @@ const selectedFile = ref<File | null>(null)
 const fileInput = ref<HTMLInputElement | null>(null)
 const existingTemplate = ref<string | null>(null)
 const removeTemplate = ref(false)
+const toast = useAppToast()
 const loadingFields = ref(true)
 const loadingRecord = ref(false)
 const loading = ref(false)
-const submitError = ref('')
 
 const filteredAvailable = computed(() => {
   if (!fieldSearch.value) return availableFields.value
@@ -218,7 +213,7 @@ onMounted(async () => {
         .map(f => ({ id: f.id, name: f.name, type: f.type, type_label: f.type_label, required: f.required }))
     }
   }
-  catch { submitError.value = 'Could not load form data.' }
+  catch (err) { toast.error(err, 'Could not load form data', { category: 'form' }) }
   finally { loadingRecord.value = false }
 })
 
@@ -249,7 +244,6 @@ function validate(): boolean {
 async function onSubmit() {
   if (!validate()) return
   loading.value = true
-  submitError.value = ''
   try {
     const api = useApi()
     const body = new FormData()
@@ -268,15 +262,16 @@ async function onSubmit() {
       body.append('_method', 'PATCH')
       if (removeTemplate.value) body.append('remove_template', 'true')
       await api(`/forms/${id.value}`, { method: 'POST', body })
+      toast.success('Form updated', { category: 'form' })
     }
     else {
       await api('/forms', { method: 'POST', body })
+      toast.success('Form created', { category: 'form' })
     }
     await navigateTo('/forms')
   }
   catch (err: unknown) {
-    const msg = (err as { data?: { message?: string } })?.data?.message
-    submitError.value = msg ?? 'Something went wrong. Please try again.'
+    toast.error(err, isEdit.value ? 'Could not update form' : 'Could not create form', { category: 'form' })
   }
   finally { loading.value = false }
 }

@@ -21,7 +21,19 @@
       </div>
     </div>
 
-    <template v-else-if="view === 'list'">
+    <AppBlankState
+      v-else-if="blankState.show.value"
+      :image="blankState.image.value"
+      :title="blankState.title.value"
+      :message="blankState.message.value"
+    >
+      <AppButton to="/fields/create">
+        <span class="material-icons-round">add</span>
+        New Field
+      </AppButton>
+    </AppBlankState>
+
+    <template v-else-if="effectiveView === 'list'">
       <AppTable
         :columns="columns"
         :rows="tableRows"
@@ -41,24 +53,12 @@
         <template #cell-status="{ value }">
           <AppBadge :variant="value === 'Active' ? 'success' : 'danger'">{{ value }}</AppBadge>
         </template>
-
-        <template #empty>
-          <span class="material-icons-round">input</span>
-          <p>No fields found.</p>
-        </template>
       </AppTable>
     </template>
 
     <!-- MOSAIC VIEW -->
     <template v-else>
-      <div v-if="filtered.length === 0" class="list-container">
-        <div class="list-empty">
-          <span class="material-icons-round">input</span>
-          <p>No fields found.</p>
-        </div>
-      </div>
-
-      <div v-else class="list-mosaic">
+      <div class="list-mosaic">
         <div v-for="field in filtered" :key="field.id" class="list-card">
           <div class="list-card__header">
             <NuxtLink :to="`/fields/${field.id}`" class="list-card__title">{{ field.name }}</NuxtLink>
@@ -92,7 +92,7 @@
 </template>
 
 <script setup lang="ts">
-definePageMeta({ middleware: ['auth', 'admin'] })
+definePageMeta({ middleware: ['auth'] })
 
 interface Field {
   id: number
@@ -123,9 +123,17 @@ interface PaginatedResponse<T> {
   meta: PaginationMeta
 }
 
+const toast = useAppToast()
 const fields = ref<Field[]>([])
 const loading = ref(true)
 const { search, sort, view, selectedCount, onSelect, onDelete } = useListToolbar()
+const isMobile = ref(false)
+onMounted(() => {
+  const mq = window.matchMedia('(max-width: 767px)')
+  isMobile.value = mq.matches
+  mq.addEventListener('change', e => { isMobile.value = e.matches })
+})
+const effectiveView = computed(() => isMobile.value ? 'grid' : view.value)
 const { page, lastPage, total, setMeta, goTo } = useListPagination()
 
 async function fetchData() {
@@ -157,6 +165,12 @@ const filtered = computed(() => {
   return result
 })
 
+const blankState = useBlankState(filtered, search, {
+  image: '/images/blankPages/fields.svg',
+  title: 'No fields yet',
+  message: 'Create reusable input fields for your forms.',
+})
+
 const tableRows = computed(() =>
   filtered.value.map(f => ({
     name: f.name,
@@ -168,7 +182,18 @@ const tableRows = computed(() =>
   })),
 )
 
-function onDeleteRow(_row: Record<string, unknown>, _idx: number) { /* TODO */ }
+async function onDeleteRow(row: Record<string, unknown>, _idx: number) {
+  const field = row._raw as Field
+  try {
+    const api = useApi()
+    await api(`/fields/${field.id}`, { method: 'DELETE' })
+    fields.value = fields.value.filter(f => f.id !== field.id)
+    toast.success('Field deleted', { category: 'field' })
+  }
+  catch (err) {
+    toast.error(err, 'Could not delete field', { category: 'field' })
+  }
+}
 
 function formatDate(date: string) {
   return new Date(date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })

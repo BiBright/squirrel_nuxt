@@ -1,10 +1,6 @@
 @use '../base/variables' as *;
 @use '../base/viewport' as *;
 
-// ================================
-// Login Page
-// ================================
-
 .login-page {
   min-height: 100vh;
   display: flex;
@@ -16,22 +12,38 @@
   }
 }
 
-// Left panel — logo / illustration centered
 .login-visual {
   display: none;
 
   @include tablet-up {
-    display: flex;
+    display: block;
     flex: 1;
-    align-items: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  &__bg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  &__container {
+    position: absolute;
     justify-content: center;
-    padding: 48px;
+    align-items: center;
+    display: flex;
+    top: 0;
+    left: 0;
+    height: 400px;
+    width: 100%;
   }
 
   &__logo {
-    max-width: 280px;
-    max-height: 280px;
-    object-fit: contain;
+    height: 60px;
+    width: auto; 
   }
 }
 

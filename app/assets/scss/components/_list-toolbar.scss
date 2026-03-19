@@ -50,7 +50,9 @@
   }
 
   &__view-toggle {
-    display: flex;
+    display: none;
     gap: 4px;
+
+    @include tablet-up { display: flex; }
   }
 }

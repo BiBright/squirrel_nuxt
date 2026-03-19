@@ -1,5 +1,5 @@
-@use '../base/variables' as *;
-@use '../base/viewport' as *;
+@use "../base/variables" as *;
+@use "../base/viewport" as *;
 
 // ================================
 // App Header (Top Bar)
@@ -16,14 +16,13 @@
   align-items: center;
   justify-content: space-between;
   padding: 0 20px;
-  z-index: 100;
+  z-index: 250;
 
   @include desktop-up {
     left: $sidebar-width;
     padding: 0 32px;
   }
 
-  // Hamburger — visible on mobile/tablet
   &__hamburger {
     display: flex;
     align-items: center;
@@ -39,12 +38,15 @@
     transition: background-color 0.2s;
     flex-shrink: 0;
 
-    &:hover { background: $white60; }
+    &:hover {
+      background: $white60;
+    }
 
-    @include desktop-up { display: none; }
+    @include desktop-up {
+      display: none;
+    }
   }
 
-  // Logo — shown on mobile/tablet (sidebar is hidden)
   &__logo {
     display: flex;
     align-items: center;
@@ -57,17 +59,25 @@
       color: $primary100;
     }
 
-    @include desktop-up { display: none; } // shown in sidebar on desktop
+    @include desktop-up {
+      display: none;
+    }
   }
 
   // Search bar — tablet+
   &__search {
-    flex: 1;
-    max-width: 400px;
-    margin: 0 24px;
     display: none;
 
-    @include tablet-up { display: block; }
+    @include tablet-up {
+      flex: 1;
+      max-width: 400px;
+      margin: 0 24px;
+      display: block;
+    }
+
+    @include desktop-up {
+      margin: 0 24px 0 0;
+    }
   }
 
   // Right-side actions
@@ -88,7 +98,9 @@
     border-radius: 8px;
     transition: background-color 0.2s;
 
-    &:hover { background: $white60; }
+    &:hover {
+      background: $white60;
+    }
 
     .avatar {
       width: 36px;
@@ -109,7 +121,9 @@
       line-height: 20px;
       color: $black80;
 
-      @include mobile-only { display: none; }
+      @include mobile-only {
+        display: none;
+      }
     }
   }
 }

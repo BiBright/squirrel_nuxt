@@ -21,7 +21,19 @@
       </div>
     </div>
 
-    <template v-else-if="view === 'list'">
+    <AppBlankState
+      v-else-if="blankState.show.value"
+      :image="blankState.image.value"
+      :title="blankState.title.value"
+      :message="blankState.message.value"
+    >
+      <AppButton @click="onAdd">
+        <span class="material-icons-round">add</span>
+        Create User
+      </AppButton>
+    </AppBlankState>
+
+    <template v-else-if="effectiveView === 'list'">
       <AppTable
         :columns="columns"
         :rows="tableRows"
@@ -37,24 +49,12 @@
         <template #cell-role="{ value }">
           <AppBadge :variant="roleVariant(value as string)">{{ value }}</AppBadge>
         </template>
-
-        <template #empty>
-          <span class="material-icons-round">person_off</span>
-          <p>No users found.</p>
-        </template>
       </AppTable>
     </template>
 
     <!-- MOSAIC VIEW -->
     <template v-else>
-      <div v-if="filtered.length === 0" class="list-container">
-        <div class="list-empty">
-          <span class="material-icons-round">person_off</span>
-          <p>No users found.</p>
-        </div>
-      </div>
-
-      <div v-else class="list-mosaic">
+      <div class="list-mosaic">
         <div v-for="user in filtered" :key="user.id" class="list-card">
           <div class="list-card__header">
             <NuxtLink :to="`/users/${user.id}`" class="list-card__title">{{ user.name }}</NuxtLink>
@@ -107,11 +107,19 @@ interface PaginatedResponse<T> {
   meta: PaginationMeta
 }
 
+const toast = useAppToast()
 const authStore = useAuthStore()
 const usersCache = useState<User[]>('users-list', () => [])
 const users = ref<User[]>([])
 const loading = ref(true)
 const { search, sort, view, selectedCount, onSelect, onDelete } = useListToolbar()
+const isMobile = ref(false)
+onMounted(() => {
+  const mq = window.matchMedia('(max-width: 767px)')
+  isMobile.value = mq.matches
+  mq.addEventListener('change', e => { isMobile.value = e.matches })
+})
+const effectiveView = computed(() => isMobile.value ? 'grid' : view.value)
 const { page, lastPage, total, setMeta, goTo } = useListPagination()
 
 async function fetchData() {
@@ -157,6 +165,12 @@ const filtered = computed(() => {
   return result
 })
 
+const blankState = useBlankState(filtered, search, {
+  image: '/images/blankPages/users.svg',
+  title: 'No users yet',
+  message: 'Add your first team member to get started.',
+})
+
 const tableRows = computed(() =>
   filtered.value.map(u => ({
     name: u.name,
@@ -168,7 +182,20 @@ const tableRows = computed(() =>
 
 
 function onAdd() { navigateTo('/users/create') }
-function onDeleteRow(_row: Record<string, unknown>, _idx: number) { /* TODO */ }
+
+async function onDeleteRow(row: Record<string, unknown>, _idx: number) {
+  const user = row._raw as User
+  try {
+    const api = useApi()
+    await api(`/users/${user.id}`, { method: 'DELETE' })
+    users.value = users.value.filter(u => u.id !== user.id)
+    usersCache.value = users.value
+    toast.success('User deleted', { category: 'user' })
+  }
+  catch (err) {
+    toast.error(err, 'Could not delete user', { category: 'user' })
+  }
+}
 
 type BadgeVariant = 'warning' | 'primary' | 'success' | 'danger' | 'neutral'
 
