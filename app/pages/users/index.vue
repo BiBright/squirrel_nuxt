@@ -108,7 +108,7 @@ interface PaginatedResponse<T> {
 }
 
 const toast = useAppToast()
-const authStore = useAuthStore()
+const auth = useAuth()
 const usersCache = useState<User[]>('users-list', () => [])
 const users = ref<User[]>([])
 const loading = ref(true)
@@ -143,7 +143,7 @@ const filtered = computed(() => {
   let result = [...users.value]
 
   // Always ensure the logged-in user appears on page 1
-  const me = authStore.user
+  const me = auth.user
   if (page.value === 1 && me && !result.some(u => u.id === (me.id as number))) {
     result.unshift({
       id: me.id as number,

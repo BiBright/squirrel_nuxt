@@ -4,61 +4,55 @@
 
     <div class="dash">
 
-        <!-- Stat cards -->
-        <div class="dash-stats dash__stats">
-          <div class="dash-stat">
-            <p class="dash-stat__label">Requests</p>
-            <p class="dash-stat__value">{{ stats.requests }}</p>
-          </div>
-          <div class="dash-stat">
-            <p class="dash-stat__label">Suppliers</p>
-            <p class="dash-stat__value">{{ stats.suppliers }}</p>
-          </div>
-          <div class="dash-stat">
-            <p class="dash-stat__label">Forms</p>
-            <p class="dash-stat__value">{{ stats.forms }}</p>
-          </div>
+      <!-- Stat cards -->
+      <div class="dash-stats dash__stats">
+        <div class="dash-stat">
+          <p class="dash-stat__label">Requests</p>
+          <p class="dash-stat__value">{{ stats.requests }}</p>
         </div>
-
-        <!-- Charts row -->
-        <div class="dash-charts-row dash__charts">
-          <div class="dash-card">
-            <h3 class="dash-card__title">Total request vs completed</h3>
-            <div v-if="loadingRequests" class="dash-state">Loading...</div>
-            <div v-else-if="stats.requests === 0" class="dash-state">No request data yet.</div>
-            <ClientOnly v-else>
-              <AppChartBar
-                :labels="['Total requests', 'Completed']"
-                :datasets="[{ label: '', data: [stats.requests, stats.completed], color: ['#367B8A', '#A0E797'] }]"
-                :legend="false"
-              />
-            </ClientOnly>
-          </div>
-
-          <div class="dash-card">
-            <h3 class="dash-card__title">Requests status</h3>
-            <div v-if="loadingRequests" class="dash-state">Loading...</div>
-            <div v-else-if="donutData.every(v => v === 0)" class="dash-state">No request data yet.</div>
-            <ClientOnly v-else>
-              <AppChartDonut
-                :labels="['Awaiting answer', 'For Approval', 'Rejected', 'Complete']"
-                :data="donutData"
-                :colors="['#F3DFA9', '#C5CBE4', '#E49890', '#A0E797']"
-                cutout="0%"
-              />
-            </ClientOnly>
-          </div>
+        <div class="dash-stat">
+          <p class="dash-stat__label">Suppliers</p>
+          <p class="dash-stat__value">{{ stats.suppliers }}</p>
         </div>
+        <div class="dash-stat">
+          <p class="dash-stat__label">Forms</p>
+          <p class="dash-stat__value">{{ stats.forms }}</p>
+        </div>
+      </div>
 
-        <!-- Yearly view -->
-        <div class="dash-card dash__yearly">
-          <h3 class="dash-card__title">Yearly view</h3>
+      <!-- Charts row -->
+      <div class="dash-charts-row dash__charts">
+        <div class="dash-card">
+          <h3 class="dash-card__title">Total request vs completed</h3>
           <div v-if="loadingRequests" class="dash-state">Loading...</div>
-          <div v-else-if="stats.requests === 0" class="dash-state">You don't have any requests yet.</div>
+          <div v-else-if="stats.requests === 0" class="dash-state">No request data yet.</div>
           <ClientOnly v-else>
-            <AppChartLine :labels="MONTHS" :datasets="lineDatasets" />
+            <AppChartBar :labels="['Total requests', 'Completed']"
+              :datasets="[{ label: '', data: [stats.requests, stats.completed], color: ['#367B8A', '#A0E797'] }]"
+              :legend="false" />
           </ClientOnly>
         </div>
+
+        <div class="dash-card">
+          <h3 class="dash-card__title">Requests status</h3>
+          <div v-if="loadingRequests" class="dash-state">Loading...</div>
+          <div v-else-if="donutData.every(v => v === 0)" class="dash-state">No request data yet.</div>
+          <ClientOnly v-else>
+            <AppChartDonut :labels="['Awaiting answer', 'For Approval', 'Rejected', 'Complete']" :data="donutData"
+              :colors="['#F3DFA9', '#C5CBE4', '#E49890', '#A0E797']" cutout="0%" />
+          </ClientOnly>
+        </div>
+      </div>
+
+      <!-- Yearly view -->
+      <div class="dash-card dash__yearly">
+        <h3 class="dash-card__title">Yearly view</h3>
+        <div v-if="loadingRequests" class="dash-state">Loading...</div>
+        <div v-else-if="stats.requests === 0" class="dash-state">You don't have any requests yet.</div>
+        <ClientOnly v-else>
+          <AppChartLine :labels="MONTHS" :datasets="lineDatasets" />
+        </ClientOnly>
+      </div>
 
       <!-- ── Right column: Recent requests ─────────────── -->
       <div class="dash__right">
@@ -69,7 +63,8 @@
           </div>
 
           <div v-if="loadingRequests" class="dash-state" style="padding: var(--space-6)">Loading...</div>
-          <div v-else-if="assignedEntries.length === 0 && approvalEntries.length === 0" class="dash-state" style="padding: var(--space-6)">
+          <div v-else-if="assignedEntries.length === 0 && approvalEntries.length === 0" class="dash-state"
+            style="padding: var(--space-6)">
             No recent requests.
           </div>
 
@@ -77,12 +72,9 @@
             <!-- Assigned to you -->
             <template v-if="assignedEntries.length > 0">
               <p class="dash-group-label">Assigned to you</p>
-              <NuxtLink
-                v-for="entry in assignedEntries"
+              <NuxtLink v-for="entry in assignedEntries"
                 :key="`a-${entry.requestId}-${entry.formId}-${entry.supplierId}`"
-                :to="`/requests/${entry.requestId}/edit`"
-                class="dash-entry"
-              >
+                :to="`/requests/${entry.requestId}/edit`" class="dash-entry">
                 <div class="dash-entry__main">
                   <p class="dash-entry__title">({{ entry.requestId }}) {{ entry.formName }}</p>
                   <p class="dash-entry__supplier">{{ entry.supplierName }}</p>
@@ -99,13 +91,11 @@
 
             <!-- For approval -->
             <template v-if="approvalEntries.length > 0">
-              <p class="dash-group-label" :class="{ 'dash-group-label--spaced': assignedEntries.length > 0 }">For Approval</p>
-              <NuxtLink
-                v-for="entry in approvalEntries"
+              <p class="dash-group-label" :class="{ 'dash-group-label--spaced': assignedEntries.length > 0 }">For
+                Approval</p>
+              <NuxtLink v-for="entry in approvalEntries"
                 :key="`p-${entry.requestId}-${entry.formId}-${entry.supplierId}`"
-                :to="`/requests/${entry.requestId}/edit`"
-                class="dash-entry"
-              >
+                :to="`/requests/${entry.requestId}/edit`" class="dash-entry">
                 <div class="dash-entry__main">
                   <p class="dash-entry__title">({{ entry.requestId }}) {{ entry.formName }}</p>
                   <p class="dash-entry__supplier">{{ entry.supplierName }}</p>
@@ -129,8 +119,8 @@
 <script setup lang="ts">
 definePageMeta({ middleware: 'auth' })
 
-const authStore = useAuthStore()
-const userName = computed(() => (authStore.user as Record<string, string> | null)?.name ?? 'there')
+const auth = useAuth()
+const userName = computed(() => (auth.user as Record<string, string> | null)?.name ?? 'there')
 
 interface RequestEntry {
   id: number
@@ -157,34 +147,27 @@ interface Request {
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
-const requests = ref<Request[]>([])
-const loadingRequests = ref(true)
-const supplierCount = ref(0)
-const formCount = ref(0)
+const api = useApi()
 
-onMounted(async () => {
-  const api = useApi()
-  const [reqRes, supRes, formRes] = await Promise.allSettled([
-    api<{ data: Request[] | { data: Request[] } }>('/requests'),
-    api<{ data: unknown[] | { data: unknown[] } }>('/suppliers'),
-    api<{ data: unknown[] | { data: unknown[] } }>('/forms'),
-  ])
+const [reqRes, supRes, formRes] = await Promise.allSettled([
+  api<{ data: Request[] | { data: Request[] } }>('/requests'),
+  api<{ data: unknown[] | { data: unknown[] } }>('/suppliers'),
+  api<{ data: unknown[] | { data: unknown[] } }>('/forms'),
+])
 
-  if (reqRes.status === 'fulfilled') {
-    const d = reqRes.value.data
-    requests.value = Array.isArray(d) ? d : d.data
-  }
-  loadingRequests.value = false
+const requests = reqRes.status === 'fulfilled'
+  ? (Array.isArray(reqRes.value.data) ? reqRes.value.data : reqRes.value.data.data)
+  : []
 
-  if (supRes.status === 'fulfilled') {
-    const d = supRes.value.data
-    supplierCount.value = (Array.isArray(d) ? d : d.data).length
-  }
-  if (formRes.status === 'fulfilled') {
-    const d = formRes.value.data
-    formCount.value = (Array.isArray(d) ? d : d.data).length
-  }
-})
+const supplierCount = supRes.status === 'fulfilled'
+  ? (Array.isArray(supRes.value.data) ? supRes.value.data : supRes.value.data.data).length
+  : 0
+
+const formCount = formRes.status === 'fulfilled'
+  ? (Array.isArray(formRes.value.data) ? formRes.value.data : formRes.value.data.data).length
+  : 0
+
+const loadingRequests = ref(false)
 
 // ── Stats ─────────────────────────────────────────────────
 const stats = computed(() => ({
@@ -192,8 +175,8 @@ const stats = computed(() => ({
   completed: ownRequests.value.filter(r =>
     r.forms.flatMap(f => f.suppliers).every(e => e.status.value === 'completed'),
   ).length,
-  suppliers: supplierCount.value,
-  forms: formCount.value,
+  suppliers: supplierCount,
+  forms: formCount,
 }))
 
 // ── Pie chart ────────────────────────────────────────────
@@ -254,19 +237,19 @@ function flattenEntries(reqs: Request[]): FlatEntry[] {
   ).sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
 }
 
-const myId = computed(() => authStore.user?.id as number)
-const isCompanyUser = computed(() => authStore.user?.roles === 'company-user')
+const myId = computed(() => auth.user?.id as number)
+const isCompanyUser = computed(() => auth.user?.roles === 'company-user')
 
 const ownRequests = computed(() =>
   isCompanyUser.value
-    ? requests.value.filter(r => r.created_by?.id === myId.value)
-    : requests.value,
+    ? requests.filter(r => r.created_by?.id === myId.value)
+    : requests,
 )
 
 const assignedEntries = computed(() => {
   const source = isCompanyUser.value
     ? ownRequests.value
-    : requests.value.filter(r => r.assigned_to?.id === myId.value)
+    : requests.filter(r => r.assigned_to?.id === myId.value)
   return flattenEntries(source).slice(0, 6)
 })
 
@@ -285,10 +268,21 @@ const approvalEntries = computed(() =>
 }
 
 /* order on small screens: stats → recent → charts → yearly */
-.dash__stats   { order: 1; }
-.dash__right   { order: 2; }
-.dash__charts  { order: 3; }
-.dash__yearly  { order: 4; }
+.dash__stats {
+  order: 1;
+}
+
+.dash__right {
+  order: 2;
+}
+
+.dash__charts {
+  order: 3;
+}
+
+.dash__yearly {
+  order: 4;
+}
 
 @media (min-width: 1536px) {
   .dash {
@@ -296,10 +290,28 @@ const approvalEntries = computed(() =>
     gap: var(--space-6);
   }
 
-  .dash__stats  { grid-column: 1; order: unset; }
-  .dash__charts { grid-column: 1; order: unset; }
-  .dash__yearly { grid-column: 1; order: unset; }
-  .dash__right  { grid-column: 2; grid-row: 1 / span 4; order: unset; position: sticky; top: var(--space-6); }
+  .dash__stats {
+    grid-column: 1;
+    order: unset;
+  }
+
+  .dash__charts {
+    grid-column: 1;
+    order: unset;
+  }
+
+  .dash__yearly {
+    grid-column: 1;
+    order: unset;
+  }
+
+  .dash__right {
+    grid-column: 2;
+    grid-row: 1 / span 4;
+    order: unset;
+    position: sticky;
+    top: var(--space-6);
+  }
 }
 
 /* ── Stat cards ───────────────────────────────────────── */
@@ -367,7 +379,7 @@ const approvalEntries = computed(() =>
   line-height: 1.3;
 }
 
-.dash-card > :last-child {
+.dash-card> :last-child {
   margin-top: auto;
 }
 
@@ -405,7 +417,10 @@ const approvalEntries = computed(() =>
   color: var(--color-primary);
   text-decoration: none;
 }
-.dash-recent__view-all:hover { text-decoration: underline; }
+
+.dash-recent__view-all:hover {
+  text-decoration: underline;
+}
 
 /* ── Group label ──────────────────────────────────────── */
 .dash-group-label {
@@ -435,7 +450,10 @@ const approvalEntries = computed(() =>
   text-decoration: none;
   transition: background 0.1s;
 }
-.dash-entry:hover { background: var(--color-surface-hover); }
+
+.dash-entry:hover {
+  background: var(--color-surface-hover);
+}
 
 .dash-entry__main {
   flex: 1;

@@ -26,9 +26,9 @@ export default defineNuxtConfig({
   },
 
   runtimeConfig: {
+    apiBaseUrl: process.env.NUXT_API_SECRET_URL,
     public: {
-      apiBase: 'http://localhost:8000/api',
-      apiOrigin: 'http://localhost:8000',
+      frontendUrl: process.env.NUXT_PUBLIC_FRONTEND_URL,
     },
   },
 })

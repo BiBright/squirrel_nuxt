@@ -48,10 +48,10 @@ onMounted(async () => {
   loadingRecord.value = true
 
   // Try auth store first (for the logged-in user's own profile)
-  const authStore = useAuthStore()
-  if (String(authStore.user?.id) === id.value) {
-    form.name = (authStore.user?.name as string) ?? ''
-    form.email = (authStore.user?.email as string) ?? ''
+  const auth = useAuth()
+  if (String(auth.user?.id) === id.value) {
+    form.name = (auth.user?.name as string) ?? ''
+    form.email = (auth.user?.email as string) ?? ''
     loadingRecord.value = false
     return
   }

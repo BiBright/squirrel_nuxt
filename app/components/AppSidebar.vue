@@ -3,7 +3,7 @@
 
     <div class="app-sidebar__logo">
       <NuxtLink :to="isMaster ? '/admin' : '/'" @click="emit('close')">
-        <img src="/images/logo.png" alt="Squirrel" />
+        <!-- <span>Squirrel</span> -->
       </NuxtLink>
     </div>
 
@@ -114,15 +114,14 @@
 defineProps<{ isOpen: boolean }>()
 const emit = defineEmits<{ close: [] }>()
 
-const authStore = useAuthStore()
-const isMaster = computed(() => authStore.user?.roles === 'master')
-const isCompanyUser = computed(() => authStore.user?.roles === 'company-user')
+const auth = useAuth()
+const isMaster = computed(() => auth.user?.roles === 'master')
+const isCompanyUser = computed(() => auth.user?.roles === 'company-user')
 
 const modelsOpen = ref(false)
 
 function onLogout() {
   emit('close')
-  authStore.logout()
-  navigateTo('/login')
+  auth.logout()
 }
 </script>

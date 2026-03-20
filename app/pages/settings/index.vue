@@ -135,18 +135,18 @@
 <script setup lang="ts">
 definePageMeta({ middleware: 'auth' })
 
-const authStore = useAuthStore()
+const auth = useAuth()
 const api = useApi()
 const router = useRouter()
 const toast = useAppToast()
 
-const user = computed(() => authStore.user as Record<string, string> | null)
+const user = computed(() => auth.user as Record<string, string> | null)
 const initials = computed(() => {
   const name = user.value?.name ?? ''
   return name.split(' ').slice(0, 2).map((w: string) => w[0]).join('').toUpperCase() || 'U'
 })
 
-const isCompanyUser = computed(() => authStore.user?.roles === 'company-user')
+const isCompanyUser = computed(() => auth.user?.roles === 'company-user')
 const activeSection = ref('profile')
 const mobileShowContent = ref(false)
 
@@ -238,7 +238,7 @@ async function saveProfile() {
       method: 'PATCH',
       body: { name: profileForm.name, email: profileForm.email },
     }) as { data: Record<string, unknown> }
-    authStore.setUser(res.data)
+    auth.setUser(res.data)
     toast.success('Profile updated', { category: 'profile' })
   }
   catch (err: unknown) {
@@ -270,7 +270,6 @@ async function savePassword() {
 }
 
 function onLogout() {
-  authStore.logout()
-  router.push('/login')
+  auth.logout()
 }
 </script>

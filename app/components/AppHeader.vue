@@ -24,8 +24,8 @@
 </template>
 
 <script setup lang="ts">
-const authStore = useAuthStore()
-const user = computed(() => authStore.user as Record<string, string> | null)
+const auth = useAuth()
+const user = computed(() => auth.user as Record<string, string> | null)
 const initials = computed(() => {
   const name = user.value?.name ?? ''
   return name

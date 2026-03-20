@@ -80,7 +80,7 @@ interface User {
   name: string
 }
 
-const authStore = useAuthStore()
+const auth = useAuth()
 const toast = useAppToast()
 const requests = ref<Request[]>([])
 const users = ref<User[]>([])
@@ -115,8 +115,8 @@ onMounted(async () => {
 
 const filtered = computed(() => {
   let result = [...requests.value]
-  if (authStore.user?.roles === 'company-user') {
-    result = result.filter(r => r.created_by?.id === (authStore.user?.id as number))
+  if (auth.user?.roles === 'company-user') {
+    result = result.filter(r => r.created_by?.id === (auth.user?.id as number))
   }
   if (search.value) {
     const q = search.value.toLowerCase()

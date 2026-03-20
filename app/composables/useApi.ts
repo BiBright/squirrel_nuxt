@@ -1,37 +1,20 @@
 /**
- * Thin $fetch wrapper pointing to the backend API.
- * Injects Bearer token on every request and handles 401 globally.
+ * Thin $fetch wrapper pointing to Nuxt server-side API proxy routes.
+ * XSRF token injection and cookie forwarding are handled server-side.
  *
  * Usage:
  *   const api = useApi()
- *   const data = await api('/auth/me')
+ *   const data = await api('/fields')
  */
 export function useApi() {
-  const config = useRuntimeConfig()
-  const authStore = useAuthStore()
-
-  function getXsrfToken(): string {
-    return decodeURIComponent(
-      document.cookie
-        .split('; ')
-        .find(row => row.startsWith('XSRF-TOKEN='))
-        ?.split('=')[1] ?? '',
-    )
-  }
+  const auth = useAuth()
 
   return $fetch.create({
-    baseURL: config.public.apiBase,
+    baseURL: '/api',
     credentials: 'include',
-    onRequest({ options }) {
-      const token = getXsrfToken()
-      if (token) {
-        options.headers = { ...options.headers, 'X-XSRF-TOKEN': token }
-      }
-    },
     onResponseError({ response }) {
-      if (response.status === 401) {
-        authStore.logout()
-        navigateTo('/login')
+      if (response.status === 401 && import.meta.client) {
+        auth.logout()
       }
     },
   })
