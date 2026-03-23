@@ -1,0 +1,245 @@
+@use "sass:math";
+
+// ============================================================
+// Grid System — squirrel_nuxt
+// Mobile-first · 12 columns · Bootstrap-style padding gutters
+// ============================================================
+//
+// Breakpoint prefixes:
+//   (none)  320–767px   mobile
+//   sm      768px+      tablet
+//   md      1280px+     desktop
+//   xl      1440px+     desktop large  (nav sidebar: 288px)
+//   xxl     1536px+     desktop xlarge (nav sidebar: 324px)
+//
+// Usage:
+//   <div class="container">
+//     <div class="row">
+//       <div class="col-12 col-sm-6 col-md-4">...</div>
+//     </div>
+//   </div>
+// ============================================================
+
+// --- Breakpoints --------------------------------------------
+$bp-sm: 768px;
+$bp-md: 1280px;
+$bp-xl: 1440px;
+$bp-xxl: 1536px;
+
+// --- Nav sidebar widths (xl+) ------------------------------
+$nav-width-xl: 288px;
+$nav-width-xxl: 324px;
+
+// --- Columns -----------------------------------------------
+$grid-columns: 12;
+
+// ============================================================
+// Nav Container (fixed-width sidebar)
+// ============================================================
+
+.container-nav {
+  width: 100%;
+
+  @media (min-width: $bp-xl) {
+    width: $nav-width-xl;
+  }
+  @media (min-width: $bp-xxl) {
+    width: $nav-width-xxl;
+  }
+}
+
+// ============================================================
+// Main Container
+// ============================================================
+
+.container,
+.container-fluid {
+  width: 100%;
+  margin-right: auto;
+  margin-left: auto;
+  padding-right: 24px; // base margin
+  padding-left: 24px;
+
+  @media (min-width: $bp-sm) {
+    padding-right: 32px;
+    padding-left: 32px;
+  }
+
+  @media (min-width: $bp-md) {
+    padding-right: 20px;
+    padding-left: 20px;
+  }
+
+  @media (min-width: $bp-xl) {
+    padding-right: 24px;
+    padding-left: 24px;
+  }
+}
+
+// ============================================================
+// Row
+// ============================================================
+
+.row {
+  --gutter-x: 20px; // base gutter
+  --gutter-y: 0;
+
+  display: flex;
+  flex-wrap: wrap;
+  margin-top: calc(-1 * var(--gutter-y));
+  margin-right: calc(-0.5 * var(--gutter-x));
+  margin-left: calc(-0.5 * var(--gutter-x));
+
+  > * {
+    flex-shrink: 0;
+    width: 100%;
+    max-width: 100%;
+    padding-right: calc(var(--gutter-x) * 0.5);
+    padding-left: calc(var(--gutter-x) * 0.5);
+    margin-top: var(--gutter-y);
+  }
+
+  @media (min-width: $bp-sm) {
+    --gutter-x: 16px;
+  }
+  @media (min-width: $bp-md) {
+    --gutter-x: 20px;
+  }
+  @media (min-width: $bp-xl) {
+    --gutter-x: 24px;
+  }
+}
+
+// ============================================================
+// Display utilities
+// ============================================================
+
+.d-none  { display: none !important; }
+.d-block { display: block !important; }
+.d-flex  { display: flex !important; }
+
+@media (min-width: $bp-sm) {
+  .d-sm-none  { display: none !important; }
+  .d-sm-block { display: block !important; }
+  .d-sm-flex  { display: flex !important; }
+}
+
+@media (min-width: $bp-md) {
+  .d-md-none  { display: none !important; }
+  .d-md-block { display: block !important; }
+  .d-md-flex  { display: flex !important; }
+}
+
+@media (min-width: $bp-xl) {
+  .d-xl-none  { display: none !important; }
+  .d-xl-block { display: block !important; }
+  .d-xl-flex  { display: flex !important; }
+}
+
+// ============================================================
+// Columns — base (mobile, no prefix)
+// ============================================================
+
+.col {
+  flex: 1 0 0%;
+}
+
+.col-auto {
+  flex: 0 0 auto;
+  width: auto;
+}
+
+@for $i from 1 through $grid-columns {
+  .col-#{$i} {
+    flex: 0 0 auto;
+    width: math.percentage(math.div($i, $grid-columns));
+  }
+}
+
+// ============================================================
+// Columns — sm (768px+)
+// ============================================================
+
+@media (min-width: $bp-sm) {
+  .col-sm {
+    flex: 1 0 0%;
+  }
+
+  .col-sm-auto {
+    flex: 0 0 auto;
+    width: auto;
+  }
+
+  @for $i from 1 through $grid-columns {
+    .col-sm-#{$i} {
+      flex: 0 0 auto;
+      width: math.percentage(math.div($i, $grid-columns));
+    }
+  }
+}
+
+// ============================================================
+// Columns — md (1280px+)
+// ============================================================
+
+@media (min-width: $bp-md) {
+  .col-md {
+    flex: 1 0 0%;
+  }
+
+  .col-md-auto {
+    flex: 0 0 auto;
+    width: auto;
+  }
+
+  @for $i from 1 through $grid-columns {
+    .col-md-#{$i} {
+      flex: 0 0 auto;
+      width: math.percentage(math.div($i, $grid-columns));
+    }
+  }
+}
+
+// ============================================================
+// Columns — xl (1440px+)
+// ============================================================
+
+@media (min-width: $bp-xl) {
+  .col-xl {
+    flex: 1 0 0%;
+  }
+
+  .col-xl-auto {
+    flex: 0 0 auto;
+    width: auto;
+  }
+
+  @for $i from 1 through $grid-columns {
+    .col-xl-#{$i} {
+      flex: 0 0 auto;
+      width: math.percentage(math.div($i, $grid-columns));
+    }
+  }
+}
+
+// ============================================================
+// Columns — xxl (1536px+)
+// ============================================================
+
+@media (min-width: $bp-xxl) {
+  .col-xxl {
+    flex: 1 0 0%;
+  }
+
+  .col-xxl-auto {
+    flex: 0 0 auto;
+    width: auto;
+  }
+
+  @for $i from 1 through $grid-columns {
+    .col-xxl-#{$i} {
+      flex: 0 0 auto;
+      width: math.percentage(math.div($i, $grid-columns));
+    }
+  }
+}

@@ -1,50 +1,41 @@
 <template>
-  <div>
-    <AppPageHeader title="Requests" subtitle="Track and manage your requests" />
+  <div class="container">
+    <div class="row">
 
-    <AppListToolbar
-      v-model:search="search"
-      v-model:sort="sort"
-      :view="'list'"
-      hide-view-toggle
-      label="request"
-      add-label="New Request"
-      :total-count="filtered.length"
-      :selected-count="selectedCount"
-      @add="onAdd"
-      @delete="onDelete"
-    />
+      <div class="col-12 col-md-9">
+        <div class="col-12">
+          <AppBreadcrumb :items="[{ label: 'Requests' }]" />
+        </div>
+        <AppPageHeader title="Requests" />
 
-    <div v-if="loading" class="list-container">
-      <div class="list-empty">
-        <span class="material-icons-round">hourglass_empty</span>
-        <p>Loading requests...</p>
+        <AppListToolbar v-model:search="search" v-model:sort="sort" :view="'list'" hide-view-toggle label="request"
+          add-label="New Request" :total-count="filtered.length" :selected-count="selectedCount" @add="onAdd"
+          @delete="onDelete" />
+
+        <div v-if="loading" class="list-container">
+          <div class="list-empty">
+            <span class="material-icons-round">hourglass_empty</span>
+            <p>Loading requests...</p>
+          </div>
+        </div>
+
+        <AppBlankState v-else-if="blankState.show.value" :image="blankState.image.value" :title="blankState.title.value"
+          :message="blankState.message.value">
+          <AppButton @click="onAdd">
+            <span class="material-icons-round">add</span>
+            New Request
+          </AppButton>
+        </AppBlankState>
+
+        <RequestsTable v-else :requests="filtered" :users="users" :loading-users="loadingUsers" @assign="onAssign"
+          @remove="onRemove" @bulk-assign="onBulkAssign" @bulk-remove="onBulkRemove"
+          @selection-change="onSelectionChange" />
+      </div>
+
+      <div class="col-12 col-md-3 d-none d-md-block">
+        <RequestsFilter :requests="requests" @change="onFilterChange" />
       </div>
     </div>
-
-    <AppBlankState
-      v-else-if="blankState.show.value"
-      :image="blankState.image.value"
-      :title="blankState.title.value"
-      :message="blankState.message.value"
-    >
-      <AppButton @click="onAdd">
-        <span class="material-icons-round">add</span>
-        New Request
-      </AppButton>
-    </AppBlankState>
-
-    <RequestsTable
-      v-else
-      :requests="filtered"
-      :users="users"
-      :loading-users="loadingUsers"
-      @assign="onAssign"
-      @remove="onRemove"
-      @bulk-assign="onBulkAssign"
-      @bulk-remove="onBulkRemove"
-      @selection-change="onSelectionChange"
-    />
   </div>
 </template>
 
@@ -91,6 +82,7 @@ const sort = ref('recent')
 const view = ref<'list' | 'grid'>('list')
 const selectedCount = ref(0)
 const selectedEntryIds = ref<number[]>([])
+const activeFilters = ref({ status: [] as string[], forms: [] as string[], suppliers: [] as string[], assigned: [] as string[] })
 
 onMounted(async () => {
   const api = useApi()
@@ -125,6 +117,11 @@ const filtered = computed(() => {
       r.forms.some(f => f.form_name.toLowerCase().includes(q)),
     )
   }
+  const af = activeFilters.value
+  if (af.status.length) result = result.filter(r => r.forms.some(f => f.suppliers.some(s => af.status.includes(s.status.value))))
+  if (af.forms.length) result = result.filter(r => r.forms.some(f => af.forms.includes(f.form_name)))
+  if (af.suppliers.length) result = result.filter(r => r.forms.some(f => f.suppliers.some(s => af.suppliers.includes(s.supplier.name))))
+  if (af.assigned.length) result = result.filter(r => r.assigned_to != null && af.assigned.includes(r.assigned_to.name))
   if (sort.value === 'az') result.sort((a, b) => displayTitle(a).localeCompare(displayTitle(b)))
   else if (sort.value === 'za') result.sort((a, b) => displayTitle(b).localeCompare(displayTitle(a)))
   else if (sort.value === 'oldest') result.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
@@ -164,6 +161,7 @@ async function onRemove(req: Request) {
   catch (err) { toast.error(err, 'Failed to remove request', { category: 'request' }) }
 }
 
+function onFilterChange(f: typeof activeFilters.value) { activeFilters.value = f }
 function onAdd() { navigateTo('/requests/create') }
 function onDelete() { selectedCount.value = 0 }
 
@@ -237,4 +235,3 @@ function formatDate(date: string): string {
   return new Date(date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
 }
 </script>
-

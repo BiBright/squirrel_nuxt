@@ -3,9 +3,6 @@
     <table class="app-table">
       <thead class="app-table__head">
         <tr>
-          <th class="app-table__th app-table__th--check">
-            <input type="checkbox" :checked="allSelected" @change="toggleAll" />
-          </th>
           <th
             v-for="col in columns"
             :key="col.key"
@@ -14,6 +11,7 @@
           >
             {{ col.label }}
           </th>
+          <th v-if="buttonEdit" class="app-table__th app-table__th--action" />
           <th v-if="buttonDelete" class="app-table__th app-table__th--action" />
           <th v-if="dropDownActions.length" :colspan="dropDownActions.length" class="app-table__th app-table__th--action" />
         </tr>
@@ -23,15 +21,8 @@
         <template v-for="(row, rowIdx) in rows" :key="rowIdx">
           <tr
             class="app-table__row"
-            :class="{
-              'app-table__row--selected': selected.includes(rowIdx),
-              'app-table__row--open': openPanel !== null && openPanel.rowIdx === rowIdx,
-            }"
+            :class="{ 'app-table__row--open': openPanel !== null && openPanel.rowIdx === rowIdx }"
           >
-            <td class="app-table__td app-table__td--check">
-              <input type="checkbox" :checked="selected.includes(rowIdx)" @change="toggleSelect(rowIdx)" />
-            </td>
-
             <td
               v-for="col in columns"
               :key="col.key"
@@ -41,6 +32,12 @@
               <slot :name="`cell-${col.key}`" :value="row[col.key]" :row="row">
                 <span class="app-table__cell-text">{{ row[col.key] ?? '—' }}</span>
               </slot>
+            </td>
+
+            <td v-if="buttonEdit" class="app-table__td app-table__td--action">
+              <button class="app-table__action-btn app-table__action-btn--edit" title="Edit" @click="emit('edit', row, rowIdx)">
+                <span class="material-icons-round">edit</span>
+              </button>
             </td>
 
             <td v-if="buttonDelete" class="app-table__td app-table__td--action">
@@ -104,13 +101,14 @@ interface DropDownAction {
 const props = defineProps<{
   columns: Column[]
   rows: Record<string, unknown>[]
+  buttonEdit?: boolean
   buttonDelete?: boolean
   dropDown?: boolean | DropDownAction[]
 }>()
 
 const emit = defineEmits<{
+  edit: [row: Record<string, unknown>, index: number]
   delete: [row: Record<string, unknown>, index: number]
-  select: [indices: number[]]
 }>()
 
 const dropDownActions = computed<DropDownAction[]>(() => {
@@ -119,30 +117,15 @@ const dropDownActions = computed<DropDownAction[]>(() => {
   return props.dropDown
 })
 
-const selected = ref<number[]>([])
 const openPanel = ref<{ rowIdx: number, key: string } | null>(null)
 
 const totalCols = computed(() => {
-  let count = 1 + props.columns.length
+  let count = props.columns.length
+  if (props.buttonEdit) count++
   if (props.buttonDelete) count++
   count += dropDownActions.value.length
   return count
 })
-
-const allSelected = computed(() =>
-  props.rows.length > 0 && props.rows.every((_, i) => selected.value.includes(i)),
-)
-
-function toggleSelect(idx: number) {
-  const i = selected.value.indexOf(idx)
-  i === -1 ? selected.value.push(idx) : selected.value.splice(i, 1)
-  emit('select', selected.value)
-}
-
-function toggleAll() {
-  allSelected.value ? (selected.value = []) : (selected.value = props.rows.map((_, i) => i))
-  emit('select', selected.value)
-}
 
 function togglePanel(rowIdx: number, key: string) {
   if (openPanel.value?.rowIdx === rowIdx && openPanel.value?.key === key) {
@@ -163,7 +146,6 @@ function closePanel() {
   width: 100%;
   overflow-x: auto;
   border-radius: var(--radius-lg);
-  border: 1px solid var(--color-border);
   background: var(--color-surface);
 }
 
@@ -174,12 +156,23 @@ function closePanel() {
 }
 
 /* Head */
+
 .app-table__head {
-  border-bottom: 1px solid var(--color-border);
+  position: relative;
+}
+
+.app-table__head::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 20px;
+  right: 20px;
+  height: 1px;
+  background-color: var(--color-black20);
 }
 
 .app-table__th {
-  padding: var(--space-2) var(--space-4);
+  padding: 24px 0 16px;
   text-align: left;
   font-size: var(--text-xs);
   font-weight: 500;
@@ -189,19 +182,19 @@ function closePanel() {
   text-transform: uppercase;
 }
 
+.app-table__th:first-child { padding-left: 48px; }
+.app-table__th:last-child { padding-right: 32px; }
+
 .app-table__th--primary {
   min-width: 220px;
 }
 
-.app-table__th--check,
 .app-table__th--action {
   width: 40px;
   text-align: center;
 }
 
-/* Rows */
 .app-table__row {
-  border-bottom: 1px solid var(--color-border);
   transition: background 0.1s;
 }
 
@@ -210,11 +203,7 @@ function closePanel() {
 }
 
 .app-table__row:hover {
-  background: var(--color-surface-hover);
-}
-
-.app-table__row--selected {
-  background: var(--color-primary-subtle);
+  background: var(--color-primary-25);
 }
 
 .app-table__row--open {
@@ -223,12 +212,14 @@ function closePanel() {
 
 /* Cells */
 .app-table__td {
-  padding: var(--space-3) var(--space-4);
+  padding: 24px 0 16px;
   color: var(--color-text-muted);
   vertical-align: middle;
 }
 
-.app-table__td--check,
+.app-table__td:first-child { padding-left: 48px; }
+.app-table__td:last-child { padding-right: 32px; }
+
 .app-table__td--action {
   text-align: center;
   width: 40px;
@@ -273,9 +264,14 @@ function closePanel() {
   background: var(--color-surface-hover);
 }
 
-.app-table__action-btn--danger:hover {
-  color: var(--color-danger);
-  background: var(--color-danger-subtle);
+.app-table__action-btn--edit .material-icons-round {
+  color: var(--color-primary);
+  font-size: 20px;
+}
+
+.app-table__action-btn--danger .material-icons-round {
+  color: var(--color-black60);
+  font-size: 20px;
 }
 
 /* Dropdown panel */
@@ -285,7 +281,6 @@ function closePanel() {
 
 .app-table__dropdown-cell {
   padding: 0;
-  border-bottom: 1px solid var(--color-border);
 }
 
 .app-table__dropdown-panel {

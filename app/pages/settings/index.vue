@@ -1,11 +1,17 @@
 <template>
   <div>
-    <div class="page-header">
-      <h1 class="title01 page-header__title">Settings</h1>
+    <div class="container">
+      <div class="row">
+        <div class="col-12">
+          <AppBreadcrumb :items="[{ label: 'Settings' }]" />
     </div>
 
-    <div class="settings-layout">
-      <!-- Left menu -->
+        <div class="col-12">
+          <AppPageHeader title="Settings" />
+        </div>
+
+        <!-- Left menu -->
+        <div class="col-12 col-sm-4 col-md-2">
       <aside class="settings-menu" :class="{ 'settings-menu--hidden': mobileShowContent }">
         <div class="settings-menu__user">
           <div class="avatar">{{ initials }}</div>
@@ -30,8 +36,10 @@
           </button>
         </nav>
       </aside>
+        </div>
 
-      <!-- Right content -->
+        <!-- Right content -->
+        <div class="col-12 col-sm-8 col-md-10">
       <section class="settings-content" :class="{ 'settings-content--visible': mobileShowContent }">
         <button type="button" class="settings-back" @click="mobileShowContent = false">
           <span class="material-icons-round">arrow_back</span>
@@ -128,6 +136,9 @@
           </template>
         </div>
       </section>
+    </div>
+
+      </div>
     </div>
   </div>
 </template>

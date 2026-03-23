@@ -2,51 +2,61 @@
   <div>
     <AppPageHeader title="Dashboard" :subtitle="`Welcome back, ${userName}`" />
 
-    <div class="dash">
+    <div class="container">
+      <div class="dash">
 
         <!-- Stat cards -->
-        <div class="dash-stats dash__stats">
-          <div class="dash-stat">
-            <p class="dash-stat__label">Requests</p>
-            <p class="dash-stat__value">{{ stats.requests }}</p>
+        <div class="row dash__stats">
+          <div class="col-12 col-sm-4 col-md-2">
+            <div class="dash-stat">
+              <p class="dash-stat__label">Requests</p>
+              <p class="dash-stat__value">{{ stats.requests }}</p>
+            </div>
           </div>
-          <div class="dash-stat">
-            <p class="dash-stat__label">Suppliers</p>
-            <p class="dash-stat__value">{{ stats.suppliers }}</p>
+          <div class="col-6 col-sm-4 col-md-2">
+            <div class="dash-stat">
+              <p class="dash-stat__label">Suppliers</p>
+              <p class="dash-stat__value">{{ stats.suppliers }}</p>
+            </div>
           </div>
-          <div class="dash-stat">
-            <p class="dash-stat__label">Forms</p>
-            <p class="dash-stat__value">{{ stats.forms }}</p>
+          <div class="col-6 col-sm-4 col-md-2">
+            <div class="dash-stat">
+              <p class="dash-stat__label">Forms</p>
+              <p class="dash-stat__value">{{ stats.forms }}</p>
+            </div>
           </div>
         </div>
 
         <!-- Charts row -->
-        <div class="dash-charts-row dash__charts">
-          <div class="dash-card">
-            <h3 class="dash-card__title">Total request vs completed</h3>
-            <div v-if="loadingRequests" class="dash-state">Loading...</div>
-            <div v-else-if="stats.requests === 0" class="dash-state">No request data yet.</div>
-            <ClientOnly v-else>
-              <AppChartBar
-                :labels="['Total requests', 'Completed']"
-                :datasets="[{ label: '', data: [stats.requests, stats.completed], color: ['#367B8A', '#A0E797'] }]"
-                :legend="false"
-              />
-            </ClientOnly>
+        <div class="row dash__charts">
+          <div class="col-12 col-sm-6">
+            <div class="dash-card">
+              <h3 class="dash-card__title">Total request vs completed</h3>
+              <div v-if="loadingRequests" class="dash-state">Loading...</div>
+              <div v-else-if="stats.requests === 0" class="dash-state">No request data yet.</div>
+              <ClientOnly v-else>
+                <AppChartBar
+                  :labels="['Total requests', 'Completed']"
+                  :datasets="[{ label: '', data: [stats.requests, stats.completed], color: ['#367B8A', '#A0E797'] }]"
+                  :legend="false"
+                />
+              </ClientOnly>
+            </div>
           </div>
-
-          <div class="dash-card">
-            <h3 class="dash-card__title">Requests status</h3>
-            <div v-if="loadingRequests" class="dash-state">Loading...</div>
-            <div v-else-if="donutData.every(v => v === 0)" class="dash-state">No request data yet.</div>
-            <ClientOnly v-else>
-              <AppChartDonut
-                :labels="['Awaiting answer', 'For Approval', 'Rejected', 'Complete']"
-                :data="donutData"
-                :colors="['#F3DFA9', '#C5CBE4', '#E49890', '#A0E797']"
-                cutout="0%"
-              />
-            </ClientOnly>
+          <div class="col-12 col-sm-6">
+            <div class="dash-card">
+              <h3 class="dash-card__title">Requests status</h3>
+              <div v-if="loadingRequests" class="dash-state">Loading...</div>
+              <div v-else-if="donutData.every(v => v === 0)" class="dash-state">No request data yet.</div>
+              <ClientOnly v-else>
+                <AppChartDonut
+                  :labels="['Awaiting answer', 'For Approval', 'Rejected', 'Complete']"
+                  :data="donutData"
+                  :colors="['#F3DFA9', '#C5CBE4', '#E49890', '#A0E797']"
+                  cutout="0%"
+                />
+              </ClientOnly>
+            </div>
           </div>
         </div>
 
@@ -60,69 +70,71 @@
           </ClientOnly>
         </div>
 
-      <!-- ── Right column: Recent requests ─────────────── -->
-      <div class="dash__right">
-        <div class="dash-recent">
-          <div class="dash-recent__header">
-            <h2 class="dash-recent__title">Recent requests</h2>
-            <NuxtLink to="/requests" class="dash-recent__view-all">View All</NuxtLink>
-          </div>
+        <!-- Right column: Recent requests -->
+        <div class="dash__right">
+          <div class="dash-recent">
+            <div class="dash-recent__header">
+              <h2 class="dash-recent__title">Recent requests</h2>
+              <NuxtLink to="/requests" class="dash-recent__view-all">View All</NuxtLink>
+            </div>
 
-          <div v-if="loadingRequests" class="dash-state" style="padding: var(--space-6)">Loading...</div>
-          <div v-else-if="assignedEntries.length === 0 && approvalEntries.length === 0" class="dash-state" style="padding: var(--space-6)">
-            No recent requests.
-          </div>
+            <div v-if="loadingRequests" class="dash-state" style="padding: var(--space-6)">Loading...</div>
+            <div v-else-if="assignedEntries.length === 0 && approvalEntries.length === 0" class="dash-state" style="padding: var(--space-6)">
+              No recent requests.
+            </div>
 
-          <template v-else>
-            <!-- Assigned to you -->
-            <template v-if="assignedEntries.length > 0">
-              <p class="dash-group-label">Assigned to you</p>
-              <NuxtLink
-                v-for="entry in assignedEntries"
-                :key="`a-${entry.requestId}-${entry.formId}-${entry.supplierId}`"
-                :to="`/requests/${entry.requestId}/edit`"
-                class="dash-entry"
-              >
-                <div class="dash-entry__main">
-                  <p class="dash-entry__title">({{ entry.requestId }}) {{ entry.formName }}</p>
-                  <p class="dash-entry__supplier">{{ entry.supplierName }}</p>
-                </div>
-                <div class="dash-entry__right">
-                  <div class="dash-entry__date">
-                    <span>{{ entry.date }}</span>
-                    <span>{{ entry.time }}</span>
+            <template v-else>
+              <!-- Assigned to you -->
+              <template v-if="assignedEntries.length > 0">
+                <p class="dash-group-label">Assigned to you</p>
+                <NuxtLink
+                  v-for="entry in assignedEntries"
+                  :key="`a-${entry.requestId}-${entry.formId}-${entry.supplierId}`"
+                  :to="`/requests/${entry.requestId}/edit`"
+                  class="dash-entry"
+                >
+                  <div class="dash-entry__main">
+                    <p class="dash-entry__title">({{ entry.requestId }}) {{ entry.formName }}</p>
+                    <p class="dash-entry__supplier">{{ entry.supplierName }}</p>
                   </div>
-                  <span class="material-icons-round dash-entry__arrow">arrow_forward</span>
-                </div>
-              </NuxtLink>
-            </template>
-
-            <!-- For approval -->
-            <template v-if="approvalEntries.length > 0">
-              <p class="dash-group-label" :class="{ 'dash-group-label--spaced': assignedEntries.length > 0 }">For Approval</p>
-              <NuxtLink
-                v-for="entry in approvalEntries"
-                :key="`p-${entry.requestId}-${entry.formId}-${entry.supplierId}`"
-                :to="`/requests/${entry.requestId}/edit`"
-                class="dash-entry"
-              >
-                <div class="dash-entry__main">
-                  <p class="dash-entry__title">({{ entry.requestId }}) {{ entry.formName }}</p>
-                  <p class="dash-entry__supplier">{{ entry.supplierName }}</p>
-                </div>
-                <div class="dash-entry__right">
-                  <div class="dash-entry__date">
-                    <span>{{ entry.date }}</span>
-                    <span>{{ entry.time }}</span>
+                  <div class="dash-entry__right">
+                    <div class="dash-entry__date">
+                      <span>{{ entry.date }}</span>
+                      <span>{{ entry.time }}</span>
+                    </div>
+                    <span class="material-icons-round dash-entry__arrow">arrow_forward</span>
                   </div>
-                  <span class="material-icons-round dash-entry__arrow">arrow_forward</span>
-                </div>
-              </NuxtLink>
+                </NuxtLink>
+              </template>
+
+              <!-- For approval -->
+              <template v-if="approvalEntries.length > 0">
+                <p class="dash-group-label" :class="{ 'dash-group-label--spaced': assignedEntries.length > 0 }">For Approval</p>
+                <NuxtLink
+                  v-for="entry in approvalEntries"
+                  :key="`p-${entry.requestId}-${entry.formId}-${entry.supplierId}`"
+                  :to="`/requests/${entry.requestId}/edit`"
+                  class="dash-entry"
+                >
+                  <div class="dash-entry__main">
+                    <p class="dash-entry__title">({{ entry.requestId }}) {{ entry.formName }}</p>
+                    <p class="dash-entry__supplier">{{ entry.supplierName }}</p>
+                  </div>
+                  <div class="dash-entry__right">
+                    <div class="dash-entry__date">
+                      <span>{{ entry.date }}</span>
+                      <span>{{ entry.time }}</span>
+                    </div>
+                    <span class="material-icons-round dash-entry__arrow">arrow_forward</span>
+                  </div>
+                </NuxtLink>
+              </template>
             </template>
-          </template>
+          </div>
         </div>
-      </div><!-- /.dash__right -->
-    </div><!-- /.dash -->
+
+      </div>
+    </div>
   </div>
 </template>
 
@@ -282,12 +294,13 @@ const approvalEntries = computed(() =>
   grid-template-columns: 1fr;
   gap: var(--space-4);
   align-items: start;
+  padding-block: var(--space-4);
 }
 
 /* order on small screens: stats → recent → charts → yearly */
-.dash__stats   { order: 1; }
+.dash__stats   { order: 1; --gutter-y: var(--space-4); }
 .dash__right   { order: 2; }
-.dash__charts  { order: 3; }
+.dash__charts  { order: 3; --gutter-y: var(--space-4); }
 .dash__yearly  { order: 4; }
 
 @media (min-width: 1536px) {
@@ -303,18 +316,6 @@ const approvalEntries = computed(() =>
 }
 
 /* ── Stat cards ───────────────────────────────────────── */
-.dash-stats {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: var(--space-4);
-}
-
-@media (min-width: 768px) {
-  .dash-stats {
-    grid-template-columns: repeat(3, 1fr);
-  }
-}
-
 .dash-stat {
   background: var(--color-surface);
   border-radius: var(--radius-lg);
@@ -333,19 +334,6 @@ const approvalEntries = computed(() =>
   font-weight: 700;
   color: var(--color-primary);
   line-height: 1;
-}
-
-/* ── Charts row ───────────────────────────────────────── */
-.dash-charts-row {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: var(--space-4);
-}
-
-@media (min-width: 768px) {
-  .dash-charts-row {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  }
 }
 
 /* ── Generic card ─────────────────────────────────────── */

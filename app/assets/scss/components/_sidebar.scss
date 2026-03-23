@@ -19,7 +19,10 @@
     transform: translateX(0);
   }
 
-  // Mobile + tablet: slide down from below navbar
+  @media (min-width: $desktop-l) {
+    width: $sidebar-width-xxl;
+  }
+
   @media (max-width: #{$desktop - 1px}) {
     top: $header-height;
     bottom: auto;
@@ -32,7 +35,6 @@
     box-shadow: none;
   }
 
-  // Tablet: 75vh height
   @include tablet-only {
     height: 50vh;
   }
@@ -82,7 +84,7 @@
     display: none;
 
     @include desktop-up {
-      height: 64px;
+      height: 108px;
       padding: 0 24px;
       flex-shrink: 0;
       display: flex;
@@ -157,19 +159,15 @@
     }
   }
 
-  // ── Home item ─────────────────────────────────
-  // &__home { margin-bottom: 16px; }
-
   &__separator {
     height: 1px;
     background: $black20;
     border: none;
   }
 
-  // ── Models dropdown ───────────────────────────
   &__dropdown-toggle {
     &::after {
-      content: "\e5cf"; // expand_more
+      content: "\e5cf";
       font-family: "Material Icons Round";
       font-size: 20px;
       margin-left: auto;
@@ -220,7 +218,6 @@
   }
 }
 
-// ── Mobile backdrop ───────────────────────────────
 .sidebar-backdrop {
   display: none;
   position: fixed;

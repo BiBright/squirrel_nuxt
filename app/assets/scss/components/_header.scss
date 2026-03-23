@@ -1,10 +1,6 @@
 @use "../base/variables" as *;
 @use "../base/viewport" as *;
 
-// ================================
-// App Header (Top Bar)
-// ================================
-
 .app-header {
   position: fixed;
   top: 0;
@@ -21,6 +17,7 @@
   @include desktop-up {
     left: $sidebar-width;
     padding: 0 32px;
+    height: $header-height;
   }
 
   &__hamburger {

@@ -1,93 +1,78 @@
 <template>
   <div>
-    <AppPageHeader title="Fields" subtitle="Reusable input fields for your forms" />
+    <div class="container">
+      <div class="row">
+        <div class="col-12">
+          <AppBreadcrumb :items="[{ label: 'Models' }, { label: 'Fields', to: '/fields' }]" />
+        </div>
 
-    <AppListToolbar
-      v-model:search="search"
-      v-model:sort="sort"
-      v-model:view="view"
-      label="field"
-      add-label="New Field"
-      :total-count="filtered.length"
-      :selected-count="selectedCount"
-      @add="navigateTo('/fields/create')"
-      @delete="onDelete"
-    />
+        <AppPageHeader title="Fields"/>
 
-    <div v-if="loading" class="list-container">
-      <div class="list-empty">
-        <span class="material-icons-round">hourglass_empty</span>
-        <p>Loading fields...</p>
-      </div>
-    </div>
+        <div class="col-12">
+          <AppListToolbar v-model:search="search" v-model:sort="sort" v-model:view="view" label="field"
+            add-label="New Field" :total-count="filtered.length" :selected-count="selectedCount"
+            @add="navigateTo('/fields/create')" @delete="onDelete" />
+        </div>
 
-    <AppBlankState
-      v-else-if="blankState.show.value"
-      :image="blankState.image.value"
-      :title="blankState.title.value"
-      :message="blankState.message.value"
-    >
-      <AppButton to="/fields/create">
-        <span class="material-icons-round">add</span>
-        New Field
-      </AppButton>
-    </AppBlankState>
-
-    <template v-else-if="effectiveView === 'list'">
-      <AppTable
-        :columns="columns"
-        :rows="tableRows"
-        :button-delete="true"
-        @delete="onDeleteRow"
-        @select="onSelect"
-      >
-        <template #cell-name="{ value, row }">
-          <NuxtLink :to="`/fields/${row._raw.id}`" class="app-table__cell-link">{{ value }}</NuxtLink>
-          <span v-if="row.description" class="app-table__cell-sub">{{ row.description }}</span>
-        </template>
-
-        <template #cell-type="{ value }">
-          <AppBadge variant="neutral">{{ value }}</AppBadge>
-        </template>
-
-        <template #cell-status="{ value }">
-          <AppBadge :variant="value === 'Active' ? 'success' : 'danger'">{{ value }}</AppBadge>
-        </template>
-      </AppTable>
-    </template>
-
-    <!-- MOSAIC VIEW -->
-    <template v-else>
-      <div class="list-mosaic">
-        <div v-for="field in filtered" :key="field.id" class="list-card">
-          <div class="list-card__header">
-            <NuxtLink :to="`/fields/${field.id}`" class="list-card__title">{{ field.name }}</NuxtLink>
-          </div>
-          <div class="list-card__meta">
-            <div v-if="field.description" class="list-card__meta-row">
-              <span class="material-icons-round">notes</span>
-              {{ field.description }}
-            </div>
-            <div class="list-card__meta-row">
-              <span class="material-icons-round">category</span>
-              {{ field.type_label }}
-            </div>
-            <div class="list-card__meta-row">
-              <span class="material-icons-round">calendar_today</span>
-              {{ formatDate(field.created_at) }}
+        <div class="col-12">
+          <div v-if="loading" class="list-container">
+            <div class="list-empty">
+              <span class="material-icons-round">hourglass_empty</span>
+              <p>Loading fields...</p>
             </div>
           </div>
-          <div class="list-card__footer">
-            <AppBadge :variant="field.is_active ? 'success' : 'danger'">
-              {{ field.is_active ? 'Active' : 'Inactive' }}
-            </AppBadge>
-            <AppBadge variant="neutral">{{ field.type_label }}</AppBadge>
-          </div>
+
+          <AppBlankState v-else-if="blankState.show.value" :image="blankState.image.value"
+            :title="blankState.title.value" :message="blankState.message.value">
+            <AppButton to="/fields/create">
+              <span class="material-icons-round">add</span>
+              New Field
+            </AppButton>
+          </AppBlankState>
+
+          <template v-else-if="effectiveView === 'list'">
+            <AppTable :columns="columns" button-edit :rows="tableRows" @select="onSelect">
+              
+              <template #cell-name="{ value, row }">
+                <NuxtLink :to="`/fields/${row._raw.id}`" class="app-table__cell-link">{{ value }}</NuxtLink>
+                <span v-if="row.description" class="app-table__cell-sub">{{ row.description }}</span>
+              </template>
+
+              <template #cell-type="{ value }">
+                <AppBadge variant="neutral">{{ value }}</AppBadge>
+              </template>
+
+              <template #cell-status="{ value }">
+                <AppBadge :variant="value === 'Active' ? 'success' : 'danger'">{{ value }}</AppBadge>
+              </template>
+            </AppTable>
+          </template>
+
+          <!-- MOSAIC VIEW -->
+          <template v-else>
+            <div class="list-mosaic">
+              <div v-for="field in filtered" :key="field.id" class="list-card">
+                <div class="list-card__header">
+                  <NuxtLink :to="`/fields/${field.id}`" class="list-card__title">{{ field.name }}</NuxtLink>
+                </div>
+                <div class="list-card__meta">
+                  <div v-if="field.description" class="list-card__meta-row">
+                    {{ field.description }}
+                  </div>
+                </div>
+                <div class="list-card__footer">
+                  <AppBadge variant="neutral">{{ field.type_label }}</AppBadge>
+                </div>
+              </div>
+            </div>
+          </template>
+        </div>
+
+        <div class="col-12">
+          <AppPagination :page="page" :last-page="lastPage" :total="total" @go="goTo" />
         </div>
       </div>
-    </template>
-
-    <AppPagination :page="page" :last-page="lastPage" :total="total" @go="goTo" />
+    </div>
   </div>
 </template>
 
@@ -100,15 +85,11 @@ interface Field {
   description: string | null
   type: string
   type_label: string
-  is_active: boolean
-  created_at: string
 }
 
 const columns = [
-  { key: 'name',   label: 'Name',    primary: true },
-  { key: 'type',   label: 'Type' },
-  { key: 'status', label: 'Status' },
-  { key: 'date',   label: 'Created' },
+  { key: 'name', label: 'Field Name', primary: true },
+  { key: 'file', label: 'File' }
 ]
 
 interface PaginationMeta {

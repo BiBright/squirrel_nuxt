@@ -12,12 +12,10 @@
   margin-top: $header-height;
   height: calc(100vh - #{$header-height});
   overflow-y: auto;
-  padding: 24px;
   background: $white80;
 
   @include desktop-up {
     margin-left: $sidebar-width;
-    padding: 32px;
   }
 }
 

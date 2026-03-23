@@ -7,6 +7,10 @@
       </AppButton>
     </AppPageHeader>
 
+    <div class="container">
+      <div class="row">
+        <div class="col-12">
+
     <div v-if="loadingRecord" class="list-container">
       <div class="list-empty">
         <span class="material-icons-round">hourglass_empty</span>
@@ -133,6 +137,10 @@
         <AppButton type="submit" :loading="loading">{{ isEdit ? 'Update Form' : 'Save Form' }}</AppButton>
       </div>
     </form>
+
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 

@@ -1,82 +1,97 @@
 <template>
   <div>
-    <AppPageHeader title="Users" subtitle="Manage team members and access" />
 
-    <AppListToolbar
-      v-model:search="search"
-      v-model:sort="sort"
-      v-model:view="view"
-      label="user"
-      add-label="Create User"
-      :total-count="filtered.length"
-      :selected-count="selectedCount"
-      @add="onAdd"
-      @delete="onDelete"
-    />
+    <div class="container">
+      <div class="row">
+        <div class="col-12">
+          <AppBreadcrumb :items="[{ label: 'Users' }]" />
+        </div>
 
-    <div v-if="loading" class="list-container">
-      <div class="list-empty">
-        <span class="material-icons-round">hourglass_empty</span>
-        <p>Loading users...</p>
-      </div>
-    </div>
+        <AppPageHeader title="Users" />
 
-    <AppBlankState
-      v-else-if="blankState.show.value"
-      :image="blankState.image.value"
-      :title="blankState.title.value"
-      :message="blankState.message.value"
-    >
-      <AppButton @click="onAdd">
-        <span class="material-icons-round">add</span>
-        Create User
-      </AppButton>
-    </AppBlankState>
+        <div class="col-12">
+          <AppListToolbar
+            v-model:search="search"
+            v-model:sort="sort"
+            v-model:view="view"
+            label="user"
+            add-label="Create User"
+            :total-count="filtered.length"
+            :selected-count="selectedCount"
+            @add="onAdd"
+            @delete="onDelete"
+          />
+        </div>
 
-    <template v-else-if="effectiveView === 'list'">
-      <AppTable
-        :columns="columns"
-        :rows="tableRows"
-        :button-delete="true"
-        @delete="onDeleteRow"
-        @select="onSelect"
-      >
-        <template #cell-name="{ value, row }">
-          <NuxtLink :to="`/users/${row._raw.id}`" class="app-table__cell-link">{{ value }}</NuxtLink>
-          <span class="app-table__cell-sub">{{ row.email }}</span>
-        </template>
-
-        <template #cell-role="{ value }">
-          <AppBadge :variant="roleVariant(value as string)">{{ value }}</AppBadge>
-        </template>
-      </AppTable>
-    </template>
-
-    <!-- MOSAIC VIEW -->
-    <template v-else>
-      <div class="list-mosaic">
-        <div v-for="user in filtered" :key="user.id" class="list-card">
-          <div class="list-card__header">
-            <NuxtLink :to="`/users/${user.id}`" class="list-card__title">{{ user.name }}</NuxtLink>
-          </div>
-          <div class="list-card__meta">
-            <div class="list-card__meta-row">
-              <span class="material-icons-round">email</span>
-              {{ user.email }}
-            </div>
-            <div class="list-card__meta-row">
-              <span class="material-icons-round">badge</span>
-              {{ user.roles ?? '—' }}
+        <div class="col-12">
+          <div v-if="loading" class="list-container">
+            <div class="list-empty">
+              <span class="material-icons-round">hourglass_empty</span>
+              <p>Loading users...</p>
             </div>
           </div>
-          <div class="list-card__footer">
-            <AppBadge :variant="roleVariant(user.roles ?? '')">{{ user.roles ?? 'No role' }}</AppBadge>
-          </div>
+
+          <AppBlankState
+            v-else-if="blankState.show.value"
+            :image="blankState.image.value"
+            :title="blankState.title.value"
+            :message="blankState.message.value"
+          >
+            <AppButton @click="onAdd">
+              <span class="material-icons-round">add</span>
+              Create User
+            </AppButton>
+          </AppBlankState>
+
+          <template v-else-if="effectiveView === 'list'">
+            <AppTable
+              buttonn-edit
+              :columns="columns"
+              :rows="tableRows"
+              @delete="onDeleteRow"
+              @select="onSelect"
+            >
+              <template #cell-name="{ value, row }">
+                <NuxtLink :to="`/users/${row._raw.id}`" class="app-table__cell-link">{{ value }}</NuxtLink>
+                <span class="app-table__cell-sub">{{ row.email }}</span>
+              </template>
+
+              <template #cell-role="{ value }">
+                <AppBadge :variant="roleVariant(value as string)">{{ value }}</AppBadge>
+              </template>
+            </AppTable>
+          </template>
+
+          <!-- MOSAIC VIEW -->
+          <template v-else>
+            <div class="list-mosaic">
+              <div v-for="user in filtered" :key="user.id" class="list-card">
+                <div class="list-card__header">
+                  <NuxtLink :to="`/users/${user.id}`" class="list-card__title">{{ user.name }}</NuxtLink>
+                </div>
+                <div class="list-card__meta">
+                  <div class="list-card__meta-row">
+                    <span class="material-icons-round">email</span>
+                    {{ user.email }}
+                  </div>
+                  <div class="list-card__meta-row">
+                    <span class="material-icons-round">badge</span>
+                    {{ user.roles ?? '—' }}
+                  </div>
+                </div>
+                <div class="list-card__footer">
+                  <AppBadge :variant="roleVariant(user.roles ?? '')">{{ user.roles ?? 'No role' }}</AppBadge>
+                </div>
+              </div>
+            </div>
+          </template>
+        </div>
+
+        <div class="col-12">
+          <AppPagination :page="page" :last-page="lastPage" :total="total" @go="goTo" />
         </div>
       </div>
-    </template>
-
-    <AppPagination :page="page" :last-page="lastPage" :total="total" @go="goTo" />
+    </div>
   </div>
 </template>
 

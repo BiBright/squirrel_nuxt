@@ -7,59 +7,67 @@
       </AppButton>
     </AppPageHeader>
 
-    <div v-if="loadingRecord" class="list-container">
-      <div class="list-empty">
-        <span class="material-icons-round">hourglass_empty</span>
-        <p>Loading field...</p>
+    <div class="container">
+      <div class="row">
+        <div class="col-12">
+
+          <div v-if="loadingRecord" class="list-container">
+            <div class="list-empty">
+              <span class="material-icons-round">hourglass_empty</span>
+              <p>Loading field...</p>
+            </div>
+          </div>
+
+          <form v-else novalidate class="create-form" @submit.prevent="onSubmit">
+            <AppCard title="Field Details">
+              <AppInput
+                v-model="form.name"
+                label="Name"
+                placeholder="e.g. Company Registration Number"
+                :error="errors.name"
+              />
+              <AppInput
+                v-model="form.description"
+                label="Description"
+                type="textarea"
+                placeholder="Optional description for this field"
+                :optional="true"
+              />
+
+              <div class="form-group">
+                <label class="label01">Type</label>
+                <p v-if="errors.type" class="input-error-msg">{{ errors.type }}</p>
+                <div class="field-type-grid">
+                  <label
+                    v-for="t in FIELD_TYPES"
+                    :key="t.value"
+                    class="field-type-option"
+                    :class="{ 'is-selected': form.type === t.value }"
+                  >
+                    <input v-model="form.type" type="radio" :value="t.value" class="field-type-radio" />
+                    <span class="material-icons-round">{{ t.icon }}</span>
+                    <span class="field-type-label">{{ t.label }}</span>
+                  </label>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="label01">
+                  <input v-model="form.is_active" type="checkbox" class="input-checkbox" />
+                  Active
+                </label>
+              </div>
+            </AppCard>
+
+            <div class="create-form__actions">
+              <AppButton variant="ghost" to="/fields">Cancel</AppButton>
+              <AppButton type="submit" :loading="loading">{{ isEdit ? 'Update Field' : 'Save Field' }}</AppButton>
+            </div>
+          </form>
+
+        </div>
       </div>
     </div>
-
-    <form v-else novalidate class="create-form" @submit.prevent="onSubmit">
-      <AppCard title="Field Details">
-        <AppInput
-          v-model="form.name"
-          label="Name"
-          placeholder="e.g. Company Registration Number"
-          :error="errors.name"
-        />
-        <AppInput
-          v-model="form.description"
-          label="Description"
-          type="textarea"
-          placeholder="Optional description for this field"
-          :optional="true"
-        />
-
-        <div class="form-group">
-          <label class="label01">Type</label>
-          <p v-if="errors.type" class="input-error-msg">{{ errors.type }}</p>
-          <div class="field-type-grid">
-            <label
-              v-for="t in FIELD_TYPES"
-              :key="t.value"
-              class="field-type-option"
-              :class="{ 'is-selected': form.type === t.value }"
-            >
-              <input v-model="form.type" type="radio" :value="t.value" class="field-type-radio" />
-              <span class="material-icons-round">{{ t.icon }}</span>
-              <span class="field-type-label">{{ t.label }}</span>
-            </label>
-          </div>
-        </div>
-
-        <div class="form-group">
-          <label class="label01">
-            <input v-model="form.is_active" type="checkbox" class="input-checkbox" />
-            Active
-          </label>
-        </div>
-      </AppCard>
-
-      <div class="create-form__actions">
-        <AppButton variant="ghost" to="/fields">Cancel</AppButton>
-        <AppButton type="submit" :loading="loading">{{ isEdit ? 'Update Field' : 'Save Field' }}</AppButton>
-      </div>
-    </form>
   </div>
 </template>
 

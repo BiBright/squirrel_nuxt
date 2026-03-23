@@ -24,8 +24,10 @@ export function useApi() {
     credentials: 'include',
     onRequest({ options }) {
       const token = getXsrfToken()
-      if (token) {
-        options.headers = { ...options.headers, 'X-XSRF-TOKEN': token }
+      options.headers = {
+        'Accept': 'application/json',
+        ...options.headers,
+        ...(token ? { 'X-XSRF-TOKEN': token } : {}),
       }
     },
     onResponseError({ response }) {

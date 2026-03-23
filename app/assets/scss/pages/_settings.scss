@@ -5,23 +5,14 @@
 // Settings Page
 // ================================
 
-.settings-layout {
-  display: flex;
-  height: 100%;
-  gap: 0;
-}
-
 // Left column — user info + nav
 .settings-menu {
-  width: 240px;
-  flex-shrink: 0;
   border-right: 1px solid $black20;
   padding-right: 24px;
   display: flex;
   flex-direction: column;
 
   @include mobile-only {
-    width: 100%;
     border-right: none;
     padding-right: 0;
 
@@ -289,7 +280,6 @@
 }
 
 .settings-content {
-  flex: 1;
   padding-left: 32px;
   overflow-y: auto;
 
