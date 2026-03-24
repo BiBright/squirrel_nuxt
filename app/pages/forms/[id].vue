@@ -1,142 +1,122 @@
 <template>
   <div>
-    <AppPageHeader :title="isEdit ? 'Edit Form' : 'New Form'" :subtitle="isEdit ? 'Update form template.' : 'Create a form template from your fields.'">
-      <AppButton variant="ghost" to="/forms">
-        <span class="material-icons-round">arrow_back</span>
-        Back
-      </AppButton>
-    </AppPageHeader>
-
     <div class="container">
       <div class="row">
         <div class="col-12">
-
-    <div v-if="loadingRecord" class="list-container">
-      <div class="list-empty">
-        <span class="material-icons-round">hourglass_empty</span>
-        <p>Loading form...</p>
-      </div>
-    </div>
-
-    <form v-else novalidate class="create-form" @submit.prevent="onSubmit">
-      <AppCard title="Form Details">
-        <AppInput
-          v-model="form.name"
-          label="Name"
-          placeholder="e.g. Supplier Qualification Form"
-          :error="errors.name"
-        />
-        <AppInput
-          v-model="form.description"
-          label="Description"
-          type="textarea"
-          placeholder="Optional description"
-          :optional="true"
-        />
-
-        <div class="form-group">
-          <label class="label01">Template File <span class="optional">(optional)</span></label>
-          <p class="label02">A reference document suppliers can download before filling the form.</p>
-
-          <!-- Existing template (edit mode) -->
-          <div v-if="isEdit && existingTemplate && !removeTemplate" class="file-selected">
-            <span class="material-icons-round">attach_file</span>
-            {{ existingTemplate }}
-            <button type="button" class="file-remove-btn" @click="removeTemplate = true">
-              <span class="material-icons-round">close</span>
-            </button>
-          </div>
-          <p v-else-if="isEdit && removeTemplate" class="label02" style="color: var(--color-danger)">
-            Template will be removed on save.
-            <button type="button" class="link" style="background:none;border:none;cursor:pointer;color:var(--color-primary)" @click="removeTemplate = false">Undo</button>
-          </p>
-
-          <input
-            ref="fileInput"
-            type="file"
-            class="input-file"
-            accept=".pdf,.doc,.docx,.xls,.xlsx"
-            @change="onFileChange"
-          />
-          <div v-if="selectedFile" class="file-selected">
-            <span class="material-icons-round">attach_file</span>
-            {{ selectedFile.name }}
-            <button type="button" class="file-remove-btn" @click="removeFile">
-              <span class="material-icons-round">close</span>
-            </button>
-          </div>
+          <AppBreadcrumb :items="[{ label: 'Models' }, { label: 'Forms', to: '/forms' }]" />
         </div>
 
-        <div class="form-group">
-          <label class="label01">
-            <input v-model="form.is_active" type="checkbox" class="input-checkbox" />
-            Active
-          </label>
-        </div>
-      </AppCard>
+        <div class="col-12">
+          <AppPageHeader :title="isEdit ? 'Edit Form' : 'New Form'" />
 
-      <AppCard title="Fields">
-        <p v-if="errors.fields" class="input-error-msg">{{ errors.fields }}</p>
-
-        <div class="fields-builder">
-          <div class="fields-builder__available">
-            <p class="label01">Available Fields</p>
-            <div v-if="loadingFields" class="create-select__loading">Loading fields...</div>
-            <div v-else-if="availableFields.length === 0" class="create-select__empty">
-              No fields yet.
-              <NuxtLink to="/fields/create" class="link">Create one</NuxtLink>
+          <div v-if="loadingRecord" class="list-container">
+            <div class="list-empty">
+              <span class="material-icons-round">hourglass_empty</span>
+              <p>Loading form...</p>
             </div>
-            <template v-else>
-              <AppInput v-model="fieldSearch" type="search" placeholder="Search fields..." />
-              <div class="create-select__list">
-                <div
-                  v-for="f in filteredAvailable"
-                  :key="f.id"
-                  class="create-select__item"
-                  :class="{ 'is-disabled': isSelected(f.id) }"
-                  @click="addField(f)"
-                >
-                  <span class="material-icons-round create-select__type-icon">{{ typeIcon(f.type) }}</span>
-                  <div>
-                    <span class="create-select__name">{{ f.name }}</span>
-                    <span class="create-select__sub">{{ f.type_label }}</span>
-                  </div>
-                  <span class="material-icons-round create-select__add-icon">{{ isSelected(f.id) ? 'check' : 'add' }}</span>
+          </div>
+
+          <form v-else novalidate class="create-form" @submit.prevent="onSubmit">
+            <AppCard>
+              <AppInput v-model="form.name" label="Title" placeholder="e.g. Supplier Qualification Form"
+                :error="errors.name" />
+              <AppInput v-model="form.description" label="Description" type="textarea"
+                placeholder="Optional description" :optional="true" />
+
+              <div class="form-group">
+                <label class="label01">Attach File <span class="optional">(optional)</span></label>
+                <p class="label02">Insert here the template file, if needed.</p>
+
+                <div v-if="isEdit && existingTemplate && !removeTemplate" class="file-selected">
+                  <span class="material-icons-round">attach_file</span>
+                  {{ existingTemplate }}
+                  <button type="button" class="file-remove-btn" @click="removeTemplate = true">
+                    <span class="material-icons-round">close</span>
+                  </button>
                 </div>
+
+                <p v-else-if="isEdit && removeTemplate" class="label02" style="color: var(--color-danger)">
+                  Template will be removed on save.
+                  <button type="button" class="link"
+                    style="background:none;border:none;cursor:pointer;color:var(--color-primary)"
+                    @click="removeTemplate = false">Undo</button>
+                </p>
+
+                <div v-if="selectedFile" class="file-selected">
+                  <span class="material-icons-round">attach_file</span>
+                  {{ selectedFile.name }}
+                  <button type="button" class="file-remove-btn" @click="removeFile">
+                    <span class="material-icons-round">close</span>
+                  </button>
+                </div>
+                <template v-else>
+                  <label for="form-file-input" class="attach-btn">
+                    <span class="material-icons-round">attach_file</span>
+                    Attach File
+                  </label>
+                  <input id="form-file-input" ref="fileInput" type="file" class="input-file" accept=".pdf,.doc,.docx,.xls,.xlsx" @change="onFileChange">
+                </template>
               </div>
-            </template>
-          </div>
 
-          <div class="fields-builder__selected">
-            <p class="label01">Selected Fields <span class="optional">({{ selectedFields.length }})</span></p>
-            <div v-if="selectedFields.length === 0" class="create-select__empty">
-              Click fields on the left to add them.
-            </div>
-            <div v-else class="selected-fields-list">
-              <div v-for="(sf, idx) in selectedFields" :key="sf.id" class="selected-field-row">
-                <span class="selected-field-order">{{ idx + 1 }}</span>
-                <div class="selected-field-info">
-                  <span class="create-select__name">{{ sf.name }}</span>
-                  <span class="create-select__sub">{{ sf.type_label }}</span>
-                </div>
-                <label class="selected-field-required">
-                  <input v-model="sf.required" type="checkbox" class="input-checkbox" />
-                  Required
+              <!-- <div class="form-group">
+                <label class="label01">
+                  <input v-model="form.is_active" type="checkbox" class="input-checkbox" />
+                  Active
                 </label>
-                <button type="button" class="file-remove-btn" @click="removeField(idx)">
-                  <span class="material-icons-round">close</span>
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </AppCard>
+              </div> -->
 
-      <div class="create-form__actions">
-        <AppButton variant="ghost" to="/forms">Cancel</AppButton>
-        <AppButton type="submit" :loading="loading">{{ isEdit ? 'Update Form' : 'Save Form' }}</AppButton>
-      </div>
-    </form>
+              <div class="fields-section-header">
+                <label class="label01">Add Fields</label>
+                <button v-if="selectedFields.length > 0" type="button" class="remove-all-btn" @click="selectedFields = []">Remove all</button>
+              </div>
+
+              <p v-if="errors.fields" class="input-error-msg">{{ errors.fields }}</p>
+
+              <div v-if="selectedFields.length > 0" class="fields-list">
+                <div v-for="(sf, idx) in selectedFields" :key="sf.id" class="field-row">
+                  <span class="field-row__name">{{ sf.name }}</span>
+                  <span class="field-row__type">{{ sf.type_label }}</span>
+                  <button type="button" class="field-row__delete" @click="removeField(idx)">
+                    <span class="material-icons-round">delete</span>
+                  </button>
+                </div>
+              </div>
+
+              <AppButton type="button" @click="showFieldModal = true">
+                <span class="material-icons-round">add</span> Add Field
+              </AppButton>
+            </AppCard>
+
+            <AppModal v-model="showFieldModal" title="Add Fields" size="wide">
+              <div v-if="loadingFields" class="create-select__loading">Loading fields...</div>
+              <div v-else-if="availableFields.length === 0" class="create-select__empty">
+                No fields yet.
+                <NuxtLink to="/fields/create" class="link">Create one</NuxtLink>
+              </div>
+              <template v-else>
+                <AppInput v-model="fieldSearch" type="search" placeholder="Search fields..." />
+                <div class="modal-field-list">
+                  <div v-for="f in filteredAvailable" :key="f.id" class="modal-field-item"
+                    :class="{ 'is-selected': isSelected(f.id) }" @click="addField(f)">
+                    <span class="material-icons-round modal-field-item__icon">{{ typeIcon(f.type) }}</span>
+                    <div class="modal-field-item__info">
+                      <span class="create-select__name">{{ f.name }}</span>
+                      <span class="create-select__sub">{{ f.type_label }}</span>
+                    </div>
+                    <span class="material-icons-round modal-field-item__action">{{ isSelected(f.id) ? 'check' : 'add' }}</span>
+                  </div>
+                </div>
+              </template>
+              <template #footer>
+                <AppButton @click="showFieldModal = false">Done</AppButton>
+              </template>
+            </AppModal>
+
+            <div class="create-form__actions">
+              <AppButton variant="ghost" to="/forms">Cancel</AppButton>
+              <AppButton type="submit" :loading="loading">{{ isEdit ? 'Update Form' : 'Save Form' }}</AppButton>
+            </div>
+          </form>
 
         </div>
       </div>
@@ -184,6 +164,7 @@ const toast = useAppToast()
 const loadingFields = ref(true)
 const loadingRecord = ref(false)
 const loading = ref(false)
+const showFieldModal = ref(false)
 
 const filteredAvailable = computed(() => {
   if (!fieldSearch.value) return availableFields.value
@@ -194,7 +175,6 @@ const filteredAvailable = computed(() => {
 onMounted(async () => {
   const api = useApi()
 
-  // Load available fields
   try {
     const res = await api<{ data: FieldOption[] | { data: FieldOption[] } }>('/fields')
     const d = res.data
@@ -203,7 +183,6 @@ onMounted(async () => {
   catch { availableFields.value = [] }
   finally { loadingFields.value = false }
 
-  // Load existing form if editing
   if (!isEdit.value) return
   loadingRecord.value = true
   try {
@@ -266,7 +245,6 @@ async function onSubmit() {
     })
 
     if (isEdit.value) {
-      // Laravel doesn't parse FormData on PATCH — spoof via POST
       body.append('_method', 'PATCH')
       if (removeTemplate.value) body.append('remove_template', 'true')
       await api(`/forms/${id.value}`, { method: 'POST', body })
@@ -286,7 +264,11 @@ async function onSubmit() {
 </script>
 
 <style scoped>
-.create-form { display: flex; flex-direction: column; gap: var(--space-6); }
+.create-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
 
 .create-form__actions {
   display: flex;
@@ -295,17 +277,47 @@ async function onSubmit() {
   padding-bottom: var(--space-8);
 }
 
-.input-checkbox { margin-right: var(--space-2); cursor: pointer; }
+.input-checkbox {
+  margin-right: var(--space-2);
+  cursor: pointer;
+}
 
-.input-file { display: block; margin-top: var(--space-2); font-size: var(--text-sm); }
+.input-file {
+  display: none;
+}
+
+.attach-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+  padding: var(--space-2) var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-primary-25);
+  color: var(--color-primary);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.attach-btn:hover {
+  background: var(--color-primary-subtle);
+}
+
+.attach-btn .material-icons-round {
+  font-size: 18px;
+}
 
 .file-selected {
+  width: fit-content;
+  color: var(--color-primary);
   display: flex;
   align-items: center;
   gap: var(--space-2);
   margin-top: var(--space-2);
-  padding: var(--space-2) var(--space-3);
-  background: var(--color-surface-hover);
+  padding: var(--space-3) var(--space-6);
+  background: var(--color-primary-25);
   border-radius: var(--radius-md);
   font-size: var(--text-sm);
 }
@@ -320,26 +332,81 @@ async function onSubmit() {
   align-items: center;
   padding: 0;
 }
-.file-remove-btn:hover { color: var(--color-danger); }
 
-.fields-builder {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: var(--space-4);
-  margin-top: var(--space-2);
+.file-remove-btn:hover {
+  color: var(--color-danger);
 }
-@media (max-width: 768px) { .fields-builder { grid-template-columns: 1fr; } }
 
-.create-select__list {
+.fields-section-header {
+  margin-bottom: var(--space-6);
+}
+
+.remove-all-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: var(--text-sm);
+  color: var(--color-primary);
+  padding: 0;
+}
+
+.remove-all-btn:hover {
+  text-decoration: underline;
+}
+
+.fields-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
+}
+
+.field-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--color-black10);
+  border-radius: var(--radius-md);
+  background-color: var(--color-white);
+}
+
+.field-row:hover {
+  background-color: var(--color-white60);
+}
+
+.field-row__name {
+  flex: 1;
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--color-primary);
+}
+
+.field-row__type {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+
+.field-row__delete {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--color-text-muted);
+  display: flex;
+  align-items: center;
+  padding: 0;
+}
+
+.modal-field-list {
   display: flex;
   flex-direction: column;
   gap: var(--space-1);
   margin-top: var(--space-3);
-  max-height: 300px;
+  max-height: 360px;
   overflow-y: auto;
 }
 
-.create-select__item {
+.modal-field-item {
   display: flex;
   align-items: center;
   gap: var(--space-2);
@@ -348,36 +415,51 @@ async function onSubmit() {
   cursor: pointer;
   transition: background 0.15s;
 }
-.create-select__item:hover:not(.is-disabled) { background: var(--color-surface-hover); }
-.create-select__item.is-disabled { opacity: 0.4; cursor: default; }
 
-.create-select__type-icon { font-size: 18px; color: var(--color-text-muted); }
-.create-select__add-icon { margin-left: auto; font-size: 18px; color: var(--color-text-muted); }
-.create-select__name { font-size: var(--text-sm); font-weight: 500; display: block; }
-.create-select__sub { font-size: var(--text-xs); color: var(--color-text-muted); display: block; }
-.create-select__loading, .create-select__empty { font-size: var(--text-sm); color: var(--color-text-muted); padding: var(--space-3) 0; }
-.link { color: var(--color-primary); text-decoration: underline; }
-
-.selected-fields-list { display: flex; flex-direction: column; gap: var(--space-2); margin-top: var(--space-3); }
-
-.selected-field-row {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  padding: var(--space-2) var(--space-3);
+.modal-field-item:hover:not(.is-selected) {
   background: var(--color-surface-hover);
-  border-radius: var(--radius-md);
 }
 
-.selected-field-order { font-size: var(--text-sm); color: var(--color-text-muted); min-width: 18px; text-align: center; }
-.selected-field-info { flex: 1; }
-.selected-field-required {
-  display: flex;
-  align-items: center;
-  gap: var(--space-1);
+.modal-field-item.is-selected {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.modal-field-item__icon {
+  font-size: 18px;
+  color: var(--color-text-muted);
+}
+
+.modal-field-item__info {
+  flex: 1;
+}
+
+.modal-field-item__action {
+  font-size: 18px;
+  color: var(--color-text-muted);
+}
+
+.create-select__name {
+  font-size: var(--text-sm);
+  font-weight: 500;
+  display: block;
+}
+
+.create-select__sub {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  display: block;
+}
+
+.create-select__loading,
+.create-select__empty {
   font-size: var(--text-sm);
   color: var(--color-text-muted);
-  white-space: nowrap;
-  cursor: pointer;
+  padding: var(--space-3) 0;
+}
+
+.link {
+  color: var(--color-primary);
+  text-decoration: underline;
 }
 </style>

@@ -1,9 +1,11 @@
 <template>
   <div>
-    <AppPageHeader title="Dashboard" :subtitle="`Welcome back, ${userName}`" />
 
     <div class="container">
       <div class="dash">
+
+
+        <AppPageHeader title="Dashboard" />
 
         <!-- Stat cards -->
         <div class="row dash__stats">
@@ -70,7 +72,6 @@
           </ClientOnly>
         </div>
 
-        <!-- Right column: Recent requests -->
         <div class="dash__right">
           <div class="dash-recent">
             <div class="dash-recent__header">

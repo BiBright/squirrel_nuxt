@@ -3,70 +3,53 @@
     <table class="app-table">
       <thead class="app-table__head">
         <tr>
-          <th
-            v-for="col in columns"
-            :key="col.key"
-            class="app-table__th"
-            :class="{ 'app-table__th--primary': col.primary }"
-          >
+          <th v-for="col in columns" :key="col.key" class="app-table__th"
+            :class="{ 'app-table__th--primary': col.primary }">
             {{ col.label }}
           </th>
           <th v-if="buttonEdit" class="app-table__th app-table__th--action" />
           <th v-if="buttonDelete" class="app-table__th app-table__th--action" />
-          <th v-if="dropDownActions.length" :colspan="dropDownActions.length" class="app-table__th app-table__th--action" />
+          <th v-if="dropDownActions.length" :colspan="dropDownActions.length"
+            class="app-table__th app-table__th--action" />
         </tr>
       </thead>
 
       <tbody>
         <template v-for="(row, rowIdx) in rows" :key="rowIdx">
-          <tr
-            class="app-table__row"
-            :class="{ 'app-table__row--open': openPanel !== null && openPanel.rowIdx === rowIdx }"
-          >
-            <td
-              v-for="col in columns"
-              :key="col.key"
-              class="app-table__td"
-              :class="{ 'app-table__td--primary': col.primary }"
-            >
+          <tr class="app-table__row"
+            :class="{ 'app-table__row--open': openPanel !== null && openPanel.rowIdx === rowIdx }">
+            <td v-for="col in columns" :key="col.key" class="app-table__td"
+              :class="{ 'app-table__td--primary': col.primary }">
               <slot :name="`cell-${col.key}`" :value="row[col.key]" :row="row">
                 <span class="app-table__cell-text">{{ row[col.key] ?? '—' }}</span>
               </slot>
             </td>
 
             <td v-if="buttonEdit" class="app-table__td app-table__td--action">
-              <button class="app-table__action-btn app-table__action-btn--edit" title="Edit" @click="emit('edit', row, rowIdx)">
+              <button class="app-table__action-btn app-table__action-btn--edit" title="Edit"
+                @click="emit('edit', row, rowIdx)">
                 <span class="material-icons-round">edit</span>
               </button>
             </td>
 
             <td v-if="buttonDelete" class="app-table__td app-table__td--action">
-              <button class="app-table__action-btn app-table__action-btn--danger" title="Delete" @click="emit('delete', row, rowIdx)">
+              <button class="app-table__action-btn app-table__action-btn--danger" title="Delete"
+                @click="emit('delete', row, rowIdx)">
                 <span class="material-icons-round">delete</span>
               </button>
             </td>
 
-            <td
-              v-for="action in dropDownActions"
-              :key="action.key"
-              class="app-table__td app-table__td--action"
-            >
-              <button
-                class="app-table__action-btn"
+            <td v-for="action in dropDownActions" :key="action.key" class="app-table__td app-table__td--action">
+              <button class="app-table__action-btn"
                 :class="{ 'is-active': openPanel?.rowIdx === rowIdx && openPanel?.key === action.key }"
-                :title="action.label ?? 'More'"
-                @click="togglePanel(rowIdx, action.key)"
-              >
+                :title="action.label ?? 'More'" @click="togglePanel(rowIdx, action.key)">
                 <span class="material-icons-round">{{ action.icon ?? 'more_horiz' }}</span>
               </button>
             </td>
           </tr>
 
           <!-- Dropdown panel -->
-          <tr
-            v-if="openPanel !== null && openPanel.rowIdx === rowIdx"
-            class="app-table__dropdown-row"
-          >
+          <tr v-if="openPanel !== null && openPanel.rowIdx === rowIdx" class="app-table__dropdown-row">
             <td :colspan="totalCols" class="app-table__dropdown-cell">
               <div class="app-table__dropdown-panel">
                 <slot :name="`dropdown-${openPanel.key}`" :row="row" :close="closePanel" />
@@ -151,7 +134,8 @@ function closePanel() {
 
 .app-table {
   width: 100%;
-  border-collapse: collapse;
+  border-collapse: separate;
+  border-spacing: 0;
   font-size: var(--text-sm);
 }
 
@@ -182,8 +166,13 @@ function closePanel() {
   text-transform: uppercase;
 }
 
-.app-table__th:first-child { padding-left: 48px; }
-.app-table__th:last-child { padding-right: 32px; }
+.app-table__th:first-child {
+  padding-left: 48px;
+}
+
+.app-table__th:last-child {
+  padding-right: 32px;
+}
 
 .app-table__th--primary {
   min-width: 220px;
@@ -202,23 +191,35 @@ function closePanel() {
   border-bottom: none;
 }
 
-.app-table__row:hover {
+.app-table__row:hover td {
   background: var(--color-primary-25);
+}
+
+.app-table__row:hover td:first-child {
+  border-radius: 8px 0 0 8px;
+}
+
+.app-table__row:hover td:last-child {
+  border-radius: 0 8px 8px 0;
 }
 
 .app-table__row--open {
   background: var(--color-surface-hover);
 }
 
-/* Cells */
 .app-table__td {
-  padding: 24px 0 16px;
+  padding: 16px 0 16px;
   color: var(--color-text-muted);
   vertical-align: middle;
 }
 
-.app-table__td:first-child { padding-left: 48px; }
-.app-table__td:last-child { padding-right: 32px; }
+.app-table__td:first-child {
+  padding-left: 48px;
+}
+
+.app-table__td:last-child {
+  padding-right: 32px;
+}
 
 .app-table__td--action {
   text-align: center;

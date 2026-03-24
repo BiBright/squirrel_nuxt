@@ -7,20 +7,12 @@
           <AppBreadcrumb :items="[{ label: 'Models' }, { label: 'Forms', to: '/forms' }]" />
         </div>
 
-        <AppPageHeader title="Forms"/>
+        <AppPageHeader title="Forms" />
 
         <div class="col-12">
-          <AppListToolbar
-            v-model:search="search"
-            v-model:sort="sort"
-            v-model:view="view"
-            label="form"
-            add-label="New Form"
-            :total-count="filtered.length"
-            :selected-count="selectedCount"
-            @add="navigateTo('/forms/create')"
-            @delete="onDelete"
-          />
+          <AppListToolbar v-model:search="search" v-model:sort="sort" v-model:view="view" label="form"
+            add-label="New Form" :total-count="filtered.length" :selected-count="selectedCount"
+            @add="navigateTo('/forms/create')" @delete="onDelete" />
         </div>
 
         <div class="col-12">
@@ -31,12 +23,8 @@
             </div>
           </div>
 
-          <AppBlankState
-            v-else-if="blankState.show.value"
-            :image="blankState.image.value"
-            :title="blankState.title.value"
-            :message="blankState.message.value"
-          >
+          <AppBlankState v-else-if="blankState.show.value" :image="blankState.image.value"
+            :title="blankState.title.value" :message="blankState.message.value">
             <AppButton to="/forms/create">
               <span class="material-icons-round">add</span>
               New Form
@@ -44,15 +32,9 @@
           </AppBlankState>
 
           <template v-else-if="effectiveView === 'list'">
-            <AppTable
-              :columns="columns"
-              :rows="tableRows"
-              :button-delete="true"
-              @select="onSelect"
-            >
+            <AppTable :columns="columns" :rows="tableRows" button-edit @select="onSelect">
               <template #cell-name="{ value, row }">
                 <NuxtLink :to="`/forms/${row._raw.id}`" class="app-table__cell-link">{{ value }}</NuxtLink>
-                <span v-if="row.description" class="app-table__cell-sub">{{ row.description }}</span>
               </template>
 
               <template #cell-fields="{ value }">
@@ -80,7 +62,7 @@
                   <div v-if="form.description" class="list-card__meta-row">
                     {{ form.description }}
                   </div>
-                  
+
                   <div v-if="form.has_template" class="list-card__meta-row">
                     <span class="material-icons-round">attach_file</span>
                     {{ form.template_file_name }}
@@ -110,8 +92,8 @@ interface Form {
 }
 
 const columns = [
-  { key: 'name',     label: 'Name',     primary: true },
-  { key: 'description',     label: 'Description' },
+  { key: 'name', label: 'Name', primary: true },
+  { key: 'description', label: 'Description' },
   { key: 'file', label: 'File' }
 ]
 

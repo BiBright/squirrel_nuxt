@@ -6,10 +6,6 @@
 // ================================
 
 .card {
-  padding: 20px;
-  transition: box-shadow 0.2s;
-
-  &:hover { box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06); }
 
   &__header {
     display: flex;

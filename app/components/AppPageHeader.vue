@@ -14,3 +14,9 @@ defineProps<{
   subtitle?: string
 }>()
 </script>
+
+<style scoped>
+.page-header {
+  user-select: none;
+}
+</style>
