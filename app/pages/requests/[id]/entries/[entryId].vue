@@ -425,29 +425,30 @@ function statusDescription(value: string): string {
   align-items: center;
   gap: var(--space-1);
   padding: var(--space-1) var(--space-3);
-  border-radius: var(--radius-full);
+  border-radius: var(--radius-md);
   font-size: var(--text-sm);
   font-weight: 600;
-  border-radius: 4px;
-  background-color: rgb(214, 255, 255);
   white-space: nowrap;
-  color: var(--color-text-muted);
-  width: fit-content
+  width: fit-content;
 }
 
 .entry-header__pill[data-status="awaiting_answer"] {
+  background: var(--color-yellow-50);
   color: var(--color-yellow);
 }
 
 .entry-header__pill[data-status="pending_approval"] {
+  background: var(--color-primary-25);
   color: var(--color-primary);
 }
 
 .entry-header__pill[data-status="completed"] {
+  background: var(--color-green-25);
   color: var(--color-green);
 }
 
 .entry-header__pill[data-status="cancelled"] {
+  background: var(--color-red-25);
   color: var(--color-danger);
 }
 
@@ -629,21 +630,40 @@ function statusDescription(value: string): string {
   color: var(--color-text);
 }
 
+.entry-status__card-header[data-status="awaiting_answer"] {
+  background: var(--color-yellow-25);
+}
+
+.entry-status__card-header[data-status="awaiting_answer"] h4,
+.entry-status__card-header[data-status="awaiting_answer"] .material-icons-round {
+  color: var(--color-yellow);
+}
+
 .entry-status__card-header[data-status="pending_approval"] {
-  background: var(--color-primary-subtle);
-}
-
-.entry-status__card-header[data-status="completed"] {
-  background: var(--color-surface-hover);
-}
-
-.entry-status__card-header[data-status="cancelled"] {
-  background: var(--color-danger-subtle);
+  background: var(--color-primary-25);
 }
 
 .entry-status__card-header[data-status="pending_approval"] h4,
 .entry-status__card-header[data-status="pending_approval"] .material-icons-round {
   color: var(--color-primary);
+}
+
+.entry-status__card-header[data-status="completed"] {
+  background: var(--color-green-25);
+}
+
+.entry-status__card-header[data-status="completed"] h4,
+.entry-status__card-header[data-status="completed"] .material-icons-round {
+  color: var(--color-green);
+}
+
+.entry-status__card-header[data-status="cancelled"] {
+  background: var(--color-red-25);
+}
+
+.entry-status__card-header[data-status="cancelled"] h4,
+.entry-status__card-header[data-status="cancelled"] .material-icons-round {
+  color: var(--color-danger);
 }
 
 .entry-status__card-body {

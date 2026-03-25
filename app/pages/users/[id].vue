@@ -1,32 +1,42 @@
 <template>
   <div>
-    <AppPageHeader :title="isEdit ? 'Edit User' : 'New User'" :subtitle="isEdit ? 'Update user details.' : 'Create a new team member.'">
-      <AppButton variant="ghost" to="/users">
-        <span class="material-icons-round">arrow_back</span>
-        Back
-      </AppButton>
-    </AppPageHeader>
+    <div class="container">
+      <div class="row">
 
-    <div v-if="loadingRecord" class="list-container">
-      <div class="list-empty">
-        <span class="material-icons-round">hourglass_empty</span>
-        <p>Loading user...</p>
+        <div class="col-12">
+          <AppBreadcrumb :items="[{ label: 'Users', to: '/users' }]" />
+        </div>
+
+        <div class="col-12">
+          <AppPageHeader :title="isEdit ? 'Edit User' : 'New User'" />
+        </div>
+
+        <div class="col-12">
+          <div v-if="loadingRecord" class="list-empty">
+            <span class="material-icons-round">hourglass_empty</span>
+            <p>Loading user...</p>
+          </div>
+
+          <form v-else novalidate class="create-form" @submit.prevent="onSubmit">
+            <div class="col-9">
+              <AppCard>
+                <AppInput v-model="form.name" label="Name" placeholder="Insert name" :error="errors.name" />
+                <AppInput v-model="form.email" label="Email" type="email" placeholder="Insert email" :error="errors.email" />
+                <AppInput v-model="form.phone" label="Phone number" placeholder="Insert phone number" :optional="true" />
+                <AppInput v-model="form.role" label="Role" placeholder="Insert role" :optional="true" />
+                <AppInput v-model="form.job_sector" label="Job Sector" placeholder="Insert job sector" :optional="true" />
+              </AppCard>
+            </div>
+
+            <div class="create-form__actions">
+              <AppButton variant="ghost" to="/users">Cancel</AppButton>
+              <AppButton type="submit" :loading="loading">{{ isEdit ? 'Update' : 'Save' }}</AppButton>
+            </div>
+          </form>
+        </div>
+
       </div>
     </div>
-
-    <form v-else novalidate class="create-form" @submit.prevent="onSubmit">
-      <AppCard title="User Details">
-        <AppInput v-model="form.name" label="Name" placeholder="Enter full name" :error="errors.name" />
-        <AppInput v-model="form.email" label="Email" type="email" placeholder="Enter email address" :error="errors.email" />
-        <AppInput v-model="form.phone" label="Phone" placeholder="Enter phone number" :optional="true" />
-        <AppInput v-model="form.job_sector" label="Job Sector" placeholder="Enter job sector" :optional="true" />
-      </AppCard>
-
-      <div class="create-form__actions">
-        <AppButton variant="ghost" to="/users">Cancel</AppButton>
-        <AppButton type="submit" :loading="loading">{{ isEdit ? 'Update User' : 'Save User' }}</AppButton>
-      </div>
-    </form>
   </div>
 </template>
 
@@ -120,7 +130,11 @@ async function onSubmit() {
 </script>
 
 <style scoped>
-.create-form { display: flex; flex-direction: column; gap: var(--space-6); }
+.create-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
 
 .create-form__actions {
   display: flex;
@@ -128,4 +142,5 @@ async function onSubmit() {
   gap: var(--space-3);
   padding-bottom: var(--space-8);
 }
+
 </style>

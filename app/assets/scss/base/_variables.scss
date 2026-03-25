@@ -69,7 +69,9 @@ $header-height: 108px;
   --color-green:  #{$green100};
   --color-green-75: #{$green75};
   --color-green-25: #{$green25};
-  --color-yellow: #{$yellow100};
+  --color-yellow:    #{$yellow100};
+  --color-yellow-50: #{$yellow50};
+  --color-yellow-25: #{$yellow25};
 
   // ── Semantic surface / text / border ──────────────
   --color-surface:        #{$white};

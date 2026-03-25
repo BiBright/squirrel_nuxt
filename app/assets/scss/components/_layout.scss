@@ -17,6 +17,10 @@
   @include desktop-up {
     margin-left: $sidebar-width;
   }
+
+  @include desktop-l-up {
+    margin-left: $sidebar-width-xxl;
+  }
 }
 
 .page-header {

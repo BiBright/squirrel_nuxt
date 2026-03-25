@@ -1,77 +1,50 @@
 <template>
-  <div>
-
+  <div class="dash-container">
     <div class="container">
+      <AppPageHeader title="Dashboard" />
+
       <div class="dash">
-
-
-        <AppPageHeader title="Dashboard" />
-
-        <!-- Stat cards -->
-        <div class="row dash__stats">
-          <div class="col-12 col-sm-4 col-md-2">
-            <div class="dash-stat">
-              <p class="dash-stat__label">Requests</p>
-              <p class="dash-stat__value">{{ stats.requests }}</p>
+        <div class="dash__stats">
+          <div class="row">
+            <div class="col-12 col-sm-4">
+              <div class="dash-stat">
+                <p class="dash-stat__label">Requests</p>
+                <p class="dash-stat__value">{{ stats.requests }}</p>
+              </div>
             </div>
-          </div>
-          <div class="col-6 col-sm-4 col-md-2">
-            <div class="dash-stat">
-              <p class="dash-stat__label">Suppliers</p>
-              <p class="dash-stat__value">{{ stats.suppliers }}</p>
+            <div class="col-6 col-sm-4">
+              <div class="dash-stat">
+                <p class="dash-stat__label">Suppliers</p>
+                <p class="dash-stat__value">{{ stats.suppliers }}</p>
+              </div>
             </div>
-          </div>
-          <div class="col-6 col-sm-4 col-md-2">
-            <div class="dash-stat">
-              <p class="dash-stat__label">Forms</p>
-              <p class="dash-stat__value">{{ stats.forms }}</p>
+            <div class="col-6 col-sm-4">
+              <div class="dash-stat">
+                <p class="dash-stat__label">Forms</p>
+                <p class="dash-stat__value">{{ stats.forms }}</p>
+              </div>
             </div>
           </div>
         </div>
 
-        <!-- Charts row -->
-        <div class="row dash__charts">
-          <div class="col-12 col-sm-6">
-            <div class="dash-card">
-              <h3 class="dash-card__title">Total request vs completed</h3>
-              <div v-if="loadingRequests" class="dash-state">Loading...</div>
-              <div v-else-if="stats.requests === 0" class="dash-state">No request data yet.</div>
-              <ClientOnly v-else>
-                <AppChartBar
-                  :labels="['Total requests', 'Completed']"
-                  :datasets="[{ label: '', data: [stats.requests, stats.completed], color: ['#367B8A', '#A0E797'] }]"
-                  :legend="false"
-                />
-              </ClientOnly>
-            </div>
-          </div>
-          <div class="col-12 col-sm-6">
-            <div class="dash-card">
-              <h3 class="dash-card__title">Requests status</h3>
-              <div v-if="loadingRequests" class="dash-state">Loading...</div>
-              <div v-else-if="donutData.every(v => v === 0)" class="dash-state">No request data yet.</div>
-              <ClientOnly v-else>
-                <AppChartDonut
-                  :labels="['Awaiting answer', 'For Approval', 'Rejected', 'Complete']"
-                  :data="donutData"
-                  :colors="['#F3DFA9', '#C5CBE4', '#E49890', '#A0E797']"
-                  cutout="0%"
-                />
-              </ClientOnly>
+        <div class="dash__chart">
+          <div class="row">
+            <div class="col-6 col-sm-12">
+              <div class="dash-card">
+                <h3 class="dash-card__title">Total request vs completed</h3>
+                <div v-if="loadingRequests" class="dash-state">Loading...</div>
+                <div v-else-if="stats.requests === 0" class="dash-state">No request data yet.</div>
+                <ClientOnly v-else>
+                  <AppChartBar :labels="['Total requests', 'Completed']"
+                    :datasets="[{ label: '', data: [stats.requests, stats.completed], color: ['#367B8A', '#A0E797'] }]"
+                    :legend="false" />
+                </ClientOnly>
+              </div>
             </div>
           </div>
         </div>
 
-        <!-- Yearly view -->
-        <div class="dash-card dash__yearly">
-          <h3 class="dash-card__title">Yearly view</h3>
-          <div v-if="loadingRequests" class="dash-state">Loading...</div>
-          <div v-else-if="stats.requests === 0" class="dash-state">You don't have any requests yet.</div>
-          <ClientOnly v-else>
-            <AppChartLine :labels="MONTHS" :datasets="lineDatasets" />
-          </ClientOnly>
-        </div>
-
+        <!-- Recent requests -->
         <div class="dash__right">
           <div class="dash-recent">
             <div class="dash-recent__header">
@@ -80,22 +53,19 @@
             </div>
 
             <div v-if="loadingRequests" class="dash-state" style="padding: var(--space-6)">Loading...</div>
-            <div v-else-if="assignedEntries.length === 0 && approvalEntries.length === 0" class="dash-state" style="padding: var(--space-6)">
+            <div v-else-if="assignedEntries.length === 0 && approvalEntries.length === 0" class="dash-state"
+              style="padding: var(--space-6)">
               No recent requests.
             </div>
 
             <template v-else>
-              <!-- Assigned to you -->
               <template v-if="assignedEntries.length > 0">
-                <p class="dash-group-label">Assigned to you</p>
-                <NuxtLink
-                  v-for="entry in assignedEntries"
+                <p class="dash-group-label">Recent</p>
+                <NuxtLink v-for="entry in assignedEntries"
                   :key="`a-${entry.requestId}-${entry.formId}-${entry.supplierId}`"
-                  :to="`/requests/${entry.requestId}/edit`"
-                  class="dash-entry"
-                >
+                  :to="`/requests/${entry.requestId}/edit`" class="dash-entry">
                   <div class="dash-entry__main">
-                    <p class="dash-entry__title">({{ entry.requestId }}) {{ entry.formName }}</p>
+                    <p class="dash-entry__title">{{ entry.formName }}</p>
                     <p class="dash-entry__supplier">{{ entry.supplierName }}</p>
                   </div>
                   <div class="dash-entry__right">
@@ -108,17 +78,14 @@
                 </NuxtLink>
               </template>
 
-              <!-- For approval -->
               <template v-if="approvalEntries.length > 0">
-                <p class="dash-group-label" :class="{ 'dash-group-label--spaced': assignedEntries.length > 0 }">For Approval</p>
-                <NuxtLink
-                  v-for="entry in approvalEntries"
+                <p class="dash-group-label" :class="{ 'dash-group-label--spaced': assignedEntries.length > 0 }">For
+                  Approval</p>
+                <NuxtLink v-for="entry in approvalEntries"
                   :key="`p-${entry.requestId}-${entry.formId}-${entry.supplierId}`"
-                  :to="`/requests/${entry.requestId}/edit`"
-                  class="dash-entry"
-                >
+                  :to="`/requests/${entry.requestId}/edit`" class="dash-entry">
                   <div class="dash-entry__main">
-                    <p class="dash-entry__title">({{ entry.requestId }}) {{ entry.formName }}</p>
+                    <p class="dash-entry__title">{{ entry.formName }}</p>
                     <p class="dash-entry__supplier">{{ entry.supplierName }}</p>
                   </div>
                   <div class="dash-entry__right">
@@ -143,7 +110,6 @@
 definePageMeta({ middleware: 'auth' })
 
 const authStore = useAuthStore()
-const userName = computed(() => (authStore.user as Record<string, string> | null)?.name ?? 'there')
 
 interface RequestEntry {
   id: number
@@ -167,8 +133,6 @@ interface Request {
   forms: RequestForm[]
   created_at: string
 }
-
-const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
 const requests = ref<Request[]>([])
 const loadingRequests = ref(true)
@@ -199,7 +163,7 @@ onMounted(async () => {
   }
 })
 
-// ── Stats ─────────────────────────────────────────────────
+// ── Stats ──────────────────────────────────────────────
 const stats = computed(() => ({
   requests: ownRequests.value.length,
   completed: ownRequests.value.filter(r =>
@@ -209,34 +173,7 @@ const stats = computed(() => ({
   forms: formCount.value,
 }))
 
-// ── Pie chart ────────────────────────────────────────────
-const donutData = computed(() => {
-  const c = { awaiting_answer: 0, pending_approval: 0, cancelled: 0, completed: 0 }
-  ownRequests.value.forEach(r =>
-    r.forms.flatMap(f => f.suppliers).forEach((e) => {
-      if (e.status.value in c) c[e.status.value as keyof typeof c]++
-    }),
-  )
-  return [c.awaiting_answer, c.pending_approval, c.cancelled, c.completed]
-})
-
-// ── Line chart ───────────────────────────────────────────
-const lineDatasets = computed(() => {
-  const total = new Array(12).fill(0)
-  const completed = new Array(12).fill(0)
-  ownRequests.value.forEach((r) => {
-    const m = new Date(r.created_at).getMonth()
-    total[m]++
-    const entries = r.forms.flatMap(f => f.suppliers)
-    if (entries.length > 0 && entries.every(e => e.status.value === 'completed')) completed[m]++
-  })
-  return [
-    { label: 'Total Requests', data: total, color: '#367B8A' },
-    { label: 'Completed Requests', data: completed, color: '#A0E797' },
-  ]
-})
-
-// ── Recent entries ───────────────────────────────────────
+// ── Recent entries ─────────────────────────────────────
 interface FlatEntry {
   requestId: number
   formId: number
@@ -276,12 +213,7 @@ const ownRequests = computed(() =>
     : requests.value,
 )
 
-const assignedEntries = computed(() => {
-  const source = isCompanyUser.value
-    ? ownRequests.value
-    : requests.value.filter(r => r.assigned_to?.id === myId.value)
-  return flattenEntries(source).slice(0, 6)
-})
+const assignedEntries = computed(() => flattenEntries(ownRequests.value).slice(0, 6))
 
 const approvalEntries = computed(() =>
   flattenEntries(ownRequests.value).filter(e => e.status === 'pending_approval').slice(0, 6),
@@ -289,31 +221,57 @@ const approvalEntries = computed(() =>
 </script>
 
 <style scoped>
-/* ── Main layout ──────────────────────────────────────── */
+.dash-container {
+  margin-top: 68px; 
+}
+
 .dash {
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-areas:
+    "stats"
+    "chart"
+    "recent";
   gap: var(--space-4);
-  align-items: start;
   padding-block: var(--space-4);
 }
 
-/* order on small screens: stats → recent → charts → yearly */
-.dash__stats   { order: 1; --gutter-y: var(--space-4); }
-.dash__right   { order: 2; }
-.dash__charts  { order: 3; --gutter-y: var(--space-4); }
-.dash__yearly  { order: 4; }
+.dash__stats {
+  grid-area: stats;
+}
 
-@media (min-width: 1536px) {
+.dash__chart {
+  grid-area: chart;
+}
+
+.dash__right {
+  grid-area: recent;
+}
+
+@media (min-width: 1280px) {
   .dash {
-    grid-template-columns: minmax(0, 1fr) 360px;
+    grid-template-columns: 1fr 1fr;
+    grid-template-areas: none;
     gap: var(--space-6);
   }
 
-  .dash__stats  { grid-column: 1; order: unset; }
-  .dash__charts { grid-column: 1; order: unset; }
-  .dash__yearly { grid-column: 1; order: unset; }
-  .dash__right  { grid-column: 2; grid-row: 1 / span 4; order: unset; position: sticky; top: var(--space-6); }
+  .dash__stats {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .dash__chart {
+    grid-column: 1;
+    grid-row: 2;
+  }
+
+  .dash__right {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+  }
+
+  .dash-recent {
+    height: 100%;
+  }
 }
 
 /* ── Stat cards ───────────────────────────────────────── */
@@ -356,19 +314,7 @@ const approvalEntries = computed(() =>
   line-height: 1.3;
 }
 
-.dash-card > :last-child {
-  margin-top: auto;
-}
-
-/* ── Yearly card: prevent chart overflow ─────────────── */
-.dash__yearly {
-  min-width: 0;
-  overflow: hidden;
-}
-
 /* ── Right panel ──────────────────────────────────────── */
-.dash__right {}
-
 .dash-recent {
   background: var(--color-surface);
   border-radius: var(--radius-lg);
@@ -394,7 +340,10 @@ const approvalEntries = computed(() =>
   color: var(--color-primary);
   text-decoration: none;
 }
-.dash-recent__view-all:hover { text-decoration: underline; }
+
+.dash-recent__view-all:hover {
+  text-decoration: underline;
+}
 
 /* ── Group label ──────────────────────────────────────── */
 .dash-group-label {
@@ -424,7 +373,10 @@ const approvalEntries = computed(() =>
   text-decoration: none;
   transition: background 0.1s;
 }
-.dash-entry:hover { background: var(--color-surface-hover); }
+
+.dash-entry:hover {
+  background: var(--color-surface-hover);
+}
 
 .dash-entry__main {
   flex: 1;

@@ -68,7 +68,7 @@
                       <span class="material-icons-round">close</span>
                     </button>
                   </div>
-                  <template v-else-if="form.type === 'template_file'">
+                  <template v-else>
                     <label for="template-file-input" class="attach-btn">
                       <span class="material-icons-round">attach_file</span>
                       Attach File
@@ -81,7 +81,7 @@
 
             <div class="create-form__actions">
               <AppButton variant="ghost" to="/fields">Cancel</AppButton>
-              <AppButton type="submit" :loading="loading">{{ isEdit ? 'Update Field' : 'Save Field' }}</AppButton>
+              <AppButton type="submit" :loading="loading">{{ isEdit ? 'Update' : 'Save' }}</AppButton>
             </div>
           </form>
         </div>

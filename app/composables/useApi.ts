@@ -11,6 +11,7 @@ export function useApi() {
   const authStore = useAuthStore()
 
   function getXsrfToken(): string {
+    if (import.meta.server) return ''
     return decodeURIComponent(
       document.cookie
         .split('; ')
@@ -31,7 +32,7 @@ export function useApi() {
       }
     },
     onResponseError({ response }) {
-      if (response.status === 401) {
+      if (response.status === 401 && import.meta.client) {
         authStore.logout()
         navigateTo('/login')
       }

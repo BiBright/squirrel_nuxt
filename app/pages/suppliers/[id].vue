@@ -1,40 +1,46 @@
 <template>
   <div>
-    <AppPageHeader :title="isEdit ? 'Edit Supplier' : 'New Supplier'" :subtitle="isEdit ? 'Update supplier details.' : 'Register a new supplier.'">
-      <AppButton variant="ghost" to="/suppliers">
-        <span class="material-icons-round">arrow_back</span>
-        Back
-      </AppButton>
-    </AppPageHeader>
+    <div class="container">
+      <div class="row">
 
-    <div v-if="loadingRecord" class="list-container">
-      <div class="list-empty">
-        <span class="material-icons-round">hourglass_empty</span>
-        <p>Loading supplier...</p>
+        <div class="col-12">
+          <AppBreadcrumb :items="[{ label: 'Suppliers', to: '/suppliers' }]" />
+        </div>
+
+        <div class="col-12">
+          <AppPageHeader :title="isEdit ? 'Edit Supplier' : 'New Supplier'" />
+        </div>
+
+        <div class="col-12">
+          <div v-if="loadingRecord" class="list-empty">
+            <span class="material-icons-round">hourglass_empty</span>
+            <p>Loading supplier...</p>
+          </div>
+
+          <form v-else novalidate class="create-form" @submit.prevent="onSubmit">
+            <div class="col-9">
+              <AppCard>
+                <AppInput v-model="form.name" label="Supplier Name" placeholder="Insert supplier name" :error="errors.name" />
+                <AppInput v-model="form.email" label="Email" type="email" placeholder="Insert supplier email" :error="errors.email" />
+                <AppInput v-model="form.supplier_number" label="Supplier Number" placeholder="Insert supplier registration number" :optional="true" />
+                <AppInput v-model="form.category" label="Supplier Category" placeholder="Insert supplier category" :optional="true" />
+                <AppInput v-model="form.material_type" label="Supplier Material Type" placeholder="Insert material type" :optional="true" />
+                <AppInput v-model="form.contact_person" label="Supplier Contact Person" placeholder="Insert contact person name" :optional="true" />
+                <AppInput v-model="form.contact_email" label="Primary Email" type="email" placeholder="Insert primary email" :optional="true" :error="errors.contact_email" />
+                <AppInput v-model="form.contact_phone" label="Contact Phone" placeholder="Insert contact phone" :optional="true" />
+                <AppInput v-model="form.country" label="Country" placeholder="Insert country" :optional="true" />
+              </AppCard>
+            </div>
+
+            <div class="create-form__actions">
+              <AppButton variant="ghost" to="/suppliers">Cancel</AppButton>
+              <AppButton type="submit" :loading="loading">{{ isEdit ? 'Update' : 'Save' }}</AppButton>
+            </div>
+          </form>
+        </div>
+
       </div>
     </div>
-
-    <form v-else novalidate class="create-form" @submit.prevent="onSubmit">
-      <AppCard title="Supplier Details">
-        <AppInput v-model="form.name" label="Name" placeholder="Enter supplier name" :error="errors.name" />
-        <AppInput v-model="form.email" label="Email" type="email" placeholder="Enter supplier email" :error="errors.email" />
-        <AppInput v-model="form.supplier_number" label="Supplier Number" placeholder="Enter supplier registration number" :optional="true" />
-        <AppInput v-model="form.category" label="Category" placeholder="Enter supplier category" :optional="true" />
-        <AppInput v-model="form.material_type" label="Material Type" placeholder="Enter material type" :optional="true" />
-        <AppInput v-model="form.country" label="Country" placeholder="Enter country" :optional="true" />
-      </AppCard>
-
-      <AppCard title="Contact">
-        <AppInput v-model="form.contact_person" label="Contact Person" placeholder="Enter contact person name" :optional="true" />
-        <AppInput v-model="form.contact_email" label="Contact Email" type="email" placeholder="Enter contact email" :optional="true" :error="errors.contact_email" />
-        <AppInput v-model="form.contact_phone" label="Contact Phone" placeholder="Enter contact phone" :optional="true" />
-      </AppCard>
-
-      <div class="create-form__actions">
-        <AppButton variant="ghost" to="/suppliers">Cancel</AppButton>
-        <AppButton type="submit" :loading="loading">{{ isEdit ? 'Update Supplier' : 'Save Supplier' }}</AppButton>
-      </div>
-    </form>
   </div>
 </template>
 
@@ -91,6 +97,7 @@ function validate(): boolean {
 async function onSubmit() {
   if (!validate()) return
   loading.value = true
+
   try {
     const api = useApi()
     const body = {
@@ -104,6 +111,7 @@ async function onSubmit() {
       contact_email: form.contact_email || null,
       contact_phone: form.contact_phone || null,
     }
+    
     if (isEdit.value) {
       await api(`/suppliers/${id.value}`, { method: 'PATCH', body })
       toast.success('Supplier updated', { category: 'supplier' })
@@ -122,7 +130,11 @@ async function onSubmit() {
 </script>
 
 <style scoped>
-.create-form { display: flex; flex-direction: column; gap: var(--space-6); }
+.create-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
 
 .create-form__actions {
   display: flex;

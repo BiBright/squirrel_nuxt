@@ -20,6 +20,10 @@
     height: $header-height;
   }
 
+  @include desktop-l-up {
+    left: $sidebar-width-xxl;
+  }
+
   &__hamburger {
     display: flex;
     align-items: center;

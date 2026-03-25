@@ -309,3 +309,58 @@
     }
   }
 }
+
+// ================================
+// Company settings — logo upload
+// ================================
+
+.company-logo-field {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.company-logo-preview {
+  width: 96px;
+  height: 96px;
+  border-radius: $radius-lg;
+  border: 1px solid $black20;
+  background: $white60;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.company-logo-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.company-logo-placeholder {
+  font-size: 40px;
+  color: $black40;
+}
+
+.attach-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  width: fit-content;
+  padding: 8px 16px;
+  border: 1px solid $black20;
+  border-radius: $radius-md;
+  background: $primary25;
+  color: $primary100;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+
+  .material-icons-round { font-size: 18px; }
+
+  &:hover { background: darken($primary25, 4%); }
+}
+
+.input-file { display: none; }

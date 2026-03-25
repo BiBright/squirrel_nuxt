@@ -1,12 +1,12 @@
 <template>
-  <div class="row request-table">
+  <div class="request-table">
 
-    <div v-if="requests.length === 0" class="col-12 request-table__empty">
+    <div v-if="requests.length === 0" class="request-table__empty">
       <span class="material-icons-round">inbox</span>
       <p>No requests found.</p>
     </div>
 
-    <div v-for="req in requests" :key="req.id" class="col-12 request-table__group">
+    <div v-for="req in requests" :key="req.id" class="request-table__group">
 
       <div class="request-table__header"
         :class="{ 'request-table__header--selected': isGroupSelected(req), 'request-table__header--closed': !expanded.has(req.id) }">

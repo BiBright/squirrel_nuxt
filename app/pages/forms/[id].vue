@@ -8,15 +8,16 @@
 
         <div class="col-12">
           <AppPageHeader :title="isEdit ? 'Edit Form' : 'New Form'" />
+        </div>
 
-          <div v-if="loadingRecord" class="list-container">
-            <div class="list-empty">
-              <span class="material-icons-round">hourglass_empty</span>
-              <p>Loading form...</p>
-            </div>
+        <div class="col-12">
+          <div v-if="loadingRecord" class="list-empty">
+            <span class="material-icons-round">hourglass_empty</span>
+            <p>Loading form...</p>
           </div>
 
           <form v-else novalidate class="create-form" @submit.prevent="onSubmit">
+            <div class="col-10">
             <AppCard>
               <AppInput v-model="form.name" label="Title" placeholder="e.g. Supplier Qualification Form"
                 :error="errors.name" />
@@ -111,14 +112,15 @@
                 <AppButton @click="showFieldModal = false">Done</AppButton>
               </template>
             </AppModal>
+            </div>
 
             <div class="create-form__actions">
               <AppButton variant="ghost" to="/forms">Cancel</AppButton>
-              <AppButton type="submit" :loading="loading">{{ isEdit ? 'Update Form' : 'Save Form' }}</AppButton>
+              <AppButton type="submit" :loading="loading">{{ isEdit ? 'Update' : 'Save' }}</AppButton>
             </div>
           </form>
-
         </div>
+
       </div>
     </div>
   </div>
@@ -287,6 +289,7 @@ async function onSubmit() {
 }
 
 .attach-btn {
+  width: fit-content;
   display: inline-flex;
   align-items: center;
   gap: var(--space-2);

@@ -4,7 +4,7 @@
       <div class="row">
         <div class="col-12">
           <AppBreadcrumb :items="[{ label: 'Settings' }]" />
-    </div>
+        </div>
 
         <div class="col-12">
           <AppPageHeader title="Settings" />
@@ -12,131 +12,146 @@
 
         <!-- Left menu -->
         <div class="col-12 col-sm-4 col-md-2">
-      <aside class="settings-menu" :class="{ 'settings-menu--hidden': mobileShowContent }">
-        <div class="settings-menu__user">
-          <div class="avatar">{{ initials }}</div>
-          <p class="username">{{ user?.name ?? 'User' }}</p>
-          <p class="role caption2">{{ user?.email ?? '' }}</p>
-          <button type="button" class="logout-btn" @click="onLogout">
-            <span class="icon material-icons-round">logout</span>
-            Sign out
-          </button>
+          <aside class="settings-menu" :class="{ 'settings-menu--hidden': mobileShowContent }">
+            <div class="settings-menu__user">
+              <div class="avatar">{{ initials }}</div>
+              <p class="username">{{ user?.name ?? 'User' }}</p>
+              <p class="role caption2">{{ user?.email ?? '' }}</p>
+              <button type="button" class="logout-btn" @click="onLogout">
+                <span class="icon material-icons-round">logout</span>
+                Sign out
+              </button>
+            </div>
+
+            <nav class="settings-menu__nav">
+              <button v-for="item in menuItems" :key="item.key" type="button"
+                :class="['settings-menu__item', { 'is-active': activeSection === item.key }]"
+                @click="selectSection(item.key)">
+                <span class="icon material-icons-round">{{ item.icon }}</span>
+                {{ item.label }}
+              </button>
+            </nav>
+          </aside>
         </div>
 
-        <nav class="settings-menu__nav">
-          <button
-            v-for="item in menuItems"
-            :key="item.key"
-            type="button"
-            :class="['settings-menu__item', { 'is-active': activeSection === item.key }]"
-            @click="selectSection(item.key)"
-          >
-            <span class="icon material-icons-round">{{ item.icon }}</span>
-            {{ item.label }}
-          </button>
-        </nav>
-      </aside>
-        </div>
+        <div class="col-12 col-sm-8 col-md-9">
+          <section class="settings-content" :class="{ 'settings-content--visible': mobileShowContent }">
+            <button type="button" class="settings-back" @click="mobileShowContent = false">
+              <span class="material-icons-round">arrow_back</span>
+              Settings
+            </button>
 
-        <!-- Right content -->
-        <div class="col-12 col-sm-8 col-md-10">
-      <section class="settings-content" :class="{ 'settings-content--visible': mobileShowContent }">
-        <button type="button" class="settings-back" @click="mobileShowContent = false">
-          <span class="material-icons-round">arrow_back</span>
-          Settings
-        </button>
-        <!-- Profile -->
-        <div v-if="activeSection === 'profile'" class="settings-section">
-          <h2 class="settings-section-title">Profile</h2>
-          <p class="settings-section-subtitle">Update your personal information.</p>
-          <AppInput v-model="profileForm.name" label="Full name" placeholder="Your name" />
-          <AppInput v-model="profileForm.email" label="Email" type="email" placeholder="you@company.com" />
-          <AppButton type="button" :loading="profileSaving" @click="saveProfile">Save changes</AppButton>
-        </div>
+            <div v-if="activeSection === 'profile'" class="settings-section">
+              <h2 class="settings-section-title">Profile</h2>
+              <p class="settings-section-subtitle">Update your personal information.</p>
+              <AppInput v-model="profileForm.name" label="Full name" placeholder="Your name" />
+              <AppInput v-model="profileForm.email" label="Email" type="email" placeholder="you@company.com" />
+              <AppButton type="button" :loading="profileSaving" @click="saveProfile">Save changes</AppButton>
+            </div>
 
-        <!-- Password -->
-        <div v-else-if="activeSection === 'password'" class="settings-section">
-          <h2 class="settings-section-title">Change Password</h2>
-          <p class="settings-section-subtitle">Choose a strong password.</p>
-          <AppInput v-model="passwordForm.current" label="Current password" type="password" />
-          <AppInput v-model="passwordForm.new" label="New password" type="password" />
-          <AppInput v-model="passwordForm.confirm" label="Confirm new password" type="password" />
-          <AppButton type="button" :loading="passwordSaving" @click="savePassword">Update password</AppButton>
-        </div>
+            <div v-else-if="activeSection === 'password'" class="settings-section">
+              <h2 class="settings-section-title">Change Password</h2>
+              <p class="settings-section-subtitle">Choose a strong password.</p>
+              <AppInput v-model="passwordForm.current" label="Current password" type="password" />
+              <AppInput v-model="passwordForm.new" label="New password" type="password" />
+              <AppInput v-model="passwordForm.confirm" label="Confirm new password" type="password" />
+              <AppButton type="button" :loading="passwordSaving" @click="savePassword">Update password</AppButton>
+            </div>
 
-        <!-- Notifications -->
-        <div v-else-if="activeSection === 'notifications'" class="settings-section">
-          <h2 class="settings-section-title">Send notifications</h2>
-          <p class="settings-section-subtitle">Change and update the suppliers notifications frequency.</p>
+            <div v-else-if="activeSection === 'company'" class="settings-section">
+              <h2 class="settings-section-title">Company Settings</h2>
+              <p class="settings-section-subtitle">Update your company information.</p>
 
-          <div v-if="notifLoading" class="notif-loading">Loading settings…</div>
-          <template v-else>
-            <div class="notif-card">
-              <!-- Toggle row -->
-              <div class="notif-card__header">
-                <button
-                  type="button"
-                  :class="['notif-toggle', { 'is-on': notifForm.send_notification }]"
-                  @click="notifForm.send_notification = !notifForm.send_notification"
-                >
-                  <span class="notif-toggle__knob" />
-                </button>
-                <div>
-                  <p class="notif-card__title">Pending actions on requests</p>
-                  <p class="notif-card__hint">All suppliers will receive notifications related to their requests.</p>
+              <div v-if="companyLoading" class="notif-loading">Loading…</div>
+              <template v-else>
+                <div class="company-logo-field">
+                  <label class="label01">Company Logo</label>
+                  <div class="company-logo-preview">
+                    <img v-if="companyLogoPreview" :src="companyLogoPreview" class="company-logo-img" alt="Logo preview">
+                    <span v-else class="company-logo-placeholder material-icons-round">business</span>
+                  </div>
+                  <label for="company-logo-input" class="attach-btn">
+                    <span class="material-icons-round">upload</span>
+                    {{ companyLogoPreview ? 'Change logo' : 'Upload logo' }}
+                  </label>
+                  <input id="company-logo-input" type="file" accept=".jpg,.jpeg,.png" class="input-file" @change="onLogoChange">
                 </div>
-              </div>
 
-              <!-- Frequency options -->
-              <div class="notif-freq-list" :class="{ 'is-disabled': !notifForm.send_notification }">
-                <!-- Once a day -->
-                <label class="notif-freq-item">
-                  <input v-model="notifForm.email_frequency" type="radio" value="daily" class="notif-radio">
-                  <div class="notif-freq-item__body">
-                    <p class="notif-freq-item__label">Once a day</p>
-                    <p class="notif-freq-item__hint">Everyday at the same hour</p>
-                    <div class="notif-selects">
-                      <AppSelect v-model="notifForm.email_frequency_time" :options="hourOptions" />
-                    </div>
-                  </div>
-                </label>
+                <AppInput v-model="companyForm.name" label="Company Name" placeholder="Your company name" />
+                <AppInput v-model="companyForm.country" label="Country" placeholder="e.g. Portugal" />
+                <AppInput v-model="companyForm.city" label="City" placeholder="e.g. Lisbon" />
+                <AppInput v-model="companyForm.address" label="Address" placeholder="Street and number" :optional="true" />
+                <AppInput v-model="companyForm.zip_code" label="Zip Code" placeholder="e.g. 1000-001" :optional="true" />
 
-                <!-- Once a week -->
-                <label class="notif-freq-item">
-                  <input v-model="notifForm.email_frequency" type="radio" value="weekly" class="notif-radio">
-                  <div class="notif-freq-item__body">
-                    <p class="notif-freq-item__label">Once a week</p>
-                    <p class="notif-freq-item__hint">Every 7 days</p>
-                    <div class="notif-selects">
-                      <AppSelect v-model="notifForm.email_frequency_weekday" :options="weekdayOptions" />
-                      <AppSelect v-model="notifForm.email_frequency_time" :options="hourOptions" />
-                    </div>
-                  </div>
-                </label>
-
-                <!-- Once a month -->
-                <label class="notif-freq-item">
-                  <input v-model="notifForm.email_frequency" type="radio" value="monthly" class="notif-radio">
-                  <div class="notif-freq-item__body">
-                    <p class="notif-freq-item__label">Once a month</p>
-                    <p class="notif-freq-item__hint">Every 31 days</p>
-                    <div class="notif-selects">
-                      <AppSelect v-model="notifForm.email_frequency_day" :options="dayOptions" />
-                      <AppSelect v-model="notifForm.email_frequency_time" :options="hourOptions" />
-                    </div>
-                  </div>
-                </label>
-              </div>
+                <AppButton type="button" :loading="companySaving" @click="saveCompany">Save changes</AppButton>
+              </template>
             </div>
 
-<div v-if="notifForm.send_notification" class="notif-actions">
-              <AppButton type="button" variant="secondary" @click="loadNotifSettings">Cancel</AppButton>
-              <AppButton type="button" :loading="notifSaving" @click="saveNotif">Save</AppButton>
+            <div v-else-if="activeSection === 'notifications'" class="settings-section">
+              <h2 class="settings-section-title">Send notifications</h2>
+              <p class="settings-section-subtitle">Change and update the suppliers notifications frequency.</p>
+
+              <div v-if="notifLoading" class="notif-loading">Loading settings…</div>
+              <template v-else>
+                <div class="notif-card">
+                  <div class="notif-card__header">
+                    <button type="button" :class="['notif-toggle', { 'is-on': notifForm.send_notification }]"
+                      @click="notifForm.send_notification = !notifForm.send_notification">
+                      <span class="notif-toggle__knob" />
+                    </button>
+                    <div>
+                      <p class="notif-card__title">Pending actions on requests</p>
+                      <p class="notif-card__hint">All suppliers will receive notifications related to their requests.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div class="notif-freq-list" :class="{ 'is-disabled': !notifForm.send_notification }">
+                    <label class="notif-freq-item">
+                      <input v-model="notifForm.email_frequency" type="radio" value="daily" class="notif-radio">
+                      <div class="notif-freq-item__body">
+                        <p class="notif-freq-item__label">Once a day</p>
+                        <p class="notif-freq-item__hint">Everyday at the same hour</p>
+                        <div class="notif-selects">
+                          <AppSelect v-model="notifForm.email_frequency_time" :options="hourOptions" />
+                        </div>
+                      </div>
+                    </label>
+
+                    <label class="notif-freq-item">
+                      <input v-model="notifForm.email_frequency" type="radio" value="weekly" class="notif-radio">
+                      <div class="notif-freq-item__body">
+                        <p class="notif-freq-item__label">Once a week</p>
+                        <p class="notif-freq-item__hint">Every 7 days</p>
+                        <div class="notif-selects">
+                          <AppSelect v-model="notifForm.email_frequency_weekday" :options="weekdayOptions" />
+                          <AppSelect v-model="notifForm.email_frequency_time" :options="hourOptions" />
+                        </div>
+                      </div>
+                    </label>
+
+                    <label class="notif-freq-item">
+                      <input v-model="notifForm.email_frequency" type="radio" value="monthly" class="notif-radio">
+                      <div class="notif-freq-item__body">
+                        <p class="notif-freq-item__label">Once a month</p>
+                        <p class="notif-freq-item__hint">Every 31 days</p>
+                        <div class="notif-selects">
+                          <AppSelect v-model="notifForm.email_frequency_day" :options="dayOptions" />
+                          <AppSelect v-model="notifForm.email_frequency_time" :options="hourOptions" />
+                        </div>
+                      </div>
+                    </label>
+                  </div>
+                </div>
+
+                <div v-if="notifForm.send_notification" class="notif-actions">
+                  <AppButton type="button" variant="secondary" @click="loadNotifSettings">Cancel</AppButton>
+                  <AppButton type="button" :loading="notifSaving" @click="saveNotif">Save</AppButton>
+                </div>
+              </template>
             </div>
-          </template>
+          </section>
         </div>
-      </section>
-    </div>
 
       </div>
     </div>
@@ -166,7 +181,6 @@ function selectSection(key: string) {
   mobileShowContent.value = true
 }
 
-// ── Notifications ─────────────────────────────────────
 const hourOptions = Array.from({ length: 24 }, (_, h) => ({
   value: String(h).padStart(2, '0') + ':00:00',
   label: String(h).padStart(2, '0') + ':00',
@@ -228,16 +242,74 @@ async function saveNotif() {
 
 watch(activeSection, (val) => {
   if (val === 'notifications') loadNotifSettings()
+  if (val === 'company') loadCompany()
 })
 
 const menuItems = computed(() => [
-  { key: 'profile',       icon: 'person',        label: 'Profile' },
-  { key: 'password',      icon: 'lock',          label: 'Password' },
-  { key: 'notifications', icon: 'notifications', label: 'Notifications' },
+  { key: 'profile', icon: 'person', label: 'Profile' },
+  { key: 'password', icon: 'lock', label: 'Security and Login' },
+  { key: 'company', icon: 'factory', label: 'Company Settings' },
+  { key: 'notifications', icon: 'notifications', label: 'Notification' },
+  { key: 'support', icon: 'support', label: 'Support' },
 ])
 
 const profileForm = reactive({ name: user.value?.name ?? '', email: user.value?.email ?? '' })
 const passwordForm = reactive({ current: '', new: '', confirm: '' })
+
+const companyForm = reactive({ name: '', country: '', city: '', address: '', zip_code: '', plan_id: null as number | null })
+const companyLoading = ref(false)
+const companySaving = ref(false)
+const companyLogoFile = ref<File | null>(null)
+const companyLogoPreview = ref<string | null>(null)
+
+async function loadCompany() {
+  const companyId = (user.value?.company_id ?? user.value?.company?.id) as number | undefined
+  if (!companyId) return
+  companyLoading.value = true
+  try {
+    const res = await api(`/companies/${companyId}`) as { data: Record<string, unknown> }
+    const d = res.data
+    companyForm.name = (d.name as string) ?? ''
+    companyForm.country = (d.country as string) ?? ''
+    companyForm.city = (d.city as string) ?? ''
+    companyForm.address = (d.address as string) ?? ''
+    companyForm.zip_code = (d.zip_code as string) ?? ''
+    companyForm.plan_id = (d.plan_id as number) ?? null
+    if (d.logo_path) companyLogoPreview.value = d.logo_path as string
+  }
+  catch { /* leave defaults */ }
+  finally { companyLoading.value = false }
+}
+
+function onLogoChange(e: Event) {
+  const file = (e.target as HTMLInputElement).files?.[0]
+  if (!file) return
+  companyLogoFile.value = file
+  companyLogoPreview.value = URL.createObjectURL(file)
+}
+
+async function saveCompany() {
+  const companyId = (user.value?.company_id ?? user.value?.company?.id) as number | undefined
+  if (!companyId) { toast.error(null, 'Company ID not found', { category: 'company' }); return }
+  companySaving.value = true
+  try {
+    const body = new FormData()
+    body.append('_method', 'PATCH')
+    body.append('name', companyForm.name)
+    body.append('country', companyForm.country)
+    body.append('city', companyForm.city)
+    body.append('address', companyForm.address)
+    body.append('zip_code', companyForm.zip_code)
+    if (companyForm.plan_id) body.append('plan_id', String(companyForm.plan_id))
+    if (companyLogoFile.value) body.append('logo', companyLogoFile.value)
+    await api(`/companies/${companyId}`, { method: 'POST', body })
+    toast.success('Company settings saved', { category: 'company' })
+  }
+  catch (err) {
+    toast.error(err, 'Failed to save company settings', { category: 'company' })
+  }
+  finally { companySaving.value = false }
+}
 
 const profileSaving = ref(false)
 const passwordSaving = ref(false)
