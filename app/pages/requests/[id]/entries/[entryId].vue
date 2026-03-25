@@ -3,12 +3,10 @@
     <div class="container">
       <div class="row">
 
-        <!-- Breadcrumb -->
         <div class="col-12">
           <AppBreadcrumb :items="[{ label: 'Requests', to: '/requests' }, { label: requestTitle }]" />
         </div>
 
-        <!-- Loading -->
         <div v-if="loading" class="col-12">
           <div class="list-empty">
             <span class="material-icons-round">hourglass_empty</span>
@@ -17,11 +15,6 @@
         </div>
 
         <template v-else-if="entry">
-
-          <!-- Title + status pill -->
-          <div class="col-12">
-
-          </div>
 
           <div class="col-12 col-md-7">
             <div class="entry-header">
@@ -35,10 +28,9 @@
                   {{ entry.supplier.name }}
                 </div>
 
-                <!-- Form description -->
                 <p v-if="form?.description" class="entry-description">{{ form.description }}</p>
 
-                <hr class="">
+                <hr class="entry-divider">
 
                 <div v-if="form?.has_template" class="entry-attached-files">
                   <p class="label01">Attached Files</p>
@@ -51,7 +43,6 @@
 
                 <hr v-if="form?.has_template && form?.fields?.length" class="entry-divider">
 
-                <!-- Fields -->
                 <div class="entry-fields">
                   <div v-for="field in form?.fields" :key="field.id" class="entry-field">
                     <div class="entry-field__name">
@@ -59,7 +50,6 @@
                     </div>
                     <p v-if="field.description" class="entry-field__description">{{ field.description }}</p>
 
-                    <!-- File type field -->
                     <template v-if="field.requires_file">
                       <p v-if="field.template_file_name" class="entry-field__template-msg">
                         Download the statement and reattach it after filling it out
@@ -136,12 +126,16 @@
               </div>
               <div class="entry-status__assigned">
                 <p class="entry-status__assigned-label">Assigned to:</p>
-                <div class="entry-status__assigned-select">
-                  <span class="material-icons-round">account_circle</span>
-                  <select v-model="selectedAssigneeId" class="entry-assignee-select" @change="onAssigneeChange">
-                    <option :value="null">Select user</option>
-                    <option v-for="u in availableUsers" :key="u.id" :value="u.id">{{ u.name }}</option>
-                  </select>
+                <div ref="assigneeDropdownRef" class="assignee-dropdown">
+                  <button class="assignee-dropdown__trigger" type="button" @click="assigneeOpen = !assigneeOpen">
+                    <span class="material-icons-round">account_circle</span>
+                    <span class="assignee-dropdown__value">{{ selectedAssigneeName }}</span>
+                    <span class="material-icons-round assignee-dropdown__chevron" :class="{ 'is-open': assigneeOpen }">expand_more</span>
+                  </button>
+                  <ul v-if="assigneeOpen" class="assignee-dropdown__menu">
+                    <li class="assignee-dropdown__option" :class="{ 'is-active': selectedAssigneeId === null }" @click="selectAssignee(null)">Select user</li>
+                    <li v-for="u in availableUsers" :key="u.id" class="assignee-dropdown__option" :class="{ 'is-active': selectedAssigneeId === u.id }" @click="selectAssignee(u.id)">{{ u.name }}</li>
+                  </ul>
                 </div>
               </div>
             </div>
@@ -235,6 +229,20 @@ const answers = reactive<Record<number, string>>({})
 const uploadedFiles = reactive<Record<number, File>>({})
 const availableUsers = ref<UserOption[]>([])
 const selectedAssigneeId = ref<number | null>(null)
+const assigneeOpen = ref(false)
+const assigneeDropdownRef = ref<HTMLElement | null>(null)
+
+const selectedAssigneeName = computed(() =>
+  availableUsers.value.find(u => u.id === selectedAssigneeId.value)?.name ?? 'Select user'
+)
+
+onClickOutside(assigneeDropdownRef, () => { assigneeOpen.value = false })
+
+async function selectAssignee(id: number | null) {
+  selectedAssigneeId.value = id
+  assigneeOpen.value = false
+  await onAssigneeChange()
+}
 
 const apiBase = config.public.apiBase as string
 const isCompanyUser = computed(() => authStore.user?.roles === 'company-user')
@@ -267,7 +275,6 @@ onMounted(async () => {
     const formRes = await api<{ data: FormDetail }>(`/forms/${entry.value.form.id}`)
     form.value = formRes.data
 
-    // Pre-fill answers
     entry.value.answers?.forEach((a) => {
       if (a.value) answers[a.field_id] = a.value
     })
@@ -286,7 +293,6 @@ function onFileChange(fieldId: number, event: Event) {
 }
 
 async function onAssigneeChange() {
-  console.log('HERE');
   try {
     await api(`/requests/${requestId}`, {
       method: 'POST',
@@ -405,7 +411,6 @@ function statusDescription(value: string): string {
   font-size: var(--text-sm);
 }
 
-/* Header */
 .entry-header {
   display: flex;
   align-items: center;
@@ -430,26 +435,23 @@ function statusDescription(value: string): string {
   font-weight: 600;
   white-space: nowrap;
   width: fit-content;
+  color: var(--color-white);
 }
 
 .entry-header__pill[data-status="awaiting_answer"] {
-  background: var(--color-yellow-50);
-  color: var(--color-yellow);
+  background: var(--color-yellow);
 }
 
 .entry-header__pill[data-status="pending_approval"] {
-  background: var(--color-primary-25);
-  color: var(--color-primary);
+  background: var(--color-primary);
 }
 
 .entry-header__pill[data-status="completed"] {
-  background: var(--color-green-25);
-  color: var(--color-green);
+  background: var(--color-green);
 }
 
 .entry-header__pill[data-status="cancelled"] {
-  background: var(--color-red-25);
-  color: var(--color-danger);
+  background: var(--color-red);
 }
 
 .request-entry-card {
@@ -458,7 +460,6 @@ function statusDescription(value: string): string {
   padding: var(--space-6);
 }
 
-/* Left content */
 .entry-supplier {
   display: flex;
   align-items: center;
@@ -510,7 +511,6 @@ function statusDescription(value: string): string {
   font-size: 16px;
 }
 
-/* Fields */
 .entry-fields {
   display: flex;
   flex-direction: column;
@@ -595,7 +595,6 @@ function statusDescription(value: string): string {
   margin-top: var(--space-2);
 }
 
-/* Status panel */
 .entry-status {
   padding: 0 0 0 var(--space-6);
   display: flex;
@@ -630,17 +629,9 @@ function statusDescription(value: string): string {
   color: var(--color-text);
 }
 
-.entry-status__card-header[data-status="awaiting_answer"] {
-  background: var(--color-yellow-25);
-}
-
 .entry-status__card-header[data-status="awaiting_answer"] h4,
 .entry-status__card-header[data-status="awaiting_answer"] .material-icons-round {
   color: var(--color-yellow);
-}
-
-.entry-status__card-header[data-status="pending_approval"] {
-  background: var(--color-primary-25);
 }
 
 .entry-status__card-header[data-status="pending_approval"] h4,
@@ -648,17 +639,9 @@ function statusDescription(value: string): string {
   color: var(--color-primary);
 }
 
-.entry-status__card-header[data-status="completed"] {
-  background: var(--color-green-25);
-}
-
 .entry-status__card-header[data-status="completed"] h4,
 .entry-status__card-header[data-status="completed"] .material-icons-round {
   color: var(--color-green);
-}
-
-.entry-status__card-header[data-status="cancelled"] {
-  background: var(--color-red-25);
 }
 
 .entry-status__card-header[data-status="cancelled"] h4,
@@ -729,7 +712,11 @@ function statusDescription(value: string): string {
   color: var(--color-text-muted);
 }
 
-.entry-status__assigned-select {
+.assignee-dropdown {
+  position: relative;
+}
+
+.assignee-dropdown__trigger {
   display: flex;
   align-items: center;
   gap: var(--space-2);
@@ -737,22 +724,47 @@ function statusDescription(value: string): string {
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   background: var(--color-surface);
-}
-
-.entry-status__assigned-select .material-icons-round {
-  font-size: 22px;
-  color: var(--color-text-muted);
-  flex-shrink: 0;
-}
-
-.entry-assignee-select {
-  flex: 1;
-  border: none;
-  background: transparent;
   font-size: var(--text-sm);
   color: var(--color-text);
   font-family: inherit;
   cursor: pointer;
-  outline: none;
+  width: 100%;
+  text-align: left;
+
+  .material-icons-round { font-size: 20px; color: var(--color-text-muted); flex-shrink: 0; }
+}
+
+.assignee-dropdown__value {
+  flex: 1;
+}
+
+.assignee-dropdown__chevron {
+  transition: transform 0.15s;
+  &.is-open { transform: rotate(180deg); }
+}
+
+.assignee-dropdown__menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  list-style: none;
+  padding: var(--space-1) 0;
+  margin: 0;
+  z-index: 10;
+}
+
+.assignee-dropdown__option {
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--text-sm);
+  color: var(--color-text);
+  cursor: pointer;
+
+  &:hover { background: var(--color-surface-hover); }
+  &.is-active { color: var(--color-primary); font-weight: 700; }
 }
 </style>

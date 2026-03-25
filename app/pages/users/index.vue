@@ -10,17 +10,9 @@
         <AppPageHeader title="Users" />
 
         <div class="col-12">
-          <AppListToolbar
-            v-model:search="search"
-            v-model:sort="sort"
-            v-model:view="view"
-            label="user"
-            add-label="Create User"
-            :total-count="filtered.length"
-            :selected-count="selectedCount"
-            @add="onAdd"
-            @delete="onDelete"
-          />
+          <AppListToolbar v-model:search="search" v-model:sort="sort" v-model:view="view" label="user"
+            add-label="Create User" :total-count="filtered.length" :selected-count="selectedCount" @add="onAdd"
+            @delete="onDelete" />
         </div>
 
         <div class="col-12">
@@ -31,12 +23,8 @@
             </div>
           </div>
 
-          <AppBlankState
-            v-else-if="blankState.show.value"
-            :image="blankState.image.value"
-            :title="blankState.title.value"
-            :message="blankState.message.value"
-          >
+          <AppBlankState v-else-if="blankState.show.value" :image="blankState.image.value"
+            :title="blankState.title.value" :message="blankState.message.value">
             <AppButton @click="onAdd">
               <span class="material-icons-round">add</span>
               Create User
@@ -44,13 +32,7 @@
           </AppBlankState>
 
           <template v-else-if="effectiveView === 'list'">
-            <AppTable
-              buttonn-edit
-              :columns="columns"
-              :rows="tableRows"
-              @delete="onDeleteRow"
-              @select="onSelect"
-            >
+            <AppTable buttonn-edit :columns="columns" :rows="tableRows" @delete="onDeleteRow" @select="onSelect">
               <template #cell-name="{ value, row }">
                 <NuxtLink :to="`/users/${row._raw.id}`" class="app-table__cell-link">{{ value }}</NuxtLink>
                 <span class="app-table__cell-sub">{{ row.email }}</span>
@@ -69,14 +51,13 @@
                 <div class="list-card__header">
                   <NuxtLink :to="`/users/${user.id}`" class="list-card__title">{{ user.name }}</NuxtLink>
                 </div>
+                <div class="list-card__meta-row">
+                  {{ user.phone }}
+                </div>
+
                 <div class="list-card__meta">
                   <div class="list-card__meta-row">
-                    <span class="material-icons-round">email</span>
                     {{ user.email }}
-                  </div>
-                  <div class="list-card__meta-row">
-                    <span class="material-icons-round">badge</span>
-                    {{ user.roles ?? '—' }}
                   </div>
                 </div>
                 <div class="list-card__footer">
@@ -106,8 +87,8 @@ interface User {
 }
 
 const columns = [
-  { key: 'name',  label: 'Name',  primary: true },
-  { key: 'role',  label: 'Role' },
+  { key: 'name', label: 'Name', primary: true },
+  { key: 'role', label: 'Role' },
 ]
 
 interface PaginationMeta {
@@ -157,7 +138,6 @@ watch(page, fetchData)
 const filtered = computed(() => {
   let result = [...users.value]
 
-  // Always ensure the logged-in user appears on page 1
   const me = authStore.user
   if (page.value === 1 && me && !result.some(u => u.id === (me.id as number))) {
     result.unshift({
@@ -216,10 +196,10 @@ type BadgeVariant = 'warning' | 'primary' | 'success' | 'danger' | 'neutral'
 
 function roleVariant(role: string): BadgeVariant {
   const map: Record<string, BadgeVariant> = {
-    admin:   'primary',
-    master:  'danger',
+    admin: 'primary',
+    master: 'danger',
     manager: 'warning',
-    user:    'neutral',
+    user: 'neutral',
   }
   return map[role] ?? 'neutral'
 }

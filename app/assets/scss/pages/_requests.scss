@@ -33,6 +33,10 @@ $req-cols-desktop: 40px 2fr 120px 180px 150px 44px;
   }
 }
 
+.entry-divider {
+  border-color: var(--color-black60);
+}
+
 // Hide date on mobile (show tablet+)
 .request-col-date {
   display: none;

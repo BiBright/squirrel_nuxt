@@ -57,7 +57,7 @@
                     </button>
                   </div>
                 </div>
-                <AppButton type="button" @click="showSuppliersModal = true">
+                <AppButton type="button" @click="showSuppliersModal = true" variant= secondary>
                   <span class="material-icons-round">add</span> Add Suppliers
                 </AppButton>
               </div>
@@ -77,7 +77,7 @@
                     </button>
                   </div>
                 </div>
-                <AppButton v-else type="button" @click="showUsersModal = true">
+                <AppButton v-else type="button" @click="showUsersModal = true" variant= secondary>
                   <span class="material-icons-round">add</span> Add User
                 </AppButton>
               </div>

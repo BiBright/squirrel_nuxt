@@ -104,7 +104,7 @@ const FIELD_TYPES = [
   { value: 'numeric', label: 'Numeric', icon: 'pin' },
   { value: 'date', label: 'Date', icon: 'calendar_today' },
   { value: 'template_file', label: 'Template File', icon: 'file_download' },
-  { value: 'template_file_input', label: 'Supplier File', icon: 'file_upload' }
+  { value: 'supplier_file', label: 'Supplier File', icon: 'file_upload' }
 ]
 
 const form = reactive({ name: '', description: '', type: '', is_active: true })
@@ -127,6 +127,7 @@ onMounted(async () => {
     const api = useApi()
     const res = await api<{ data: typeof form & { type: string } }>(`/fields/${id.value}`)
     const d = res.data as Record<string, unknown>
+    console.log(d);
     form.name = d.name as string
     form.description = (d.description as string) ?? ''
     form.type = d.type as string
@@ -155,7 +156,7 @@ async function onSubmit() {
     body.append('name', form.name)
     if (form.description) body.append('description', form.description)
     body.append('type', form.type)
-    body.append('is_active', String(form.is_active))
+    body.append('is_active', form.is_active ? '1' : '0')
     if (templateFile.value) body.append('template_file', templateFile.value)
     if (isEdit.value) {
       body.append('_method', 'PATCH')
@@ -244,7 +245,6 @@ async function onSubmit() {
   gap: var(--space-2);
   margin-top: var(--space-2);
   padding: var(--space-3) var(--space-6);
-  border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   background: var(--color-primary-25);
   color: var(--color-primary);

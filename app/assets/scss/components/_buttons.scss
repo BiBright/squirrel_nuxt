@@ -1,5 +1,5 @@
-@use '../base/variables' as *;
-@use '../base/viewport' as *;
+@use "../base/variables" as *;
+@use "../base/viewport" as *;
 
 // ================================
 // Button Components
@@ -20,7 +20,9 @@
   cursor: pointer;
   text-decoration: none;
   outline: none;
-  transition: background-color 0.3s, color 0.3s;
+  transition:
+    background-color 0.3s,
+    color 0.3s;
 
   @include desktop-up {
     font-size: 16px;
@@ -52,9 +54,19 @@
   background: $primary100;
   color: $white;
 
-  &:hover            { background: $primary75; }
-  &:active, &:focus  { background: $primary75; outline: none; box-shadow: none; }
-  &:disabled         { background: $white20; color: $black60; }
+  &:hover {
+    background: $primary75;
+  }
+  &:active,
+  &:focus {
+    background: $primary75;
+    outline: none;
+    box-shadow: none;
+  }
+  &:disabled {
+    background: $white20;
+    color: $black60;
+  }
 }
 
 // Secondary — light blue tint
@@ -63,18 +75,26 @@
   background: $primary25;
   color: $primary100;
 
-  &:hover            { background: $primary50; }
-  &:active, &:focus  { background: $primary50; outline: none; box-shadow: none; }
+  &:hover {
+    background: $primary50;
+  }
+  &:active,
+  &:focus {
+    background: $primary50;
+    outline: none;
+    box-shadow: none;
+  }
 }
 
 // Ghost — transparent / text link
 .btn-ghost {
   @extend %btn-base;
-  background: none;
+  background: $primary25;
   color: $primary100;
 
-  &:hover            { text-decoration: underline; }
-  &:active, &:focus  { text-decoration: underline; outline: none; }
+  &:hover {
+    background: $primary50;
+  }
 }
 
 // Danger — red action
@@ -83,8 +103,13 @@
   background: $red100;
   color: $white;
 
-  &:hover            { background: $red75; }
-  &:active, &:focus  { background: $red75; }
+  &:hover {
+    background: $red75;
+  }
+  &:active,
+  &:focus {
+    background: $red75;
+  }
 }
 
 // View toggle — card / list toggle buttons
@@ -101,7 +126,9 @@
   transition: background-color 0.2s;
   outline: none;
 
-  .icon { font-size: 20px; }
+  .icon {
+    font-size: 20px;
+  }
 
   &[data-active="true"] {
     background: $primary25;
@@ -112,7 +139,9 @@
   &[data-active="false"] {
     background: $white40;
     color: $black80;
-    &:hover { background: $white20; }
+    &:hover {
+      background: $white20;
+    }
   }
 }
 
@@ -122,6 +151,9 @@
   justify-content: flex-end;
 
   @include mobile-only {
-    a, button { width: 100%; }
+    a,
+    button {
+      width: 100%;
+    }
   }
 }

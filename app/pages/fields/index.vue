@@ -48,7 +48,6 @@
             </AppTable>
           </template>
 
-          <!-- MOSAIC VIEW -->
           <template v-else>
             <div class="list-mosaic">
               <div v-for="field in filtered" :key="field.id" class="list-card">
@@ -109,11 +108,13 @@ const fields = ref<Field[]>([])
 const loading = ref(true)
 const { search, sort, view, selectedCount, onSelect, onDelete } = useListToolbar()
 const isMobile = ref(false)
+
 onMounted(() => {
   const mq = window.matchMedia('(max-width: 767px)')
   isMobile.value = mq.matches
   mq.addEventListener('change', e => { isMobile.value = e.matches })
 })
+
 const effectiveView = computed(() => isMobile.value ? 'grid' : view.value)
 const { page, lastPage, total, setMeta, goTo } = useListPagination()
 
@@ -122,6 +123,7 @@ async function fetchData() {
   try {
     const api = useApi()
     const res = await api<{ data: Field[] | PaginatedResponse<Field> }>(`/fields?page=${page.value}`)
+      console.log(res.data);
     const d = res.data
     if (Array.isArray(d)) { fields.value = d }
     else { fields.value = d.data; setMeta(d.meta) }

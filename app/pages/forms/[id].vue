@@ -180,6 +180,7 @@ onMounted(async () => {
   try {
     const res = await api<{ data: FieldOption[] | { data: FieldOption[] } }>('/fields')
     const d = res.data
+    console.log(d);
     availableFields.value = Array.isArray(d) ? d : d.data
   }
   catch { availableFields.value = [] }
@@ -295,7 +296,6 @@ async function onSubmit() {
   gap: var(--space-2);
   margin-top: var(--space-2);
   padding: var(--space-2) var(--space-4);
-  border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   background: var(--color-primary-25);
   color: var(--color-primary);

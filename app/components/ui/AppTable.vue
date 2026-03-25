@@ -193,14 +193,17 @@ function closePanel() {
 
 .app-table__row:hover td {
   background: var(--color-primary-25);
+  box-shadow: inset 0 8px 0 0 var(--color-surface), inset 0 -4px 0 0 var(--color-surface);
 }
 
 .app-table__row:hover td:first-child {
   border-radius: 8px 0 0 8px;
+  box-shadow: inset 16px 8px 0 0 var(--color-surface), inset 16px -4px 0 0 var(--color-surface);
 }
 
 .app-table__row:hover td:last-child {
   border-radius: 0 8px 8px 0;
+  box-shadow: inset -16px 8px 0 0 var(--color-surface), inset -16px -4px 0 0 var(--color-surface);
 }
 
 .app-table__row--open {
