@@ -1,13 +1,16 @@
 <template>
   <div class="list-toolbar">
     <div class="list-toolbar__search">
-      <input
-        type="text"
-        class="input-search"
-        :placeholder="`Search ${label}s...`"
-        :value="search"
-        @input="$emit('update:search', ($event.target as HTMLInputElement).value)"
-      />
+      <div class="input-search-wrap">
+        <span class="material-icons-round input-search-wrap__icon">search</span>
+        <input
+          type="text"
+          class="input-search"
+          :placeholder="`Search ${label}s...`"
+          :value="search"
+          @input="$emit('update:search', ($event.target as HTMLInputElement).value)"
+        />
+      </div>
     </div>
 
     <div class="list-toolbar__sort">

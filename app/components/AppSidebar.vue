@@ -3,7 +3,7 @@
 
     <div class="app-sidebar__logo">
       <NuxtLink :to="isMaster ? '/admin' : '/'" @click="emit('close')">
-        <img src="/images/logo.png" alt="Squirrel" />
+        <img src="/images/logo_cor.png" alt="Squirrel" />
       </NuxtLink>
     </div>
 
@@ -14,7 +14,6 @@
     <nav class="app-sidebar__nav">
       <ul class="app-sidebar__list">
 
-        <!-- ── Master admin nav ─────────────────────── -->
         <template v-if="isMaster">
 
           <li class="app-sidebar__home">

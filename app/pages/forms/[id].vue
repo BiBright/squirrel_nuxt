@@ -123,6 +123,7 @@
 
       </div>
     </div>
+    <AppUnsavedModal :model-value="showModal" @confirm="confirmLeave" @cancel="cancelLeave" />
   </div>
 </template>
 
@@ -168,6 +169,11 @@ const loadingRecord = ref(false)
 const loading = ref(false)
 const showFieldModal = ref(false)
 
+const { isDirty, showModal, confirmLeave, cancelLeave } = useUnsavedChanges()
+const _ready = ref(!isEdit.value)
+watch(form, () => { _ready.value && (isDirty.value = true) }, { deep: true })
+watch(selectedFields, () => { _ready.value && (isDirty.value = true) }, { deep: true })
+
 const filteredAvailable = computed(() => {
   if (!fieldSearch.value) return availableFields.value
   const q = fieldSearch.value.toLowerCase()
@@ -180,7 +186,6 @@ onMounted(async () => {
   try {
     const res = await api<{ data: FieldOption[] | { data: FieldOption[] } }>('/fields')
     const d = res.data
-    console.log(d);
     availableFields.value = Array.isArray(d) ? d : d.data
   }
   catch { availableFields.value = [] }
@@ -204,7 +209,7 @@ onMounted(async () => {
     }
   }
   catch (err) { toast.error(err, 'Could not load form data', { category: 'form' }) }
-  finally { loadingRecord.value = false }
+  finally { loadingRecord.value = false; nextTick(() => { _ready.value = true }) }
 })
 
 function typeIcon(type: string): string { return TYPE_ICONS[type] ?? 'input' }
@@ -257,6 +262,7 @@ async function onSubmit() {
       await api('/forms', { method: 'POST', body })
       toast.success('Form created', { category: 'form' })
     }
+    isDirty.value = false
     await navigateTo('/forms')
   }
   catch (err: unknown) {

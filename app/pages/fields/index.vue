@@ -6,7 +6,7 @@
           <AppBreadcrumb :items="[{ label: 'Models' }, { label: 'Fields', to: '/fields' }]" />
         </div>
 
-        <AppPageHeader title="Fields"/>
+        <AppPageHeader title="Fields" />
 
         <div class="col-12">
           <AppListToolbar v-model:search="search" v-model:sort="sort" v-model:view="view" label="field"
@@ -31,11 +31,19 @@
           </AppBlankState>
 
           <template v-else-if="effectiveView === 'list'">
-            <AppTable :columns="columns" button-edit :rows="tableRows" @select="onSelect">
-              
+            <AppTable :columns="columns" button-edit :rows="tableRows" @select="onSelect"
+              @edit="(row) => navigateTo(`/fields/${row._raw.id}`)">
+
               <template #cell-name="{ value, row }">
                 <NuxtLink :to="`/fields/${row._raw.id}`" class="app-table__cell-link">{{ value }}</NuxtLink>
-                <span v-if="row.description" class="app-table__cell-sub">{{ row.description }}</span>
+              </template>
+
+              <template #cell-file="{ value, row }">
+                <a v-if="value" :href="(row.fileUrl as string)" class="file-download-link" target="_blank" download>
+                  <span class="material-icons-round">attach_file</span>
+                  {{ value }}
+                </a>
+                <span v-else class="text-muted">—</span>
               </template>
 
               <template #cell-type="{ value }">
@@ -84,10 +92,15 @@ interface Field {
   description: string | null
   type: string
   type_label: string
+  is_active: boolean
+  created_at: string
+  template_file_name: string | null
+  template_file_url: string | null
 }
 
 const columns = [
   { key: 'name', label: 'Field Name', primary: true },
+  { key: 'description', label: 'Description' },
   { key: 'file', label: 'File' }
 ]
 
@@ -123,8 +136,8 @@ async function fetchData() {
   try {
     const api = useApi()
     const res = await api<{ data: Field[] | PaginatedResponse<Field> }>(`/fields?page=${page.value}`)
-      console.log(res.data);
     const d = res.data
+    console.log(d);
     if (Array.isArray(d)) { fields.value = d }
     else { fields.value = d.data; setMeta(d.meta) }
   }
@@ -158,6 +171,8 @@ const tableRows = computed(() =>
   filtered.value.map(f => ({
     name: f.name,
     description: f.description,
+    file: f.template_file_name,
+    fileUrl: f.template_file_url,
     type: f.type_label,
     status: f.is_active ? 'Active' : 'Inactive',
     date: formatDate(f.created_at),
@@ -182,3 +197,18 @@ function formatDate(date: string) {
   return new Date(date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
 }
 </script>
+
+<style scoped>
+.file-download-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--color-primary);
+  font-size: var(--text-sm);
+  text-decoration: none;
+
+  .material-icons-round {
+    font-size: 16px;
+  }
+}
+</style>

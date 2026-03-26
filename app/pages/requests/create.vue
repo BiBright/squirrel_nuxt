@@ -166,6 +166,7 @@
       <AppButton @click="showUsersModal = false">Done</AppButton>
     </template>
   </AppModal>
+  <AppUnsavedModal :model-value="showModal" @confirm="confirmLeave" @cancel="cancelLeave" />
   </div>
 </template>
 
@@ -179,6 +180,8 @@ interface UserOption { id: number; name: string }
 const errors = reactive({ form_ids: '', supplier_ids: '' })
 const toast = useAppToast()
 const loading = ref(false)
+
+const { isDirty, showModal, confirmLeave, cancelLeave } = useUnsavedChanges()
 
 const availableForms = ref<FormOption[]>([])
 const availableSuppliers = ref<SupplierOption[]>([])
@@ -197,6 +200,8 @@ const showUsersModal = ref(false)
 const formSearch = ref('')
 const supplierSearch = ref('')
 const userSearch = ref('')
+
+watch([selectedForms, selectedSuppliers, assignee], () => { isDirty.value = true }, { deep: true })
 
 const filteredForms = computed(() => {
   if (!formSearch.value) return availableForms.value
@@ -274,15 +279,21 @@ async function onSubmit() {
   loading.value = true
   try {
     const api = useApi()
-    await api('/requests', {
+    const res = await api<{ data: { id: number } }>('/requests', {
       method: 'POST',
       body: {
         form_ids: selectedForms.value.map(f => f.id),
         supplier_ids: selectedSuppliers.value.map(s => s.id),
-        assigned_to: assignee.value?.id ?? null,
       },
     })
+    if (assignee.value) {
+      await api(`/requests/${res.data.id}/assign`, {
+        method: 'PATCH',
+        body: { assigned_to: assignee.value.id },
+      })
+    }
     toast.success('Request created', { category: 'request' })
+    isDirty.value = false
     await navigateTo('/requests')
   }
   catch (err: unknown) {

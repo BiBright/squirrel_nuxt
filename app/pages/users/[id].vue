@@ -37,6 +37,7 @@
 
       </div>
     </div>
+    <AppUnsavedModal :model-value="showModal" @confirm="confirmLeave" @cancel="cancelLeave" />
   </div>
 </template>
 
@@ -53,6 +54,10 @@ const toast = useAppToast()
 const loading = ref(false)
 const loadingRecord = ref(false)
 
+const { isDirty, showModal, confirmLeave, cancelLeave } = useUnsavedChanges()
+const _ready = ref(!isEdit.value)
+watch(form, () => { _ready.value && (isDirty.value = true) }, { deep: true })
+
 onMounted(async () => {
   if (!isEdit.value) return
   loadingRecord.value = true
@@ -63,6 +68,7 @@ onMounted(async () => {
     form.name = (authStore.user?.name as string) ?? ''
     form.email = (authStore.user?.email as string) ?? ''
     loadingRecord.value = false
+    nextTick(() => { _ready.value = true })
     return
   }
 
@@ -74,6 +80,7 @@ onMounted(async () => {
     form.name = cached.name ?? ''
     form.email = cached.email ?? ''
     loadingRecord.value = false
+    nextTick(() => { _ready.value = true })
     return
   }
 
@@ -88,7 +95,7 @@ onMounted(async () => {
     form.job_sector = (d.job_sector as string) ?? ''
   }
   catch (err) { toast.error(err, 'Could not load user data', { category: 'user' }) }
-  finally { loadingRecord.value = false }
+  finally { loadingRecord.value = false; nextTick(() => { _ready.value = true }) }
 })
 
 function validate(): boolean {
@@ -120,6 +127,7 @@ async function onSubmit() {
       await api('/users', { method: 'POST', body })
       toast.success('User created', { category: 'user' })
     }
+    isDirty.value = false
     await navigateTo('/users')
   }
   catch (err: unknown) {

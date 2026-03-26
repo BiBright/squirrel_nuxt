@@ -118,7 +118,12 @@ const STATUS_OPTIONS: { value: string; label: string; variant: BadgeVariant }[] 
   { value: 'completed', label: 'Complete', variant: 'success' },
 ]
 
-const props = defineProps<{ requests: Request[] }>()
+interface User {
+  id: number
+  name: string
+}
+
+const props = defineProps<{ requests: Request[]; users: User[] }>()
 
 const emit = defineEmits<{
   change: [filters: {
@@ -156,7 +161,7 @@ const allSuppliers = computed(() =>
 )
 
 const allAssigned = computed(() =>
-  [...new Set(props.requests.map(r => r.assigned_to?.name).filter(Boolean) as string[])].sort(),
+  [...props.users.map(u => u.name)].sort(),
 )
 
 // ── Filtered option lists (search) ───────────────────────
@@ -197,11 +202,13 @@ function toggleFilter(key: keyof typeof filters, value: string) {
 
 <style scoped>
 .requests-filter {
+  position: sticky;
+  top: 0;
   background-color: var(--color-white);
-  overflow: hidden;
   padding: 0 24px;
   margin-right: -20px;
-  height: 100%;
+  height: calc(100vh - var(--header-height));
+  overflow-y: auto;
 }
 
 .requests-filter__header {
@@ -270,6 +277,8 @@ function toggleFilter(key: keyof typeof filters, value: string) {
 }
 
 .requests-filter__options {
+  background-color: #f9f9f9;
+  border-radius: var(--radius-md);
   padding: var(--space-2) var(--space-4) var(--space-3);
   display: flex;
   flex-direction: column;
@@ -296,7 +305,7 @@ function toggleFilter(key: keyof typeof filters, value: string) {
   display: flex;
   align-items: center;
   gap: var(--space-2);
-  padding: var(--space-1) var(--space-2);
+  padding: var(--space-1) var(--space-2) var(--space-1) 0;
   border-radius: var(--radius-sm);
   cursor: pointer;
   font-size: var(--text-sm);

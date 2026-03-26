@@ -211,7 +211,9 @@
 
 .app-table__cell-link {
   display: block;
-  font-weight: 500;
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 700;
   color: var(--color-primary);
   text-decoration: none;
   overflow: hidden;
@@ -229,7 +231,6 @@
   margin-top: 2px;
 }
 
-// Empty state inside a list container
 .list-empty {
   padding: 48px 20px;
   text-align: center;

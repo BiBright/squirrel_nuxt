@@ -32,10 +32,9 @@
           </AppBlankState>
 
           <template v-else-if="effectiveView === 'list'">
-            <AppTable buttonn-edit :columns="columns" :rows="tableRows" @delete="onDeleteRow" @select="onSelect">
+            <AppTable button-edit :columns="columns" :rows="tableRows" @edit="(row) => navigateTo(`/users/${(row._raw as User).id}`)" @delete="onDeleteRow" @select="onSelect">
               <template #cell-name="{ value, row }">
-                <NuxtLink :to="`/users/${row._raw.id}`" class="app-table__cell-link">{{ value }}</NuxtLink>
-                <span class="app-table__cell-sub">{{ row.email }}</span>
+                <NuxtLink :to="`/users/${(row._raw as User).id}`" class="app-table__cell-link">{{ value }}</NuxtLink>
               </template>
 
               <template #cell-role="{ value }">
@@ -44,7 +43,6 @@
             </AppTable>
           </template>
 
-          <!-- MOSAIC VIEW -->
           <template v-else>
             <div class="list-mosaic">
               <div v-for="user in filtered" :key="user.id" class="list-card">
@@ -83,11 +81,14 @@ interface User {
   id: number
   name: string
   email: string
+  phone: string | null
   roles: string | null
 }
 
 const columns = [
   { key: 'name', label: 'Name', primary: true },
+  { key: 'contact', label: 'Contact' },
+  { key: 'email', label: 'Email' },
   { key: 'role', label: 'Role' },
 ]
 
@@ -124,6 +125,7 @@ async function fetchData() {
     const api = useApi()
     const res = await api<{ data: User[] | PaginatedResponse<User> }>(`/users?page=${page.value}`)
     const d = res.data
+    console.log(d);
     if (Array.isArray(d)) { users.value = d }
     else { users.value = d.data; setMeta(d.meta) }
     usersCache.value = users.value
@@ -170,6 +172,7 @@ const tableRows = computed(() =>
   filtered.value.map(u => ({
     name: u.name,
     email: u.email,
+    contact: u.phone ?? '—',
     role: u.roles ?? '—',
     _raw: u,
   })),

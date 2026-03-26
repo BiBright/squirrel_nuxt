@@ -32,7 +32,7 @@
           </AppBlankState>
 
           <template v-else-if="effectiveView === 'list'">
-            <AppTable :columns="columns" :rows="tableRows" button-edit @select="onSelect">
+            <AppTable :columns="columns" :rows="tableRows" button-edit @select="onSelect" @edit="(row) => navigateTo(`/forms/${row._raw.id}`)">
               <template #cell-name="{ value, row }">
                 <NuxtLink :to="`/forms/${row._raw.id}`" class="app-table__cell-link">{{ value }}</NuxtLink>
               </template>
@@ -41,17 +41,16 @@
                 <span>{{ value }}</span>
               </template>
 
-              <template #cell-template="{ value }">
-                <AppBadge v-if="value" variant="neutral">
-                  <span class="material-icons-round" style="font-size:14px">attach_file</span>
+              <template #cell-template="{ value, row }">
+                <a v-if="value" :href="(row.templateUrl as string)" class="file-download-link" target="_blank" download>
+                  <span class="material-icons-round">attach_file</span>
                   {{ value }}
-                </AppBadge>
+                </a>
                 <span v-else class="text-muted">—</span>
               </template>
             </AppTable>
           </template>
 
-          <!-- MOSAIC VIEW -->
           <template v-else>
             <div class="list-mosaic">
               <div v-for="form in filtered" :key="form.id" class="list-card">
@@ -89,12 +88,13 @@ interface Form {
   name: string
   description: string | null
   template_file_name: string | null
+  template_file_url: string | null
 }
 
 const columns = [
   { key: 'name', label: 'Name', primary: true },
   { key: 'description', label: 'Description' },
-  { key: 'file', label: 'File' }
+  { key: 'template', label: 'File' }
 ]
 
 interface PaginationMeta {
@@ -164,6 +164,7 @@ const tableRows = computed(() =>
     fields: `${f.fields_count} field${f.fields_count !== 1 ? 's' : ''}`,
     status: f.is_active ? 'Active' : 'Inactive',
     template: f.has_template ? f.template_file_name : null,
+    templateUrl: f.template_file_url,
     date: formatDate(f.created_at),
     _raw: f,
   })),
@@ -186,3 +187,16 @@ function formatDate(date: string) {
   return new Date(date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
 }
 </script>
+
+<style scoped>
+.file-download-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--color-primary);
+  font-size: var(--text-sm);
+  text-decoration: none;
+
+  .material-icons-round { font-size: 16px; }
+}
+</style>

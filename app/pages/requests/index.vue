@@ -33,7 +33,7 @@
       </div>
 
       <div class="col-12 col-md-3 d-none d-md-block">
-        <RequestsFilter :requests="requests" @change="onFilterChange" />
+        <RequestsFilter :requests="requests" :users="users" @change="onFilterChange" />
       </div>
     </div>
   </div>
@@ -143,7 +143,7 @@ function onSelectionChange(entryIds: number[]) {
 async function onAssign(req: Request, user: User) {
   try {
     const api = useApi()
-    await api(`/requests/${req.id}/assign`, { method: 'PATCH', body: { user_id: user.id } })
+    await api(`/requests/${req.id}/assign`, { method: 'PATCH', body: { assigned_to: user.id } })
     const target = requests.value.find(r => r.id === req.id)
     if (target) target.assigned_to = { id: user.id, name: user.name }
     toast.success(`Request assigned to ${user.name}`, { category: 'request' })

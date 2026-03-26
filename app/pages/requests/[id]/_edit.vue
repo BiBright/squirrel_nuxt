@@ -1,95 +1,103 @@
 <template>
   <div>
-    <AppPageHeader :title="form.title || 'Edit Request'" subtitle="Update forms and suppliers for this request.">
-      <AppButton variant="ghost" to="/requests">
-        <span class="material-icons-round">arrow_back</span>
-        Back
-      </AppButton>
-    </AppPageHeader>
+    <div class="container">
+      <div class="row">
 
-    <div v-if="loadingRequest" class="list-container">
-      <div class="list-empty">
-        <span class="material-icons-round">hourglass_empty</span>
-        <p>Loading request...</p>
+        <div class="col-12">
+          <AppBreadcrumb :items="[{ label: 'Requests', to: '/requests' }, { label: form.title || 'Edit Request' }]" />
+        </div>
+
+        <div class="col-12">
+          <AppPageHeader :title="form.title || 'Edit Request'" />
+        </div>
+
+        <div class="col-12">
+          <div v-if="loadingRequest" class="list-empty">
+            <span class="material-icons-round">hourglass_empty</span>
+            <p>Loading request...</p>
+          </div>
+
+          <form v-else novalidate class="create-form" @submit.prevent="onSubmit">
+            <div class="col-9">
+              <AppCard title="Details">
+                <AppInput
+                  v-model="form.title"
+                  label="Title"
+                  placeholder="Optional title for this request"
+                  :optional="true"
+                />
+              </AppCard>
+
+              <!-- Forms selection -->
+              <AppCard title="Forms">
+                <p v-if="errors.form_ids" class="input-error-msg">{{ errors.form_ids }}</p>
+                <div v-if="loadingForms" class="create-select__loading">Loading forms...</div>
+                <div v-else-if="availableForms.length === 0" class="create-select__empty">No active forms available.</div>
+                <template v-else>
+                  <AppInput v-model="formSearch" type="search" placeholder="Search forms..." />
+                  <div class="create-select__list">
+                    <label
+                      v-for="f in filteredForms"
+                      :key="f.id"
+                      class="create-select__item"
+                      :class="{ 'is-selected': form.form_ids.includes(f.id) }"
+                    >
+                      <input
+                        type="checkbox"
+                        :value="f.id"
+                        :checked="form.form_ids.includes(f.id)"
+                        class="create-select__checkbox"
+                        @change="toggleForm(f.id)"
+                      />
+                      <span class="create-select__name">{{ f.name }}</span>
+                    </label>
+                  </div>
+                  <p class="create-select__count">{{ form.form_ids.length }} selected</p>
+                </template>
+              </AppCard>
+
+              <!-- Suppliers selection -->
+              <AppCard title="Suppliers">
+                <p v-if="errors.supplier_ids" class="input-error-msg">{{ errors.supplier_ids }}</p>
+                <div v-if="loadingSuppliers" class="create-select__loading">Loading suppliers...</div>
+                <div v-else-if="availableSuppliers.length === 0" class="create-select__empty">No suppliers registered yet.</div>
+                <template v-else>
+                  <AppInput v-model="supplierSearch" type="search" placeholder="Search suppliers..." />
+                  <div class="create-select__list">
+                    <label
+                      v-for="s in filteredSuppliers"
+                      :key="s.id"
+                      class="create-select__item"
+                      :class="{ 'is-selected': form.supplier_ids.includes(s.id) }"
+                    >
+                      <input
+                        type="checkbox"
+                        :value="s.id"
+                        :checked="form.supplier_ids.includes(s.id)"
+                        class="create-select__checkbox"
+                        @change="toggleSupplier(s.id)"
+                      />
+                      <div>
+                        <span class="create-select__name">{{ s.name }}</span>
+                        <span class="create-select__sub">{{ s.email }}</span>
+                      </div>
+                    </label>
+                  </div>
+                  <p class="create-select__count">{{ form.supplier_ids.length }} selected</p>
+                </template>
+              </AppCard>
+            </div>
+
+            <div class="create-form__actions">
+              <AppButton variant="ghost" to="/requests">Cancel</AppButton>
+              <AppButton type="submit" :loading="loading">Save Changes</AppButton>
+            </div>
+          </form>
+        </div>
+
       </div>
     </div>
-
-    <template v-else>
-      <form novalidate class="create-form" @submit.prevent="onSubmit">
-        <AppCard title="Details">
-          <AppInput
-            v-model="form.title"
-            label="Title"
-            placeholder="Optional title for this request"
-            :optional="true"
-          />
-        </AppCard>
-
-        <!-- Forms selection -->
-        <AppCard title="Forms">
-          <p v-if="errors.form_ids" class="input-error-msg">{{ errors.form_ids }}</p>
-          <div v-if="loadingForms" class="create-select__loading">Loading forms...</div>
-          <div v-else-if="availableForms.length === 0" class="create-select__empty">No active forms available.</div>
-          <template v-else>
-            <AppInput v-model="formSearch" type="search" placeholder="Search forms..." />
-            <div class="create-select__list">
-              <label
-                v-for="f in filteredForms"
-                :key="f.id"
-                class="create-select__item"
-                :class="{ 'is-selected': form.form_ids.includes(f.id) }"
-              >
-                <input
-                  type="checkbox"
-                  :value="f.id"
-                  :checked="form.form_ids.includes(f.id)"
-                  class="create-select__checkbox"
-                  @change="toggleForm(f.id)"
-                />
-                <span class="create-select__name">{{ f.name }}</span>
-              </label>
-            </div>
-            <p class="create-select__count">{{ form.form_ids.length }} selected</p>
-          </template>
-        </AppCard>
-
-        <!-- Suppliers selection -->
-        <AppCard title="Suppliers">
-          <p v-if="errors.supplier_ids" class="input-error-msg">{{ errors.supplier_ids }}</p>
-          <div v-if="loadingSuppliers" class="create-select__loading">Loading suppliers...</div>
-          <div v-else-if="availableSuppliers.length === 0" class="create-select__empty">No suppliers registered yet.</div>
-          <template v-else>
-            <AppInput v-model="supplierSearch" type="search" placeholder="Search suppliers..." />
-            <div class="create-select__list">
-              <label
-                v-for="s in filteredSuppliers"
-                :key="s.id"
-                class="create-select__item"
-                :class="{ 'is-selected': form.supplier_ids.includes(s.id) }"
-              >
-                <input
-                  type="checkbox"
-                  :value="s.id"
-                  :checked="form.supplier_ids.includes(s.id)"
-                  class="create-select__checkbox"
-                  @change="toggleSupplier(s.id)"
-                />
-                <div>
-                  <span class="create-select__name">{{ s.name }}</span>
-                  <span class="create-select__sub">{{ s.email }}</span>
-                </div>
-              </label>
-            </div>
-            <p class="create-select__count">{{ form.supplier_ids.length }} selected</p>
-          </template>
-        </AppCard>
-
-        <div class="create-form__actions">
-          <AppButton variant="ghost" to="/requests">Cancel</AppButton>
-          <AppButton type="submit" :loading="loading">Save Changes</AppButton>
-        </div>
-      </form>
-    </template>
+    <AppUnsavedModal :model-value="showModal" @confirm="confirmLeave" @cancel="cancelLeave" />
   </div>
 </template>
 
@@ -130,6 +138,10 @@ const loadingRequest = ref(true)
 const loadingForms = ref(true)
 const loadingSuppliers = ref(true)
 const loading = ref(false)
+
+const { isDirty, showModal, confirmLeave, cancelLeave } = useUnsavedChanges()
+const _ready = ref(false)
+watch(form, () => { _ready.value && (isDirty.value = true) }, { deep: true })
 
 const filteredForms = computed(() => {
   if (!formSearch.value) return availableForms.value
@@ -173,6 +185,7 @@ onMounted(async () => {
     form.supplier_ids = [...new Set(req.forms.flatMap(f => f.suppliers.map(s => s.supplier.id)))]
   }
   loadingRequest.value = false
+  nextTick(() => { _ready.value = true })
 })
 
 function toggleForm(fid: number) {
@@ -213,6 +226,7 @@ async function onSubmit() {
     })
 
     toast.success('Request updated', { category: 'request' })
+    isDirty.value = false
     await navigateTo('/requests')
   }
   catch (err: unknown) {

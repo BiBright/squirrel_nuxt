@@ -1,9 +1,6 @@
 @use '../base/variables' as *;
 @use '../base/viewport' as *;
 
-// ================================
-// Modal System
-// ================================
 
 .modal-overlay {
   position: fixed;
@@ -29,8 +26,8 @@
 
   &__header {
     display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
+    align-items: center;
+    justify-content: center;
     gap: 16px;
     margin-bottom: 24px;
   }
@@ -73,15 +70,13 @@
   &__footer {
     display: flex;
     align-items: center;
-    justify-content: flex-end;
-    gap: 12px;
+    justify-content: space-between;
+    gap: 16px;
   }
 
-  // Size variants
   &--wide   { max-width: 640px; }
   &--narrow { max-width: 360px; }
 
-  // State variants
   &--danger .modal__title { color: $red100; }
 
   &--premium {

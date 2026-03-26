@@ -81,7 +81,9 @@
 
                 <div class="entry-actions">
                   <AppButton variant="ghost" to="/requests">Cancel</AppButton>
-                  <AppButton :loading="saving" @click="onSave">Save</AppButton>
+                  <AppButton :loading="saving" @click="onSave">
+                    {{ entry.status.value === 'awaiting_answer' ? 'Submit' : 'Save' }}
+                  </AppButton>
                 </div>
               </AppCard>
             </div>
@@ -152,6 +154,7 @@
       </div>
     </div>
   </div>
+  <AppUnsavedModal :model-value="showModal" @confirm="confirmLeave" @cancel="cancelLeave" />
 </template>
 
 <script setup lang="ts">
@@ -217,6 +220,9 @@ const config = useRuntimeConfig()
 const requestId = Number(route.params.id)
 const entryId = Number(route.params.entryId)
 
+const { isDirty, showModal, confirmLeave, cancelLeave } = useUnsavedChanges()
+const _ready = ref(false)
+
 const loading = ref(true)
 const saving = ref(false)
 const approving = ref(false)
@@ -237,6 +243,10 @@ const selectedAssigneeName = computed(() =>
 )
 
 onClickOutside(assigneeDropdownRef, () => { assigneeOpen.value = false })
+
+watch(answers, () => { _ready.value && (isDirty.value = true) }, { deep: true })
+watch(uploadedFiles, () => { _ready.value && (isDirty.value = true) }, { deep: true })
+watch(comment, () => { isDirty.value = true })
 
 async function selectAssignee(id: number | null) {
   selectedAssigneeId.value = id
@@ -284,6 +294,7 @@ onMounted(async () => {
   }
   finally {
     loading.value = false
+    nextTick(() => { _ready.value = true })
   }
 })
 
@@ -294,9 +305,9 @@ function onFileChange(fieldId: number, event: Event) {
 
 async function onAssigneeChange() {
   try {
-    await api(`/requests/${requestId}`, {
-      method: 'POST',
-      body: { _method: 'PATCH', assigned_to: selectedAssigneeId.value ?? '' },
+    await api(`/requests/${requestId}/assign`, {
+      method: 'PATCH',
+      body: { assigned_to: selectedAssigneeId.value },
     })
     toast.success('Assignee updated', { category: 'request' })
   }
@@ -306,18 +317,23 @@ async function onAssigneeChange() {
 }
 
 async function onSave() {
+  if (!entry.value) return
   saving.value = true
   try {
     const body = new FormData()
-    form.value?.fields.forEach((field) => {
+    form.value?.fields.forEach((field, index) => {
+      body.append(`responses[${index}][field_id]`, String(field.id))
       if (field.requires_file) {
-        if (uploadedFiles[field.id]) body.append(`fields[${field.id}][file]`, uploadedFiles[field.id])
+        if (uploadedFiles[field.id]) body.append(`responses[${index}][file]`, uploadedFiles[field.id]!)
       }
       else {
-        body.append(`fields[${field.id}][value]`, answers[field.id] ?? '')
+        body.append(`responses[${index}][value]`, answers[field.id] ?? '')
       }
     })
-    await api(`/entries/${entryId}/respond`, { method: 'POST', body })
+    await api(`/request-entries/${entryId}/respond`, { method: 'POST', body })
+    const submitRes = await api<{ data: { status: { value: string; label: string } } }>(`/request-entries/${entryId}/submit`, { method: 'POST' })
+    if (submitRes.data?.status) entry.value.status = submitRes.data.status
+    isDirty.value = false
     toast.success('Entry saved', { category: 'request' })
   }
   catch (err) {
@@ -354,8 +370,8 @@ async function onReject() {
   finally { rejecting.value = false }
 }
 
-function fieldInputType(type: string): string {
-  const map: Record<string, string> = { numeric: 'number', date: 'date', long_text: 'textarea' }
+function fieldInputType(type: string): 'number' | 'text' | 'date' | 'textarea' {
+  const map: Record<string, 'number' | 'text' | 'date' | 'textarea'> = { numeric: 'number', date: 'date', long_text: 'textarea' }
   return map[type] ?? 'text'
 }
 

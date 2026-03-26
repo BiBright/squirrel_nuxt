@@ -41,6 +41,7 @@
 
       </div>
     </div>
+    <AppUnsavedModal :model-value="showModal" @confirm="confirmLeave" @cancel="cancelLeave" />
   </div>
 </template>
 
@@ -61,6 +62,10 @@ const toast = useAppToast()
 const loading = ref(false)
 const loadingRecord = ref(false)
 
+const { isDirty, showModal, confirmLeave, cancelLeave } = useUnsavedChanges()
+const _ready = ref(!isEdit.value)
+watch(form, () => { _ready.value && (isDirty.value = true) }, { deep: true })
+
 onMounted(async () => {
   if (!isEdit.value) return
   loadingRecord.value = true
@@ -79,7 +84,7 @@ onMounted(async () => {
     form.contact_phone = (d.contact_phone as string) ?? ''
   }
   catch (err) { toast.error(err, 'Could not load supplier data', { category: 'supplier' }) }
-  finally { loadingRecord.value = false }
+  finally { loadingRecord.value = false; nextTick(() => { _ready.value = true }) }
 })
 
 function validate(): boolean {
@@ -120,6 +125,7 @@ async function onSubmit() {
       await api('/suppliers', { method: 'POST', body })
       toast.success('Supplier created', { category: 'supplier' })
     }
+    isDirty.value = false
     await navigateTo('/suppliers')
   }
   catch (err: unknown) {

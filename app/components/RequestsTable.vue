@@ -6,45 +6,42 @@
       <p>No requests found.</p>
     </div>
 
-    <div v-for="req in requests" :key="req.id" class="request-table__group">
+    <div v-for="{ req, form } in flatItems" :key="`${req.id}-${form.form_id}`" class="request-table__group">
 
       <div class="request-table__header"
-        :class="{ 'request-table__header--selected': isGroupSelected(req), 'request-table__header--closed': !expanded.has(req.id) }">
+        :class="{ 'request-table__header--selected': isGroupSelected(form), 'request-table__header--closed': !expanded.has(groupKey(req, form)) }">
 
         <div class="request-table__col request-table__col--check">
-          <input type="checkbox" :checked="isGroupSelected(req)" :indeterminate="isGroupIndeterminate(req)"
-            @change="toggleGroup(req)" />
+          <input type="checkbox" :checked="isGroupSelected(form)" :indeterminate="isGroupIndeterminate(form)"
+            @change="toggleGroup(form)" />
         </div>
 
-        <button class="request-table__chevron" @click="toggleExpand(req.id)">
+        <button class="request-table__chevron" @click="toggleExpand(groupKey(req, form))">
           <span class="material-icons-round">
-            {{ expanded.has(req.id) ? 'expand_less' : 'expand_more' }}
+            {{ expanded.has(groupKey(req, form)) ? 'expand_less' : 'expand_more' }}
           </span>
         </button>
 
-        <NuxtLink :to="`/requests/${req.id}/edit`" class="request-table__title">
-          {{ displayTitle(req) }}
-        </NuxtLink>
+        <span class="request-table__title">
+          {{ form.form_name }}
+        </span>
 
         <span class="request-table__progress">
-          {{ totalCompleted(req) }}/{{ totalEntries(req) }}
+          {{ form.completed }}/{{ form.total }}
         </span>
 
         <div class="request-table__more-wrapper" @click.stop>
-          <button class="request-table__more-btn" :class="{ 'is-active': openMenu === req.id }" @click.stop="toggleMenu(req.id)">
+          <button class="request-table__more-btn" :class="{ 'is-active': openMenu === groupKey(req, form) }" @click.stop="toggleMenu(groupKey(req, form))">
             <span class="material-icons-round">more_horiz</span>
           </button>
 
-          <!-- More panel -->
-          <div v-if="openMenu === req.id" class="request-table__more-panel">
+          <div v-if="openMenu === groupKey(req, form)" class="request-table__more-panel">
 
-            <!-- 1. Selected count -->
             <div class="request-table__more-item request-table__more-item--info">
               <span class="material-icons-round">check_box</span>
-              {{ selectedInGroup(req).length }} supplier{{ selectedInGroup(req).length !== 1 ? 's' : '' }} selected
+              {{ selectedInGroup(form).length }} supplier{{ selectedInGroup(form).length !== 1 ? 's' : '' }} selected
             </div>
 
-            <!-- 2. Assignee -->
             <button class="request-table__more-item request-table__more-item--expandable"
               @click="groupMenuSection = groupMenuSection === 'assign' ? 'none' : 'assign'">
               <span class="material-icons-round">person</span>
@@ -72,7 +69,7 @@
         </div>
       </div>
 
-      <div v-if="expanded.has(req.id)" class="request-table__entries">
+      <div v-if="expanded.has(groupKey(req, form))" class="request-table__entries">
         <div class="request-table__entries-header">
           <div class="request-table__col request-table__col--check">Select</div>
           <div class="request-table__col request-table__col--supplier">Supplier</div>
@@ -83,8 +80,7 @@
           <div class="request-table__col request-table__col--action">More</div>
         </div>
 
-        <div v-for="form in req.forms" :key="form.form_id" class="request-table__form-group">
-          <div v-for="entry in form.suppliers" :key="entry.id" class="request-table__entry"
+        <div v-for="entry in form.suppliers" :key="entry.id" class="request-table__entry"
             :class="{ 'request-table__entry--selected': selectedEntries.has(entry.id) }">
             <div class="request-table__col request-table__col--check">
               <input type="checkbox" :checked="selectedEntries.has(entry.id)" @change="toggleEntry(entry.id)" />
@@ -102,7 +98,6 @@
               </AppBadge>
             </div>
 
-            <!-- Entry more button -->
             <div class="request-table__col request-table__col--action">
               <div class="request-table__more-wrapper" @click.stop>
                 <button class="request-table__more-btn" :class="{ 'is-active': openEntryMenu === entry.id }"
@@ -112,7 +107,6 @@
 
                 <div v-if="openEntryMenu === entry.id" class="request-table__more-panel request-table__more-panel--entry">
 
-                  <!-- ── MULTI-SELECT: this entry is selected with others ── -->
                   <template v-if="selectedEntries.has(entry.id) && selectedEntries.size > 1">
 
                     <div class="request-table__more-item request-table__more-item--section">Selected Requests</div>
@@ -150,8 +144,7 @@
                       style="border-top: 1px solid var(--color-border); margin-top: 2px;">This Request</div>
                   </template>
 
-                  <!-- ── SINGLE / THIS REQUEST actions ── -->
-                  <NuxtLink :to="`/requests/${req.id}/edit`" class="request-table__more-item request-table__more-item--link"
+                  <NuxtLink :to="`/requests/${req.id}/entries/${entry.id}`" class="request-table__more-item request-table__more-item--link"
                     @click="closeEntryMenu()">
                     <span class="material-icons-round">edit</span>
                     Edit Request
@@ -185,7 +178,6 @@
               </div>
             </div>
           </div>
-        </div>
       </div>
 
     </div>
@@ -240,54 +232,40 @@ const emit = defineEmits<{
 
 useEventListener('click', () => { closeMenu(); closeEntryMenu() })
 
-const expanded = ref<Set<number>>(new Set())
+const flatItems = computed(() =>
+  props.requests.flatMap(req => req.forms.map(form => ({ req, form })))
+)
+
+function groupKey(req: Request, form: RequestForm): string {
+  return `${req.id}-${form.form_id}`
+}
+
+const expanded = ref<Set<string>>(new Set())
 const selectedEntries = ref<Set<number>>(new Set())
-const openMenu = ref<number | null>(null)
+const openMenu = ref<string | null>(null)
 const openEntryMenu = ref<number | null>(null)
 const groupMenuSection = ref<'none' | 'assign'>('none')
 const entryMenuSection = ref<'none' | 'single-assign' | 'bulk-assign'>('none')
 
-
-function allEntries(req: Request): RequestEntry[] {
-  return req.forms.flatMap(f => f.suppliers)
+function selectedInGroup(form: RequestForm): number[] {
+  return form.suppliers.map(e => e.id).filter(id => selectedEntries.value.has(id))
 }
 
-function displayTitle(req: Request): string {
-  return req.title ?? req.forms.map(f => f.form_name).join(', ')
+function isGroupSelected(form: RequestForm): boolean {
+  return form.suppliers.length > 0 && form.suppliers.every(e => selectedEntries.value.has(e.id))
 }
 
-function totalEntries(req: Request): number {
-  return req.forms.reduce((sum, f) => sum + f.total, 0)
+function isGroupIndeterminate(form: RequestForm): boolean {
+  const sel = form.suppliers.filter(e => selectedEntries.value.has(e.id))
+  return sel.length > 0 && sel.length < form.suppliers.length
 }
 
-function totalCompleted(req: Request): number {
-  return req.forms.reduce((sum, f) => sum + f.completed, 0)
-}
-
-function selectedInGroup(req: Request): number[] {
-  return allEntries(req)
-    .map(e => e.id)
-    .filter(id => selectedEntries.value.has(id))
-}
-
-function isGroupSelected(req: Request): boolean {
-  const entries = allEntries(req)
-  return entries.length > 0 && entries.every(e => selectedEntries.value.has(e.id))
-}
-
-function isGroupIndeterminate(req: Request): boolean {
-  const entries = allEntries(req)
-  const sel = entries.filter(e => selectedEntries.value.has(e.id))
-  return sel.length > 0 && sel.length < entries.length
-}
-
-function toggleGroup(req: Request) {
-  const entries = allEntries(req)
-  if (isGroupSelected(req)) {
-    entries.forEach(e => selectedEntries.value.delete(e.id))
+function toggleGroup(form: RequestForm) {
+  if (isGroupSelected(form)) {
+    form.suppliers.forEach(e => selectedEntries.value.delete(e.id))
   }
   else {
-    entries.forEach(e => selectedEntries.value.add(e.id))
+    form.suppliers.forEach(e => selectedEntries.value.add(e.id))
   }
   emit('selectionChange', [...selectedEntries.value])
 }
@@ -304,12 +282,12 @@ function clearSelection() {
   emit('selectionChange', [])
 }
 
-function toggleExpand(id: number) {
-  expanded.value.has(id) ? expanded.value.delete(id) : expanded.value.add(id)
+function toggleExpand(key: string) {
+  expanded.value.has(key) ? expanded.value.delete(key) : expanded.value.add(key)
 }
 
-function toggleMenu(id: number) {
-  openMenu.value = openMenu.value === id ? null : id
+function toggleMenu(key: string) {
+  openMenu.value = openMenu.value === key ? null : key
   groupMenuSection.value = 'none'
   openEntryMenu.value = null
 }
@@ -355,7 +333,7 @@ function formatDate(date: string): string {
 .request-table {
   display: flex;
   flex-direction: column;
-  gap: var(--space-3);
+  gap: var(--space-8);
 }
 
 .request-table__empty {
@@ -379,7 +357,7 @@ function formatDate(date: string): string {
   display: flex;
   align-items: center;
   gap: var(--space-3);
-  padding: var(--space-3) var(--space-4);
+  padding: var(--space-6);
   transition: background 0.1s;
 }
 
@@ -404,7 +382,7 @@ function formatDate(date: string): string {
 
 .request-table__col--supplier {
   flex: 1;
-  min-width: 160px;
+  min-width: 0;
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
@@ -438,7 +416,6 @@ function formatDate(date: string): string {
   justify-content: center;
 }
 
-/* Supplier link */
 .request-table__supplier-link {
   color: var(--color-primary);
   font-weight: 500;
@@ -449,12 +426,11 @@ function formatDate(date: string): string {
   text-decoration: underline;
 }
 
-/* Chevron */
 .request-table__chevron {
   background: none;
   border: none;
   cursor: pointer;
-  color: var(--color-text-muted);
+  color: var(--color-primary);
   padding: 0;
   display: flex;
   align-items: center;
@@ -466,10 +442,9 @@ function formatDate(date: string): string {
   color: var(--color-text);
 }
 
-/* Title */
 .request-table__title {
   flex: 1;
-  font-weight: 600;
+  font-weight: 700;
   font-size: var(--text-sm);
   color: var(--color-text);
   text-decoration: none;
@@ -669,7 +644,6 @@ function formatDate(date: string): string {
   border-radius: 0 0 var(--radius-lg) var(--radius-lg);
 }
 
-.request-table__form-group {}
 
 .request-table__entries-header {
   display: flex;
@@ -684,8 +658,6 @@ function formatDate(date: string): string {
   font-size: var(--text-xs);
   font-weight: 500;
   color: var(--color-text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
 }
 
 .request-table__entry {

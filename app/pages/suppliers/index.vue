@@ -10,17 +10,9 @@
         <AppPageHeader title="Suppliers" />
 
         <div class="col-12">
-          <AppListToolbar
-            v-model:search="search"
-            v-model:sort="sort"
-            v-model:view="view"
-            label="supplier"
-            add-label="New Supplier"
-            :total-count="filtered.length"
-            :selected-count="selectedCount"
-            @add="navigateTo('/suppliers/create')"
-            @delete="onDelete"
-          />
+          <AppListToolbar v-model:search="search" v-model:sort="sort" v-model:view="view" label="supplier"
+            add-label="New Supplier" :total-count="filtered.length" :selected-count="selectedCount"
+            @add="navigateTo('/suppliers/create')" @delete="onDelete" />
         </div>
 
         <div class="col-12">
@@ -31,12 +23,8 @@
             </div>
           </div>
 
-          <AppBlankState
-            v-else-if="blankState.show.value"
-            :image="blankState.image.value"
-            :title="blankState.title.value"
-            :message="blankState.message.value"
-          >
+          <AppBlankState v-else-if="blankState.show.value" :image="blankState.image.value"
+            :title="blankState.title.value" :message="blankState.message.value">
             <AppButton to="/suppliers/create">
               <span class="material-icons-round">add</span>
               New Supplier
@@ -44,16 +32,14 @@
           </AppBlankState>
 
           <template v-else-if="effectiveView === 'list'">
-            <AppTable
-              :columns="columns"
-              :rows="tableRows"
-              :button-delete="true"
-              @delete="onDeleteRow"
-              @select="onSelect"
-            >
+            <AppTable :columns="columns" :rows="tableRows" button-edit :button-delete="true"
+              @edit="(row) => navigateTo(`/suppliers/${row._raw.id}`)" @delete="onDeleteRow" @select="onSelect">
               <template #cell-name="{ value, row }">
                 <NuxtLink :to="`/suppliers/${row._raw.id}`" class="app-table__cell-link">{{ value }}</NuxtLink>
-                <span class="app-table__cell-sub">{{ row.email }}</span>
+              </template>
+
+              <template #cell-contact="{ row }">
+                <div v-if="(row._raw as Supplier).supplier_number" class="text-muted" style="font-size: 0.85em">{{ (row._raw as Supplier).supplier_number }}</div>
               </template>
 
               <template #cell-category="{ value }">
@@ -63,7 +49,6 @@
             </AppTable>
           </template>
 
-          <!-- MOSAIC VIEW -->
           <template v-else>
             <div class="list-mosaic">
               <div v-for="supplier in filtered" :key="supplier.id" class="list-card">
@@ -71,27 +56,16 @@
                   <NuxtLink :to="`/suppliers/${supplier.id}`" class="list-card__title">{{ supplier.name }}</NuxtLink>
                 </div>
                 <div class="list-card__meta">
+                  <div v-if="supplier.supplier_number" class="list-card__meta-row">
+                    <span class="material-icons-round">phone</span>
+                    {{ supplier.supplier_number }}
+                  </div>
                   <div class="list-card__meta-row">
                     <span class="material-icons-round">email</span>
                     {{ supplier.email }}
                   </div>
-                  <div v-if="supplier.contact_person" class="list-card__meta-row">
-                    <span class="material-icons-round">person</span>
-                    {{ supplier.contact_person }}
-                  </div>
-                  <div v-if="supplier.country" class="list-card__meta-row">
-                    <span class="material-icons-round">public</span>
-                    {{ supplier.country }}
-                  </div>
-                  <div class="list-card__meta-row">
-                    <span class="material-icons-round">calendar_today</span>
-                    {{ formatDate(supplier.created_at) }}
-                  </div>
                 </div>
-                <div class="list-card__footer">
-                  <AppBadge v-if="supplier.category" variant="neutral">{{ supplier.category }}</AppBadge>
-                  <span v-else class="text-muted">No category</span>
-                </div>
+                
               </div>
             </div>
           </template>
@@ -121,8 +95,9 @@ interface Supplier {
 }
 
 const columns = [
-  { key: 'name',     label: 'Supplier', primary: true },
-  { key: 'contact',  label: 'Contact' }
+  { key: 'name', label: 'Supplier', primary: true },
+  { key: 'email', label: 'Email' },
+  { key: 'contact', label: 'Contact' }
 ]
 
 interface PaginationMeta {
@@ -156,6 +131,7 @@ async function fetchData() {
     const api = useApi()
     const res = await api<{ data: Supplier[] | PaginatedResponse<Supplier> }>(`/suppliers?page=${page.value}`)
     const d = res.data
+    console.log(d);
     if (Array.isArray(d)) { suppliers.value = d }
     else { suppliers.value = d.data; setMeta(d.meta) }
   }

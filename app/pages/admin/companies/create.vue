@@ -80,6 +80,7 @@
         <AppButton type="submit" :loading="loading">Save Company</AppButton>
       </div>
     </form>
+  <AppUnsavedModal :model-value="showModal" @confirm="confirmLeave" @cancel="cancelLeave" />
   </div>
 </template>
 
@@ -118,6 +119,9 @@ const errors = reactive({
 
 const toast = useAppToast()
 const loading = ref(false)
+
+const { isDirty, showModal, confirmLeave, cancelLeave } = useUnsavedChanges()
+watch(form, () => { isDirty.value = true }, { deep: true })
 
 onMounted(async () => {
   try {
@@ -168,6 +172,7 @@ async function onSubmit() {
     })
 
     toast.success('Company created', { category: 'general' })
+    isDirty.value = false
     await navigateTo('/admin/companies')
   }
   catch (err: unknown) {

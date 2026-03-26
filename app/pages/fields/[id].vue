@@ -55,16 +55,26 @@
               </div>
             </AppCard>
 
-            <div v-if="form.type === 'template_file' || form.type === 'template_file_input'" class="col-10">
+            <div v-if="form.type === 'template_file' || form.type === 'supplier_file'" class="col-10">
               <AppCard>
                 <div class="form-group">
                   <label class="label01">{{ form.type === 'template_file' ? 'Template File' : 'Supplier File' }}</label>
                   <p class="label02">{{ form.type === 'template_file' ? 'Attach the template file suppliers will download and fill out.' : 'Suppliers will upload a file for this field.' }}</p>
 
-                  <div v-if="templateFile || (isEdit && existingTemplateFile)" class="file-selected">
+                  <div v-if="templateFile" class="file-selected">
                     <span class="material-icons-round">attach_file</span>
-                    {{ templateFile?.name ?? existingTemplateFile }}
+                    {{ templateFile.name }}
                     <button type="button" class="file-remove-btn" @click="templateFile = null">
+                      <span class="material-icons-round">close</span>
+                    </button>
+                  </div>
+
+                  <div v-else-if="isEdit && existingTemplateFile" class="file-selected">
+                    <a :href="existingTemplateFileUrl ?? '#'" class="file-download-link" target="_blank" download>
+                      <span class="material-icons-round">file_download</span>
+                      {{ existingTemplateFile }}
+                    </a>
+                    <button type="button" class="file-remove-btn" @click="existingTemplateFile = null">
                       <span class="material-icons-round">close</span>
                     </button>
                   </div>
@@ -88,6 +98,7 @@
 
       </div>
     </div>
+    <AppUnsavedModal :model-value="showModal" @confirm="confirmLeave" @cancel="cancelLeave" />
   </div>
 </template>
 
@@ -115,6 +126,11 @@ const loadingRecord = ref(false)
 const templateFile = ref<File | null>(null)
 const templateFileInput = ref<HTMLInputElement | null>(null)
 const existingTemplateFile = ref<string | null>(null)
+const existingTemplateFileUrl = ref<string | null>(null)
+
+const { isDirty, showModal, confirmLeave, cancelLeave } = useUnsavedChanges()
+const _ready = ref(!isEdit.value)
+watch(form, () => { _ready.value && (isDirty.value = true) }, { deep: true })
 
 function onTemplateFileChange(e: Event) {
   templateFile.value = (e.target as HTMLInputElement).files?.[0] ?? null
@@ -127,15 +143,15 @@ onMounted(async () => {
     const api = useApi()
     const res = await api<{ data: typeof form & { type: string } }>(`/fields/${id.value}`)
     const d = res.data as Record<string, unknown>
-    console.log(d);
     form.name = d.name as string
     form.description = (d.description as string) ?? ''
     form.type = d.type as string
     form.is_active = d.is_active as boolean
     existingTemplateFile.value = (d.template_file_name as string) ?? null
+    existingTemplateFileUrl.value = (d.template_file_url as string) ?? null
   }
   catch (err) { toast.error(err, 'Could not load field data', { category: 'field' }) }
-  finally { loadingRecord.value = false }
+  finally { loadingRecord.value = false; nextTick(() => { _ready.value = true }) }
 })
 
 function validate(): boolean {
@@ -167,6 +183,7 @@ async function onSubmit() {
       await api('/fields', { method: 'POST', body })
       toast.success('Field created', { category: 'field' })
     }
+    isDirty.value = false
     await navigateTo('/fields')
   }
   catch (err: unknown) {
@@ -272,6 +289,14 @@ async function onSubmit() {
   background: var(--color-primary-25);
   border-radius: var(--radius-md);
   font-size: var(--text-sm);
+}
+
+.file-download-link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  color: inherit;
+  text-decoration: none;
 }
 
 .file-remove-btn {
