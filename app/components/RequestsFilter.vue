@@ -27,7 +27,7 @@
         </div>
       </div>
 
-      <div class="requests-filter__group">
+      <div v-if="!supplierMode" class="requests-filter__group">
         <button class="requests-filter__group-toggle" @click="toggle('suppliers')">
           <span class="material-icons-round">local_shipping</span>
           <p class="caption1 text-grey">Suppliers</p>
@@ -69,7 +69,7 @@
       </div>
 
       <!-- Assigned To -->
-      <div class="requests-filter__group">
+      <div v-if="!supplierMode" class="requests-filter__group">
         <button class="requests-filter__group-toggle" @click="toggle('assigned')">
           <span class="material-icons-round">person</span>
           <p class="caption1 text-grey">Assigned To</p>
@@ -123,7 +123,7 @@ interface User {
   name: string
 }
 
-const props = defineProps<{ requests: Request[]; users: User[] }>()
+const props = defineProps<{ requests: Request[]; users: User[]; supplierMode?: boolean }>()
 
 const emit = defineEmits<{
   change: [filters: {

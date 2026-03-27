@@ -6,24 +6,40 @@
       <div class="dash">
         <div class="dash__stats">
           <div class="row">
-            <div class="col-12 col-sm-4">
-              <div class="dash-stat">
-                <p class="dash-stat__label">Requests</p>
-                <p class="dash-stat__value">{{ stats.requests }}</p>
+            <template v-if="isSupplier">
+              <div class="col-6">
+                <div class="dash-stat">
+                  <p class="dash-stat__label">Pending</p>
+                  <p class="dash-stat__value">{{ stats.pending }}</p>
+                </div>
               </div>
-            </div>
-            <div class="col-6 col-sm-4">
-              <div class="dash-stat">
-                <p class="dash-stat__label">Suppliers</p>
-                <p class="dash-stat__value">{{ stats.suppliers }}</p>
+              <div class="col-6">
+                <div class="dash-stat">
+                  <p class="dash-stat__label">Completed</p>
+                  <p class="dash-stat__value">{{ stats.completed }}</p>
+                </div>
               </div>
-            </div>
-            <div class="col-6 col-sm-4">
-              <div class="dash-stat">
-                <p class="dash-stat__label">Forms</p>
-                <p class="dash-stat__value">{{ stats.forms }}</p>
+            </template>
+            <template v-else>
+              <div class="col-12 col-sm-4">
+                <div class="dash-stat">
+                  <p class="dash-stat__label">Requests</p>
+                  <p class="dash-stat__value">{{ stats.requests }}</p>
+                </div>
               </div>
-            </div>
+              <div class="col-6 col-sm-4">
+                <div class="dash-stat">
+                  <p class="dash-stat__label">Suppliers</p>
+                  <p class="dash-stat__value">{{ stats.suppliers }}</p>
+                </div>
+              </div>
+              <div class="col-6 col-sm-4">
+                <div class="dash-stat">
+                  <p class="dash-stat__label">Forms</p>
+                  <p class="dash-stat__value">{{ stats.forms }}</p>
+                </div>
+              </div>
+            </template>
           </div>
         </div>
 
@@ -44,7 +60,6 @@
           </div>
         </div>
 
-        <!-- Recent requests -->
         <div class="dash__right">
           <div class="dash-recent">
             <div class="dash-recent__header">
@@ -63,7 +78,8 @@
                 <p class="dash-group-label">Recent</p>
                 <NuxtLink v-for="entry in assignedEntries"
                   :key="`a-${entry.requestId}-${entry.formId}-${entry.supplierId}`"
-                  :to="`/requests/${entry.requestId}/edit`" class="dash-entry">
+                  :to="`/requests/${entry.requestId}/entries/${entry.entryId}`"
+                  class="dash-entry">
                   <div class="dash-entry__main">
                     <p class="dash-entry__title">{{ entry.formName }}</p>
                     <p class="dash-entry__supplier">{{ entry.supplierName }}</p>
@@ -83,7 +99,8 @@
                   Approval</p>
                 <NuxtLink v-for="entry in approvalEntries"
                   :key="`p-${entry.requestId}-${entry.formId}-${entry.supplierId}`"
-                  :to="`/requests/${entry.requestId}/edit`" class="dash-entry">
+                  :to="`/requests/${entry.requestId}/entries/${entry.entryId}`"
+                  class="dash-entry">
                   <div class="dash-entry__main">
                     <p class="dash-entry__title">{{ entry.formName }}</p>
                     <p class="dash-entry__supplier">{{ entry.supplierName }}</p>
@@ -113,7 +130,7 @@ const authStore = useAuthStore()
 
 interface RequestEntry {
   id: number
-  supplier: { id: number; name: string }
+  supplier: { id: number; name: string } | null
   status: { value: string; label: string }
   created_at: string
   updated_at: string
@@ -140,42 +157,36 @@ const supplierCount = ref(0)
 const formCount = ref(0)
 
 onMounted(async () => {
+  console.log('Role', authStore.user?.roles)
   const api = useApi()
-  const [reqRes, supRes, formRes] = await Promise.allSettled([
-    api<{ data: Request[] | { data: Request[] } }>('/requests'),
-    api<{ data: unknown[] | { data: unknown[] } }>('/suppliers'),
-    api<{ data: unknown[] | { data: unknown[] } }>('/forms'),
-  ])
+  try {
+    const [reqRes, supRes, formRes] = await Promise.allSettled([
+      api<{ data: Request[] | { data: Request[] } }>('/requests'),
+      api<{ data: unknown[] | { data: unknown[] } }>('/suppliers'),
+      api<{ data: unknown[] | { data: unknown[] } }>('/forms'),
+    ])
 
-  if (reqRes.status === 'fulfilled') {
-    const d = reqRes.value.data
-    requests.value = Array.isArray(d) ? d : d.data
+    if (reqRes.status === 'fulfilled') {
+      const d = reqRes.value.data
+      requests.value = Array.isArray(d) ? d : d.data
+    }
+    if (supRes.status === 'fulfilled') {
+      const d = supRes.value.data
+      supplierCount.value = (Array.isArray(d) ? d : d.data).length
+    }
+    if (formRes.status === 'fulfilled') {
+      const d = formRes.value.data
+      formCount.value = (Array.isArray(d) ? d : d.data).length
+    }
   }
-  loadingRequests.value = false
-
-  if (supRes.status === 'fulfilled') {
-    const d = supRes.value.data
-    supplierCount.value = (Array.isArray(d) ? d : d.data).length
-  }
-  if (formRes.status === 'fulfilled') {
-    const d = formRes.value.data
-    formCount.value = (Array.isArray(d) ? d : d.data).length
+  finally {
+    loadingRequests.value = false
   }
 })
 
-// ── Stats ──────────────────────────────────────────────
-const stats = computed(() => ({
-  requests: ownRequests.value.length,
-  completed: ownRequests.value.filter(r =>
-    r.forms.flatMap(f => f.suppliers).every(e => e.status.value === 'completed'),
-  ).length,
-  suppliers: supplierCount.value,
-  forms: formCount.value,
-}))
-
-// ── Recent entries ─────────────────────────────────────
 interface FlatEntry {
   requestId: number
+  entryId: number
   formId: number
   formName: string
   supplierId: number
@@ -189,8 +200,9 @@ interface FlatEntry {
 function flattenEntries(reqs: Request[]): FlatEntry[] {
   return reqs.flatMap(r =>
     r.forms.flatMap(f =>
-      f.suppliers.map(e => ({
+      f.suppliers.filter(e => e.supplier != null).map(e => ({
         requestId: r.id,
+        entryId: e.id,
         formId: f.form_id,
         formName: f.form_name,
         supplierId: e.supplier.id,
@@ -206,12 +218,27 @@ function flattenEntries(reqs: Request[]): FlatEntry[] {
 
 const myId = computed(() => authStore.user?.id as number)
 const isCompanyUser = computed(() => authStore.user?.roles === 'company-user')
+const isSupplier = computed(() => authStore.user?.roles === 'supplier')
 
 const ownRequests = computed(() =>
   isCompanyUser.value
     ? requests.value.filter(r => r.created_by?.id === myId.value)
     : requests.value,
 )
+
+const allEntries = computed(() => ownRequests.value.flatMap(r => r.forms.flatMap(f => f.suppliers)))
+
+const stats = computed(() => ({
+  requests: ownRequests.value.length,
+  completed: isSupplier.value
+    ? allEntries.value.filter(e => e.status.value === 'completed').length
+    : ownRequests.value.filter(r =>
+        r.forms.flatMap(f => f.suppliers).every(e => e.status.value === 'completed'),
+      ).length,
+  pending: allEntries.value.filter(e => e.status.value !== 'completed').length,
+  suppliers: supplierCount.value,
+  forms: formCount.value,
+}))
 
 const assignedEntries = computed(() => flattenEntries(ownRequests.value).slice(0, 6))
 
@@ -274,7 +301,6 @@ const approvalEntries = computed(() =>
   }
 }
 
-/* ── Stat cards ───────────────────────────────────────── */
 .dash-stat {
   background: var(--color-surface);
   border-radius: var(--radius-lg);
@@ -295,7 +321,6 @@ const approvalEntries = computed(() =>
   line-height: 1;
 }
 
-/* ── Generic card ─────────────────────────────────────── */
 .dash-card {
   background: var(--color-surface);
   border-radius: var(--radius-lg);
@@ -314,7 +339,6 @@ const approvalEntries = computed(() =>
   line-height: 1.3;
 }
 
-/* ── Right panel ──────────────────────────────────────── */
 .dash-recent {
   background: var(--color-surface);
   border-radius: var(--radius-lg);
@@ -345,7 +369,6 @@ const approvalEntries = computed(() =>
   text-decoration: underline;
 }
 
-/* ── Group label ──────────────────────────────────────── */
 .dash-group-label {
   font-size: var(--text-xs);
   font-weight: 700;
@@ -364,7 +387,6 @@ const approvalEntries = computed(() =>
   padding-top: var(--space-4);
 }
 
-/* ── Entry row ────────────────────────────────────────── */
 .dash-entry {
   display: flex;
   align-items: center;
@@ -423,7 +445,6 @@ const approvalEntries = computed(() =>
   font-size: 18px;
 }
 
-/* ── Empty / loading state ────────────────────────────── */
 .dash-state {
   font-size: var(--text-sm);
   color: var(--color-text-muted);

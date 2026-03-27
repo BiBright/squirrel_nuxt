@@ -1,16 +1,20 @@
 <template>
-  <div>
-    <AppPageHeader title="Maintenance" subtitle="Control platform availability" />
+  <div class="container">
+    <div class="row">
+      <div class="col-12">
+        <AppBreadcrumb :items="[{ label: 'Maintenance' }]" />
+      </div>
 
+      <div class="col-12">
+        <AppPageHeader title="Maintenance Mode" />
+      </div>
+
+      <div class="col-12">
     <AppCard>
-      <div class="maintenance-status-row">
-        <span class="material-icons-round maintenance-status-icon" :class="maintenanceOn ? 'text-danger' : 'text-success'">
-          {{ maintenanceOn ? 'cloud_off' : 'cloud_done' }}
-        </span>
-        <div>
-          <p class="body01 text-muted">Platform is currently</p>
+      <div class="maintenance-status-row" :class="maintenanceOn ? 'text-danger' : 'text-success'">
+        <div class="d-flex">
           <p class="title03" :class="maintenanceOn ? 'text-danger' : 'text-success'">
-            {{ maintenanceOn ? 'Offline' : 'Online' }}
+            Platform is currently {{ maintenanceOn ? 'Offline' : 'Online' }}
           </p>
         </div>
       </div>
@@ -33,6 +37,8 @@
         The platform is currently offline. Users cannot log in or access any features.
       </div>
     </AppCard>
+      </div>
+    </div>
   </div>
 </template>
 

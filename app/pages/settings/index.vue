@@ -2,15 +2,6 @@
   <div>
     <div class="container">
       <div class="row">
-        <div class="col-12">
-          <AppBreadcrumb :items="[{ label: 'Settings' }]" />
-        </div>
-
-        <div class="col-12">
-          <AppPageHeader title="Settings" />
-        </div>
-
-        <!-- Left menu -->
         <div class="col-12 col-sm-4 col-md-2">
           <aside class="settings-menu" :class="{ 'settings-menu--hidden': mobileShowContent }">
             <div class="settings-menu__user">
@@ -173,6 +164,7 @@ const initials = computed(() => {
 })
 
 const isCompanyUser = computed(() => authStore.user?.roles === 'company-user')
+const isSupplier = computed(() => authStore.user?.roles === 'supplier')
 const activeSection = ref('profile')
 const mobileShowContent = ref(false)
 
@@ -248,8 +240,10 @@ watch(activeSection, (val) => {
 const menuItems = computed(() => [
   { key: 'profile', icon: 'person', label: 'Profile' },
   { key: 'password', icon: 'lock', label: 'Security and Login' },
-  { key: 'company', icon: 'factory', label: 'Company Settings' },
-  { key: 'notifications', icon: 'notifications', label: 'Notification' },
+  ...(isSupplier.value ? [] : [
+    { key: 'company', icon: 'factory', label: 'Company Settings' },
+    { key: 'notifications', icon: 'notifications', label: 'Notification' },
+  ]),
   { key: 'support', icon: 'support', label: 'Support' },
 ])
 

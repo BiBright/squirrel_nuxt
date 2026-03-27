@@ -1,5 +1,11 @@
 <template>
-  <div>
+  <div class="container">
+    <div class="row">
+      <div class="col-12">
+        <AppBreadcrumb :items="[{ label: 'Companies' }]" />
+      </div>
+
+      <div class="col-12">
     <AppPageHeader title="Companies" subtitle="Manage platform companies and their plans" />
 
     <AppListToolbar
@@ -127,6 +133,8 @@
         </div>
       </div>
     </template>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -169,10 +177,11 @@ const selected = ref<number[]>([])
 onMounted(async () => {
   try {
     const api = useApi()
-    const res = await api<{ data: { data: Company[] } }>('/master/companies')
+    const res = await api<{ data: { data: Company[] } }>('/company')
     companies.value = res.data.data
   }
-  catch {
+  catch (err) {
+    console.error('[Companies] fetch failed:', err)
     companies.value = []
   }
   finally {

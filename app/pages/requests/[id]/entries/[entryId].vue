@@ -23,7 +23,7 @@
 
             <div class="request-entry-card">
               <AppCard>
-                <div class="entry-supplier">
+                <div v-if="entry.supplier?.name" class="entry-supplier">
                   <span class="material-icons-round">local_shipping</span>
                   {{ entry.supplier.name }}
                 </div>
@@ -90,7 +90,7 @@
           </div>
 
 
-          <div class="col-12 col-md-5">
+          <div v-if="!isSupplier || !isCompanyUser" class="col-12 col-md-5">
             <div class="entry-status">
               <div class="entry-header__pill" :data-status="entry.status.value">
                 <span class="material-icons-round">{{ statusIcon(entry.status.value) }}</span>
@@ -126,7 +126,7 @@
                   </template>
                 </div>
               </div>
-              <div class="entry-status__assigned">
+              <div v-if="!isSupplier" class="entry-status__assigned">
                 <p class="entry-status__assigned-label">Assigned to:</p>
                 <div ref="assigneeDropdownRef" class="assignee-dropdown">
                   <button class="assignee-dropdown__trigger" type="button" @click="assigneeOpen = !assigneeOpen">
@@ -190,8 +190,8 @@ interface EntryAnswer {
 
 interface RequestEntry {
   id: number
-  supplier: { id: number; name: string; email: string }
-  form: { id: number; name: string }
+  supplier: { id: number; name: string; email: string } | null
+  form: { id: number; name: string; fields?: Field[] }
   status: { value: string; label: string }
   answers?: EntryAnswer[]
   created_at: string
@@ -255,6 +255,7 @@ async function selectAssignee(id: number | null) {
 }
 
 const apiBase = config.public.apiBase as string
+const isSupplier = computed(() => authStore.user?.roles === 'supplier')
 const isCompanyUser = computed(() => authStore.user?.roles === 'company-user')
 const requestTitle = computed(() => request.value?.title ?? entry.value?.form.name ?? 'Request')
 
@@ -264,26 +265,39 @@ function getAnswer(fieldId: number): EntryAnswer | undefined {
 
 onMounted(async () => {
   try {
-    const [requestRes, usersRes] = await Promise.allSettled([
-      api<{ data: RequestData }>(`/requests/${requestId}`),
-      api<{ data: UserOption[] }>('/users'),
-    ])
+    const requestRes = await api<{ data: RequestData }>(`/requests/${requestId}`)
+    console.log('[Entry] raw response:', requestRes)
+    request.value = requestRes.data
+    selectedAssigneeId.value = requestRes.data.assigned_to?.id ?? null
 
-    if (usersRes.status === 'fulfilled') availableUsers.value = usersRes.value.data
-
-    if (requestRes.status !== 'fulfilled') throw new Error('Failed to load request')
-    request.value = requestRes.value.data
-    selectedAssigneeId.value = requestRes.value.data.assigned_to?.id ?? null
-
-    for (const formGroup of requestRes.value.data.forms) {
-      const found = formGroup.suppliers.find(s => s.id === entryId)
+    for (const formGroup of requestRes.data.forms) {
+      const found = formGroup.suppliers.find((s: RequestEntry) => s.id === entryId)
       if (found) { entry.value = found; break }
     }
+    console.log('[Entry] entryId looking for:', entryId, '| found:', entry.value)
 
     if (!entry.value) return
 
-    const formRes = await api<{ data: FormDetail }>(`/forms/${entry.value.form.id}`)
-    form.value = formRes.data
+    if (isSupplier.value) {
+      if (entry.value.form.fields) {
+        form.value = {
+          id: entry.value.form.id,
+          name: entry.value.form.name,
+          description: null,
+          has_template: false,
+          template_file_name: null,
+          fields: entry.value.form.fields,
+        }
+      }
+    }
+    else {
+      const [formRes, usersRes] = await Promise.allSettled([
+        api<{ data: FormDetail }>(`/forms/${entry.value.form.id}`),
+        api<{ data: UserOption[] }>('/users'),
+      ])
+      if (formRes.status === 'fulfilled') form.value = formRes.value.data
+      if (usersRes.status === 'fulfilled') availableUsers.value = usersRes.value.data
+    }
 
     entry.value.answers?.forEach((a) => {
       if (a.value) answers[a.field_id] = a.value

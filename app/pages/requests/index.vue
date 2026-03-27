@@ -8,7 +8,7 @@
         </div>
         <AppPageHeader title="Requests" />
 
-        <AppListToolbar v-model:search="search" v-model:sort="sort" :view="'list'" hide-view-toggle label="request"
+        <AppListToolbar v-if="!isSupplier" v-model:search="search" v-model:sort="sort" :view="'list'" hide-view-toggle label="request"
           add-label="New Request" :total-count="filtered.length" :selected-count="selectedCount" @add="onAdd"
           @delete="onDelete" />
 
@@ -19,21 +19,56 @@
           </div>
         </div>
 
-        <AppBlankState v-else-if="blankState.show.value" :image="blankState.image.value" :title="blankState.title.value"
-          :message="blankState.message.value">
-          <AppButton @click="onAdd">
-            <span class="material-icons-round">add</span>
-            New Request
-          </AppButton>
-        </AppBlankState>
+        <template v-else-if="isSupplier">
+          <div v-if="filteredSupplierEntries.length === 0" class="list-empty">
+            <span class="material-icons-round">inbox</span>
+            <p>No requests assigned to you.</p>
+          </div>
+          <div v-else class="supplier-list">
+            <NuxtLink
+              v-for="entry in filteredSupplierEntries"
+              :key="entry.entryId"
+              :to="`/requests/${entry.requestId}/entries/${entry.entryId}`"
+              class="supplier-entry"
+            >
+              <div class="supplier-entry__main">
+                <p class="supplier-entry__name">{{ entry.formName }}</p>
+                <p class="supplier-entry__date">{{ entry.date }}</p>
+              </div>
+              <AppBadge :variant="entry.statusVariant">{{ entry.statusLabel }}</AppBadge>
+            </NuxtLink>
+          </div>
+        </template>
 
-        <RequestsTable v-else :requests="filtered" :users="users" :loading-users="loadingUsers" @assign="onAssign"
-          @remove="onRemove" @bulk-assign="onBulkAssign" @bulk-remove="onBulkRemove"
-          @selection-change="onSelectionChange" />
+        <template v-else>
+          <AppBlankState v-if="blankState.show.value" :image="blankState.image.value" :title="blankState.title.value"
+            :message="blankState.message.value">
+            <AppButton @click="onAdd">
+              <span class="material-icons-round">add</span>
+              New Request
+            </AppButton>
+          </AppBlankState>
+
+          <RequestsTable v-else :requests="filtered" :users="users" :loading-users="loadingUsers" @assign="onAssign"
+            @remove="onRemove" @bulk-assign="onBulkAssign" @bulk-remove="onBulkRemove"
+            @selection-change="onSelectionChange" />
+        </template>
       </div>
 
       <div class="col-12 col-md-3 d-none d-md-block">
-        <RequestsFilter :requests="requests" :users="users" @change="onFilterChange" />
+        <RequestsFilter
+          v-if="isSupplier"
+          :requests="supplierRequestsForFilter"
+          :users="[]"
+          supplier-mode
+          @change="onSupplierFilterChange"
+        />
+        <RequestsFilter
+          v-else
+          :requests="requests"
+          :users="users"
+          @change="onFilterChange"
+        />
       </div>
     </div>
   </div>
@@ -44,9 +79,11 @@ definePageMeta({ middleware: 'auth' })
 
 interface RequestEntry {
   id: number
-  supplier: { id: number; name: string; email: string }
+  supplier: { id: number; name: string; email: string } | null
   status: { value: string; label: string }
   submitted_at: string | null
+  created_at: string
+  updated_at: string
 }
 
 interface RequestForm {
@@ -71,9 +108,24 @@ interface User {
   name: string
 }
 
+interface SupplierForm {
+  entry_id: number
+  form_name: string
+  status: string
+}
+
+interface SupplierRequest {
+  request_id: number
+  title: string | null
+  company: string
+  forms: SupplierForm[]
+}
+
 const authStore = useAuthStore()
 const toast = useAppToast()
+const isSupplier = computed(() => authStore.user?.roles === 'supplier')
 const requests = ref<Request[]>([])
+const supplierRequests = ref<SupplierRequest[]>([])
 const users = ref<User[]>([])
 const loading = ref(true)
 const loadingUsers = ref(false)
@@ -86,6 +138,16 @@ const activeFilters = ref({ status: [] as string[], forms: [] as string[], suppl
 
 onMounted(async () => {
   const api = useApi()
+
+  if (isSupplier.value) {
+    try {
+      const res = await api<{ data: SupplierRequest[] }>('/supplier/requests')
+      supplierRequests.value = res.data
+    }
+    catch { supplierRequests.value = [] }
+    finally { loading.value = false }
+    return
+  }
 
   try {
     const res = await api<{ data: Request[] | { data: Request[] } }>('/requests')
@@ -128,6 +190,55 @@ const filtered = computed(() => {
   else result.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
   return result
 })
+
+type BadgeVariant = 'warning' | 'primary' | 'success' | 'danger' | 'neutral'
+function entryStatusVariant(status: string): BadgeVariant {
+  if (status === 'completed') return 'success'
+  if (status === 'pending_approval') return 'primary'
+  if (status === 'cancelled') return 'danger'
+  return 'warning'
+}
+
+const supplierEntries = computed(() =>
+  supplierRequests.value.flatMap(req =>
+    req.forms.map(form => ({
+      requestId: req.request_id,
+      entryId: form.entry_id,
+      formName: form.form_name,
+      status: form.status,
+      statusLabel: form.status.replace(/_/g, ' '),
+      statusVariant: entryStatusVariant(form.status),
+      date: '—',
+    })),
+  ),
+)
+
+const supplierActiveFilters = ref({ status: [] as string[], forms: [] as string[] })
+
+const filteredSupplierEntries = computed(() => {
+  let result = supplierEntries.value
+  const af = supplierActiveFilters.value
+  if (af.status.length) result = result.filter(e => af.status.includes(e.status))
+  if (af.forms.length) result = result.filter(e => af.forms.includes(e.formName))
+  return result
+})
+
+const supplierRequestsForFilter = computed(() =>
+  supplierRequests.value.map(r => ({
+    id: r.request_id,
+    title: r.title,
+    assigned_to: null,
+    forms: r.forms.map(f => ({
+      form_id: f.entry_id,
+      form_name: f.form_name,
+      suppliers: [],
+    })),
+  })),
+)
+
+function onSupplierFilterChange(f: { status: string[], forms: string[], suppliers: string[], assigned: string[] }) {
+  supplierActiveFilters.value = { status: f.status, forms: f.forms }
+}
 
 const blankState = useBlankState(filtered, search, {
   image: '/images/blankPages/requests.svg',
@@ -203,35 +314,46 @@ function displayTitle(req: Request): string {
   return req.title ?? req.forms.map(f => f.form_name).join(', ')
 }
 
-function totalEntries(req: Request): number {
-  return req.forms.reduce((sum, f) => sum + f.total, 0)
-}
-
-function totalCompleted(req: Request): number {
-  return req.forms.reduce((sum, f) => sum + f.completed, 0)
-}
-
-type BadgeVariant = 'warning' | 'primary' | 'success' | 'danger' | 'neutral'
-
-function overallStatusVariant(req: Request): BadgeVariant {
-  const entries = req.forms.flatMap(f => f.suppliers)
-  if (entries.length === 0) return 'neutral'
-  if (entries.every(e => e.status.value === 'completed')) return 'success'
-  if (entries.some(e => e.status.value === 'pending_approval')) return 'primary'
-  if (entries.some(e => e.status.value === 'cancelled')) return 'danger'
-  return 'warning'
-}
-
-function overallStatusLabel(req: Request): string {
-  const entries = req.forms.flatMap(f => f.suppliers)
-  if (entries.length === 0) return 'No entries'
-  if (entries.every(e => e.status.value === 'completed')) return 'Completed'
-  if (entries.some(e => e.status.value === 'pending_approval')) return 'In Review'
-  if (entries.some(e => e.status.value === 'cancelled')) return 'Cancelled'
-  return 'Awaiting Answer'
-}
-
-function formatDate(date: string): string {
-  return new Date(date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
-}
 </script>
+
+<style scoped>
+.supplier-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding-bottom: var(--space-8);
+}
+
+.supplier-entry {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-5);
+  background: var(--color-surface);
+  border-radius: var(--radius-md);
+  text-decoration: none;
+  transition: background 0.1s;
+}
+
+.supplier-entry:hover {
+  background: var(--color-surface-hover);
+}
+
+.supplier-entry__main {
+  flex: 1;
+  min-width: 0;
+}
+
+.supplier-entry__name {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.supplier-entry__date {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  margin-top: 2px;
+}
+
+</style>

@@ -422,10 +422,6 @@ function formatDate(date: string): string {
   text-decoration: none;
 }
 
-.request-table__supplier-link:hover {
-  text-decoration: underline;
-}
-
 .request-table__chevron {
   background: none;
   border: none;

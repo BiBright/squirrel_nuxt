@@ -100,6 +100,7 @@ async function onSubmit() {
 
   loading.value = true
   loginError.value = ''
+  authStore.logout()
 
   try {
     await fetchCsrfCookie()
@@ -120,6 +121,8 @@ async function onSubmit() {
       },
     )
 
+    console.log('[Login] full response:', res)
+    console.log('[Login] user being stored:', res.data.user)
     authStore.setUser(res.data.user)
 
     await navigateTo('/')

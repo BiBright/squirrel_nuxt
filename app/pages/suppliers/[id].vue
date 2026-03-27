@@ -27,8 +27,17 @@
                 <AppInput v-model="form.material_type" label="Supplier Material Type" placeholder="Insert material type" :optional="true" />
                 <AppInput v-model="form.contact_person" label="Supplier Contact Person" placeholder="Insert contact person name" :optional="true" />
                 <AppInput v-model="form.contact_email" label="Primary Email" type="email" placeholder="Insert primary email" :optional="true" :error="errors.contact_email" />
-                <AppInput v-model="form.contact_phone" label="Contact Phone" placeholder="Insert contact phone" :optional="true" />
-                <AppInput v-model="form.country" label="Country" placeholder="Insert country" :optional="true" />
+                <div class="form-group">
+                  <label class="label01">Contact Phone <span class="optional">(optional)</span></label>
+                  <div class="input-phone">
+                    <input v-model="form.phone_code" type="text" class="input-text input-phone__code" placeholder="+?" style="flex: 0 0 72px" />
+                    <input v-model="form.contact_phone" type="text" class="input-text input-phone__input" placeholder="Insert contact phone" style="flex: 1; min-width: 0" />
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label class="label01">Country <span class="optional">(optional)</span></label>
+                  <AppSelect v-model="form.country" :options="countryOptions" style="display: block; width: 100%" />
+                </div>
               </AppCard>
             </div>
 
@@ -48,14 +57,32 @@
 <script setup lang="ts">
 definePageMeta({ middleware: ['auth'] })
 
+interface Country {
+  id: number
+  name: string
+  code: string
+  phone_code: string
+}
+
 const route = useRoute()
 const id = computed(() => route.params.id as string | undefined)
 const isEdit = computed(() => !!id.value && id.value !== 'create')
 
+const countries = ref<Country[]>([])
+const countryOptions = computed(() => [
+  { value: '', label: 'Select a country' },
+  ...countries.value.map(c => ({ value: c.name, label: c.name })),
+])
+
 const form = reactive({
   name: '', email: '',
   supplier_number: '', category: '', material_type: '', country: '',
-  contact_person: '', contact_email: '', contact_phone: '',
+  contact_person: '', contact_email: '', phone_code: '', contact_phone: '',
+})
+
+watch(() => form.country, (val) => {
+  const match = countries.value.find(c => c.name === val)
+  if (match) form.phone_code = match.phone_code
 })
 const errors = reactive({ name: '', email: '', contact_email: '' })
 const toast = useAppToast()
@@ -67,10 +94,12 @@ const _ready = ref(!isEdit.value)
 watch(form, () => { _ready.value && (isDirty.value = true) }, { deep: true })
 
 onMounted(async () => {
+  const api = useApi()
+  api<{ data: Country[] }>('/countries').then(res => { countries.value = res.data })
+
   if (!isEdit.value) return
   loadingRecord.value = true
   try {
-    const api = useApi()
     const res = await api<{ data: Record<string, unknown> }>(`/suppliers/${id.value}`)
     const d = res.data
     form.name = (d.name as string) ?? ''
@@ -82,6 +111,7 @@ onMounted(async () => {
     form.contact_person = (d.contact_person as string) ?? ''
     form.contact_email = (d.contact_email as string) ?? ''
     form.contact_phone = (d.contact_phone as string) ?? ''
+    form.phone_code = (d.phone_code as string) ?? ''
   }
   catch (err) { toast.error(err, 'Could not load supplier data', { category: 'supplier' }) }
   finally { loadingRecord.value = false; nextTick(() => { _ready.value = true }) }
@@ -114,6 +144,7 @@ async function onSubmit() {
       country: form.country || null,
       contact_person: form.contact_person || null,
       contact_email: form.contact_email || null,
+      phone_code: form.phone_code || null,
       contact_phone: form.contact_phone || null,
     }
     
@@ -140,6 +171,32 @@ async function onSubmit() {
   display: flex;
   flex-direction: column;
   gap: var(--space-6);
+}
+
+.input-phone {
+  display: flex;
+
+  &__code {
+    padding: 0 var(--space-3);
+    background: var(--color-surface-alt);
+    border: 1px solid var(--color-border);
+    border-right: none;
+    border-radius: var(--radius-md) 0 0 var(--radius-md);
+    font-size: var(--text-sm);
+    color: var(--color-text-muted);
+    white-space: nowrap;
+  }
+
+  &__input {
+    flex: 1;
+    border-radius: 0 var(--radius-md) var(--radius-md) 0 !important;
+  }
+}
+
+:deep(.app-select__btn) {
+  width: 100%;
+  height: 44px;
+  font-size: var(--text-sm);
 }
 
 .create-form__actions {

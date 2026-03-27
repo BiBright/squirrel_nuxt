@@ -1,87 +1,94 @@
 <template>
-  <div>
-    <AppPageHeader title="New Company" subtitle="Register a new company and its admin user.">
-      <AppButton variant="ghost" to="/admin/companies">
-        <span class="material-icons-round">arrow_back</span>
-        Back
-      </AppButton>
-    </AppPageHeader>
-
-    <form novalidate class="create-form" @submit.prevent="onSubmit">
-      <AppCard title="Company Details">
-        <AppInput
-          v-model="form.name"
-          label="Company Name"
-          placeholder="Enter company name"
-          :error="errors.name"
-        />
-        <AppInput
-          v-model="form.plan_id"
-          label="Plan"
-          type="select"
-          placeholder="Select a plan"
-          :error="errors.plan_id"
-        >
-          <option v-for="plan in plans" :key="plan.id" :value="plan.id">
-            {{ plan.name }}
-          </option>
-        </AppInput>
-        <AppInput
-          v-model="form.country"
-          label="Country"
-          placeholder="Enter country"
-          :error="errors.country"
-        />
-        <AppInput
-          v-model="form.city"
-          label="City"
-          placeholder="Enter city"
-          :error="errors.city"
-        />
-        <AppInput
-          v-model="form.address"
-          label="Address"
-          placeholder="Enter address"
-          :error="errors.address"
-        />
-        <AppInput
-          v-model="form.zip_code"
-          label="Zip Code"
-          placeholder="Enter zip code"
-          :error="errors.zip_code"
-        />
-        <div class="form-group">
-          <label class="label01">
-            <input v-model="form.is_trial" type="checkbox" class="input-checkbox" />
-            Start on trial period
-          </label>
-        </div>
-      </AppCard>
-
-      <AppCard title="Account Info">
-        <AppInput
-          v-model="form.admin_name"
-          label="Full Name"
-          placeholder="Enter admin full name"
-          :error="errors.admin_name"
-        />
-        <AppInput
-          v-model="form.admin_email"
-          label="Email"
-          type="email"
-          placeholder="Enter admin email"
-          :error="errors.admin_email"
-        />
-        <p class="body02 text-muted">The admin will receive an email to set their password.</p>
-      </AppCard>
-
-      <div class="create-form__actions">
-        <AppButton variant="ghost" to="/admin/companies">Cancel</AppButton>
-        <AppButton type="submit" :loading="loading">Save Company</AppButton>
+  <div class="container">
+    <div class="row">
+      <div class="col-12">
+        <AppBreadcrumb :items="[{ label: 'Companies', to: '/admin/companies' }, { label: 'New Company' }]" />
       </div>
-    </form>
-  <AppUnsavedModal :model-value="showModal" @confirm="confirmLeave" @cancel="cancelLeave" />
+
+      <div class="col-12">
+        <AppPageHeader title="Create Company"/>
+      </div>
+
+      <div class="col-12">
+        <form novalidate class="create-form" @submit.prevent="onSubmit">
+          <div class="col-9">
+            <AppCard>
+              <AppInput
+                v-model="form.plan_id"
+                label="Plan"
+                type="select"
+                placeholder="Select a plan"
+                :error="errors.plan_id"
+              >
+              <AppInput
+                v-model="form.name"
+                label="Company Name"
+                placeholder="Enter company name"
+                :error="errors.name"
+              />
+                <option v-for="plan in plans" :key="plan.id" :value="plan.id">
+                  {{ plan.name }}
+                </option>
+              </AppInput>
+              <AppInput
+                v-model="form.country"
+                label="Country"
+                placeholder="Enter country"
+                :error="errors.country"
+              />
+              <AppInput
+                v-model="form.city"
+                label="City"
+                placeholder="Enter city"
+                :error="errors.city"
+              />
+              <AppInput
+                v-model="form.address"
+                label="Address"
+                placeholder="Enter address"
+                :error="errors.address"
+              />
+              <AppInput
+                v-model="form.zip_code"
+                label="Zip Code"
+                placeholder="Enter zip code"
+                :error="errors.zip_code"
+              />
+              <div class="form-group">
+                <label class="label01">
+                  <input v-model="form.is_trial" type="checkbox" class="input-checkbox" />
+                  Start on trial period
+                </label>
+              </div>
+            </AppCard>
+
+            <AppCard title="Account Info">
+              <AppInput
+                v-model="form.admin_name"
+                label="Full Name"
+                placeholder="Enter admin full name"
+                :error="errors.admin_name"
+              />
+              <AppInput
+                v-model="form.admin_email"
+                label="Email"
+                type="email"
+                placeholder="Enter admin email"
+                :error="errors.admin_email"
+              />
+              <p class="body02 text-muted">The admin will receive an email to set their password.</p>
+            </AppCard>
+          </div>
+
+          <div class="create-form__actions">
+            <AppButton variant="ghost" to="/admin/companies">Cancel</AppButton>
+            <AppButton type="submit" :loading="loading">Save Company</AppButton>
+          </div>
+        </form>
+      </div>
+    </div>
   </div>
+  <AppUnsavedModal :model-value="showModal" @confirm="confirmLeave" @cancel="cancelLeave" />
 </template>
 
 <script setup lang="ts">
@@ -166,7 +173,7 @@ async function onSubmit() {
 
   try {
     const api = useApi()
-    await api('/master/companies', {
+    await api('/company', {
       method: 'POST',
       body: { ...form },
     })

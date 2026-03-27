@@ -49,7 +49,7 @@ definePageMeta({ layout: 'auth' })
 
 const route = useRoute()
 const token = route.params.token as string
-const toast = useAppToast()
+const authStore = useAuthStore()
 
 const form = reactive({ password: '', password_confirmation: '' })
 const errors = reactive({ password: '', password_confirmation: '' })
@@ -90,12 +90,13 @@ async function onSubmit() {
 
   try {
     const api = useApi()
-    await api(`/set-password/${token}`, {
+    const res = await api<{ data: { user: Record<string, unknown> } }>(`/set-password/${token}`, {
       method: 'POST',
       body: { password: form.password, password_confirmation: form.password_confirmation },
     })
-    toast.success('Password set successfully. You can now log in.', { category: 'auth' })
-    await navigateTo('/login')
+    authStore.logout()
+    authStore.setUser(res.data.user)
+    await navigateTo('/')
   }
   catch (err: unknown) {
     const msg = (err as { data?: { message?: string } })?.data?.message

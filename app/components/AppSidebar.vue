@@ -21,9 +21,8 @@
               <span class="material-icons-round">home</span>
               Dashboard
             </NuxtLink>
-
+            <hr class="app-sidebar__separator" />
           </li>
-          <hr class="app-sidebar__separator" />
           <li>
             <NuxtLink to="/admin/companies" class="app-sidebar__link" @click="emit('close')">
               <span class="material-icons-round">factory</span>
@@ -58,35 +57,37 @@
             </NuxtLink>
           </li>
 
-          <li>
-            <button class="app-sidebar__link app-sidebar__dropdown-toggle" :class="{ 'is-open': modelsOpen }"
-              @click="modelsOpen = !modelsOpen">
-              <span class="material-icons-round">format_list_bulleted</span>
-              Models
-            </button>
-            <ul v-show="modelsOpen" class="app-sidebar__submenu">
-              <li>
-                <NuxtLink to="/fields" class="app-sidebar__sublink" @click="emit('close')">Fields</NuxtLink>
-              </li>
-              <li>
-                <NuxtLink to="/forms" class="app-sidebar__sublink" @click="emit('close')">Forms</NuxtLink>
-              </li>
-            </ul>
-          </li>
+          <template v-if="!isSupplier">
+            <li>
+              <button class="app-sidebar__link app-sidebar__dropdown-toggle" :class="{ 'is-open': modelsOpen }"
+                @click="modelsOpen = !modelsOpen">
+                <span class="material-icons-round">format_list_bulleted</span>
+                Models
+              </button>
+              <ul v-show="modelsOpen" class="app-sidebar__submenu">
+                <li>
+                  <NuxtLink to="/fields" class="app-sidebar__sublink" @click="emit('close')">Fields</NuxtLink>
+                </li>
+                <li>
+                  <NuxtLink to="/forms" class="app-sidebar__sublink" @click="emit('close')">Forms</NuxtLink>
+                </li>
+              </ul>
+            </li>
 
-          <li>
-            <NuxtLink to="/suppliers" class="app-sidebar__link" @click="emit('close')">
-              <span class="material-icons-round">local_shipping</span>
-              Suppliers
-            </NuxtLink>
-          </li>
+            <li>
+              <NuxtLink to="/suppliers" class="app-sidebar__link" @click="emit('close')">
+                <span class="material-icons-round">local_shipping</span>
+                Suppliers
+              </NuxtLink>
+            </li>
 
-          <li v-if="!isCompanyUser">
-            <NuxtLink to="/users" class="app-sidebar__link" @click="emit('close')">
-              <span class="material-icons-round">person</span>
-              Users
-            </NuxtLink>
-          </li>
+            <li v-if="!isCompanyUser">
+              <NuxtLink to="/users" class="app-sidebar__link" @click="emit('close')">
+                <span class="material-icons-round">person</span>
+                Users
+              </NuxtLink>
+            </li>
+          </template>
 
         </template>
 
@@ -116,6 +117,7 @@ const emit = defineEmits<{ close: [] }>()
 const authStore = useAuthStore()
 const isMaster = computed(() => authStore.user?.roles === 'master')
 const isCompanyUser = computed(() => authStore.user?.roles === 'company-user')
+const isSupplier = computed(() => authStore.user?.roles === 'supplier')
 
 const modelsOpen = ref(false)
 

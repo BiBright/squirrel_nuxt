@@ -139,8 +139,6 @@ function closePanel() {
   font-size: var(--text-sm);
 }
 
-/* Head */
-
 .app-table__head {
   position: relative;
 }
@@ -162,8 +160,6 @@ function closePanel() {
   font-weight: 500;
   color: var(--color-text-muted);
   white-space: nowrap;
-  letter-spacing: 0.03em;
-  text-transform: uppercase;
 }
 
 .app-table__th:first-child {
@@ -248,7 +244,6 @@ function closePanel() {
   color: var(--color-primary);
 }
 
-/* Action buttons */
 .app-table__action-btn {
   background: none;
   border: none;
@@ -274,11 +269,10 @@ function closePanel() {
 }
 
 .app-table__action-btn--danger .material-icons-round {
-  color: var(--color-black60);
+  color: var(--color-red);
   font-size: 20px;
 }
 
-/* Dropdown panel */
 .app-table__dropdown-row {
   background: var(--color-surface-raised);
 }
@@ -291,7 +285,6 @@ function closePanel() {
   padding: var(--space-4) var(--space-6);
 }
 
-/* Empty state */
 .app-table__empty {
   padding: var(--space-10) var(--space-4);
   text-align: center;
