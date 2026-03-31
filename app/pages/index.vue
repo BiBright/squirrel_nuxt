@@ -1,124 +1,229 @@
 <template>
   <div class="dash-container">
     <div class="container">
-      <AppPageHeader title="Dashboard" />
 
-      <div class="dash">
-        <div class="dash__stats">
-          <div class="row">
-            <template v-if="isSupplier">
-              <div class="col-6">
-                <div class="dash-stat">
-                  <p class="dash-stat__label">Pending</p>
-                  <p class="dash-stat__value">{{ stats.pending }}</p>
-                </div>
-              </div>
-              <div class="col-6">
-                <div class="dash-stat">
-                  <p class="dash-stat__label">Completed</p>
-                  <p class="dash-stat__value">{{ stats.completed }}</p>
-                </div>
-              </div>
-            </template>
-            <template v-else>
-              <div class="col-12 col-sm-4">
-                <div class="dash-stat">
-                  <p class="dash-stat__label">Requests</p>
-                  <p class="dash-stat__value">{{ stats.requests }}</p>
-                </div>
-              </div>
-              <div class="col-6 col-sm-4">
-                <div class="dash-stat">
-                  <p class="dash-stat__label">Suppliers</p>
-                  <p class="dash-stat__value">{{ stats.suppliers }}</p>
-                </div>
-              </div>
-              <div class="col-6 col-sm-4">
-                <div class="dash-stat">
-                  <p class="dash-stat__label">Forms</p>
-                  <p class="dash-stat__value">{{ stats.forms }}</p>
-                </div>
-              </div>
-            </template>
-          </div>
-        </div>
+      <!-- ── Master Admin dashboard ── -->
+      <template v-if="isMaster">
+        <AppPageHeader title="Dashboard" />
 
-        <div class="dash__chart">
-          <div class="row">
-            <div class="col-6 col-sm-12">
-              <div class="dash-card">
-                <h3 class="dash-card__title">Total request vs completed</h3>
-                <div v-if="loadingRequests" class="dash-state">Loading...</div>
-                <div v-else-if="stats.requests === 0" class="dash-state">No request data yet.</div>
-                <ClientOnly v-else>
-                  <AppChartBar :labels="['Total requests', 'Completed']"
-                    :datasets="[{ label: '', data: [stats.requests, stats.completed], color: ['#367B8A', '#A0E797'] }]"
-                    :legend="false" />
-                </ClientOnly>
-              </div>
+        <div v-if="loadingRequests" class="dash-state" style="padding: var(--space-8)">Loading...</div>
+
+        <template v-else>
+          <div class="master-bar">
+            <div class="master-bar__item">
+              <span class="master-bar__value">{{ masterData?.overview?.companies ?? '—' }}</span>
+              <span class="master-bar__label">Companies</span>
+            </div>
+            <div class="master-bar__item">
+              <span class="master-bar__value">{{ masterData?.overview?.fields ?? '—' }}</span>
+              <span class="master-bar__label">Fields</span>
+            </div>
+            <div class="master-bar__item">
+              <span class="master-bar__value">{{ masterData?.overview?.forms ?? '—' }}</span>
+              <span class="master-bar__label">Forms</span>
+            </div>
+            <div class="master-bar__item">
+              <span class="master-bar__value">{{ masterData?.overview?.requests ?? '—' }}</span>
+              <span class="master-bar__label">Requests</span>
+            </div>
+            <div class="master-bar__item">
+              <span class="master-bar__value">{{ masterData?.overview?.suppliers ?? '—' }}</span>
+              <span class="master-bar__label">Suppliers</span>
+            </div>
+            <div class="master-bar__item">
+              <span class="master-bar__value">{{ masterData?.overview?.users ?? '—' }}</span>
+              <span class="master-bar__label">Users</span>
             </div>
           </div>
-        </div>
 
-        <div class="dash__right">
-          <div class="dash-recent">
-            <div class="dash-recent__header">
-              <h2 class="dash-recent__title">Recent requests</h2>
-              <NuxtLink to="/requests" class="dash-recent__view-all">View All</NuxtLink>
+          <div class="row master-cards">
+            <div class="col-12 col-sm-4">
+              <div class="master-card">
+                <div class="master-card__top">
+                  <div class="master-card__icon-box">
+                    <span class="material-icons-round">local_shipping</span>
+                  </div>
+                  <div class="master-card__info">
+                    <p class="master-card__label">Companies</p>
+                    <p class="master-card__value">{{ masterData?.companies.total ?? '—' }}</p>
+                  </div>
+                </div>
+                <div class="master-card__rows">
+                  <div v-for="item in masterData?.companies.by_plan" :key="item.plan" class="master-card__row">
+                    <span>{{ item.plan }}</span>
+                    <span>{{ item.count }}</span>
+                  </div>
+                </div>
+              </div>
             </div>
 
-            <div v-if="loadingRequests" class="dash-state" style="padding: var(--space-6)">Loading...</div>
-            <div v-else-if="assignedEntries.length === 0 && approvalEntries.length === 0" class="dash-state"
-              style="padding: var(--space-6)">
-              No recent requests.
+            <div class="col-12 col-sm-4">
+              <div class="master-card">
+                <div class="master-card__top">
+
+                  <div class="master-card__icon-box">
+                    <span class="material-icons-round">groups</span>
+                  </div>
+                  <div class="master-card__info">
+                    <p class="master-card__label">Users</p>
+                    <p class="master-card__value">{{ masterData?.users.total ?? '—' }}</p>
+                  </div>
+                </div>
+                <div class="master-card__rows">
+                  <div class="master-card__row">
+                    <span>Suppliers</span><span>{{ masterData?.users.suppliers ?? '—' }}</span>
+                  </div>
+                  <div class="master-card__row">
+                    <span>Company Users</span><span>{{ masterData?.users.company_users ?? '—' }}</span>
+                  </div>
+                </div>
+              </div>
             </div>
 
-            <template v-else>
-              <template v-if="assignedEntries.length > 0">
-                <p class="dash-group-label">Recent</p>
-                <NuxtLink v-for="entry in assignedEntries"
-                  :key="`a-${entry.requestId}-${entry.formId}-${entry.supplierId}`"
-                  :to="`/requests/${entry.requestId}/entries/${entry.entryId}`"
-                  class="dash-entry">
-                  <div class="dash-entry__main">
-                    <p class="dash-entry__title">{{ entry.formName }}</p>
-                    <p class="dash-entry__supplier">{{ entry.supplierName }}</p>
+            <div class="col-12 col-sm-4">
+              <div class="master-card">
+                <div class="master-card__top">
+                  <div class="master-card__icon-box">
+                    <span class="material-icons-round">format_list_bulleted</span>
                   </div>
-                  <div class="dash-entry__right">
-                    <div class="dash-entry__date">
-                      <span>{{ entry.date }}</span>
-                      <span>{{ entry.time }}</span>
-                    </div>
-                    <span class="material-icons-round dash-entry__arrow">arrow_forward</span>
+                  <div class="master-card__info">
+                    <p class="master-card__label">Requests</p>
+                    <p class="master-card__value">{{ masterData?.requests.total ?? '—' }}</p>
                   </div>
-                </NuxtLink>
+                </div>
+                <div class="master-card__rows">
+                  <div class="master-card__row">
+                    <span>Forms</span><span>{{ masterData?.requests.forms ?? '—' }}</span>
+                  </div>
+                  <div class="master-card__row">
+                    <span>Fields</span><span>{{ masterData?.requests.fields ?? '—' }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </template>
+      </template>
+
+      <!-- ── Regular dashboard ── -->
+      <template v-else>
+        <AppPageHeader title="Dashboard" />
+
+        <div class="dash">
+          <div class="dash__stats">
+            <div class="row">
+              <template v-if="isSupplier">
+                <div class="col-6">
+                  <div class="dash-stat">
+                    <p class="dash-stat__label">Pending</p>
+                    <p class="dash-stat__value">{{ stats.pending }}</p>
+                  </div>
+                </div>
+                <div class="col-6">
+                  <div class="dash-stat">
+                    <p class="dash-stat__label">Completed</p>
+                    <p class="dash-stat__value">{{ stats.completed }}</p>
+                  </div>
+                </div>
               </template>
-
-              <template v-if="approvalEntries.length > 0">
-                <p class="dash-group-label" :class="{ 'dash-group-label--spaced': assignedEntries.length > 0 }">For
-                  Approval</p>
-                <NuxtLink v-for="entry in approvalEntries"
-                  :key="`p-${entry.requestId}-${entry.formId}-${entry.supplierId}`"
-                  :to="`/requests/${entry.requestId}/entries/${entry.entryId}`"
-                  class="dash-entry">
-                  <div class="dash-entry__main">
-                    <p class="dash-entry__title">{{ entry.formName }}</p>
-                    <p class="dash-entry__supplier">{{ entry.supplierName }}</p>
+              <template v-else>
+                <div class="col-12 col-sm-4">
+                  <div class="dash-stat">
+                    <p class="dash-stat__label">Requests</p>
+                    <p class="dash-stat__value">{{ stats.requests }}</p>
                   </div>
-                  <div class="dash-entry__right">
-                    <div class="dash-entry__date">
-                      <span>{{ entry.date }}</span>
-                      <span>{{ entry.time }}</span>
-                    </div>
-                    <span class="material-icons-round dash-entry__arrow">arrow_forward</span>
+                </div>
+                <div class="col-6 col-sm-4">
+                  <div class="dash-stat">
+                    <p class="dash-stat__label">Suppliers</p>
+                    <p class="dash-stat__value">{{ stats.suppliers }}</p>
                   </div>
-                </NuxtLink>
+                </div>
+                <div class="col-6 col-sm-4">
+                  <div class="dash-stat">
+                    <p class="dash-stat__label">Forms</p>
+                    <p class="dash-stat__value">{{ stats.forms }}</p>
+                  </div>
+                </div>
               </template>
-            </template>
+            </div>
+          </div>
+
+          <div class="dash__chart">
+            <div class="row">
+              <div class="col-6 col-sm-12">
+                <div class="dash-card">
+                  <h3 class="dash-card__title">Total request vs completed</h3>
+                  <div v-if="loadingRequests" class="dash-state">Loading...</div>
+                  <div v-else-if="stats.requests === 0" class="dash-state">No request data yet.</div>
+                  <ClientOnly v-else>
+                    <AppChartBar :labels="['Total requests', 'Completed']"
+                      :datasets="[{ label: '', data: [stats.requests, stats.completed], color: ['#367B8A', '#A0E797'] }]"
+                      :legend="false" />
+                  </ClientOnly>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="dash__right">
+            <div class="dash-recent">
+              <div class="dash-recent__header">
+                <h2 class="dash-recent__title">Recent requests</h2>
+                <NuxtLink to="/requests" class="dash-recent__view-all">View All</NuxtLink>
+              </div>
+
+              <div v-if="loadingRequests" class="dash-state" style="padding: var(--space-6)">Loading...</div>
+              <div v-else-if="assignedEntries.length === 0 && approvalEntries.length === 0" class="dash-state"
+                style="padding: var(--space-6)">
+                No recent requests.
+              </div>
+
+              <template v-else>
+                <template v-if="assignedEntries.length > 0">
+                  <p class="dash-group-label">Recent</p>
+                  <NuxtLink v-for="(entry, i) in assignedEntries" :key="`a-${i}`"
+                    :to="entry.entryId ? `/requests/${entry.requestId}/entries/${entry.entryId}` : `/requests/${entry.requestId}`"
+                    class="dash-entry">
+                    <div class="dash-entry__main">
+                      <p class="dash-entry__title">{{ entry.formName }}</p>
+                      <p class="dash-entry__supplier">{{ entry.supplierName }}</p>
+                    </div>
+                    <div class="dash-entry__right">
+                      <div class="dash-entry__date">
+                        <span>{{ entry.date }}</span>
+                        <span>{{ entry.time }}</span>
+                      </div>
+                      <span class="material-icons-round dash-entry__arrow">arrow_forward</span>
+                    </div>
+                  </NuxtLink>
+                </template>
+
+                <template v-if="approvalEntries.length > 0">
+                  <p class="dash-group-label" :class="{ 'dash-group-label--spaced': assignedEntries.length > 0 }">For
+                    Approval</p>
+                  <NuxtLink v-for="(entry, i) in approvalEntries" :key="`p-${i}`"
+                    :to="entry.entryId ? `/requests/${entry.requestId}/entries/${entry.entryId}` : `/requests/${entry.requestId}`"
+                    class="dash-entry">
+                    <div class="dash-entry__main">
+                      <p class="dash-entry__title">{{ entry.formName }}</p>
+                      <p class="dash-entry__supplier">{{ entry.supplierName }}</p>
+                    </div>
+                    <div class="dash-entry__right">
+                      <div class="dash-entry__date">
+                        <span>{{ entry.date }}</span>
+                        <span>{{ entry.time }}</span>
+                      </div>
+                      <span class="material-icons-round dash-entry__arrow">arrow_forward</span>
+                    </div>
+                  </NuxtLink>
+                </template>
+              </template>
+            </div>
           </div>
         </div>
 
-      </div>
+      </template><!-- end v-else regular dashboard -->
     </div>
   </div>
 </template>
@@ -130,66 +235,47 @@ const authStore = useAuthStore()
 
 interface RequestEntry {
   id: number
-  supplier: { id: number; name: string } | null
   status: { value: string; label: string }
-  created_at: string
   updated_at: string
 }
 interface RequestForm {
   form_id: number
   form_name: string
-  total: number
-  completed: number
   suppliers: RequestEntry[]
 }
 interface Request {
   id: number
-  title: string | null
-  assigned_to: { id: number; name: string } | null
-  created_by: { id: number; name: string } | null
   forms: RequestForm[]
-  created_at: string
 }
-
-const requests = ref<Request[]>([])
-const loadingRequests = ref(true)
-const supplierCount = ref(0)
-const formCount = ref(0)
-
-onMounted(async () => {
-  console.log('Role', authStore.user?.roles)
-  const api = useApi()
-  try {
-    const [reqRes, supRes, formRes] = await Promise.allSettled([
-      api<{ data: Request[] | { data: Request[] } }>('/requests'),
-      api<{ data: unknown[] | { data: unknown[] } }>('/suppliers'),
-      api<{ data: unknown[] | { data: unknown[] } }>('/forms'),
-    ])
-
-    if (reqRes.status === 'fulfilled') {
-      const d = reqRes.value.data
-      requests.value = Array.isArray(d) ? d : d.data
-    }
-    if (supRes.status === 'fulfilled') {
-      const d = supRes.value.data
-      supplierCount.value = (Array.isArray(d) ? d : d.data).length
-    }
-    if (formRes.status === 'fulfilled') {
-      const d = formRes.value.data
-      formCount.value = (Array.isArray(d) ? d : d.data).length
-    }
-  }
-  finally {
-    loadingRequests.value = false
-  }
-})
-
+interface CardStats {
+  countRequests: number
+  countCompleted: number
+  countForms: number
+  countSuppliers: number
+}
+interface DashboardAssigned {
+  request_id: number
+  editado: string
+  status: string
+  form: { id: number; name: string } | null
+  supplier: { id: number; name: string } | null
+}
+interface DashboardSupplierItem {
+  request_id: number
+  form_name: string
+  supplier_name: string
+  editado: string
+  estado: string
+}
+interface DashboardRecentRequest {
+  request_id: number
+  formname: string
+  supplierlist: DashboardSupplierItem[]
+}
 interface FlatEntry {
   requestId: number
-  entryId: number
-  formId: number
+  entryId: number | null
   formName: string
-  supplierId: number
   supplierName: string
   date: string
   time: string
@@ -197,59 +283,121 @@ interface FlatEntry {
   updatedAt: string
 }
 
-function flattenEntries(reqs: Request[]): FlatEntry[] {
-  return reqs.flatMap(r =>
-    r.forms.flatMap(f =>
-      f.suppliers.filter(e => e.supplier != null).map(e => ({
-        requestId: r.id,
-        entryId: e.id,
-        formId: f.form_id,
-        formName: f.form_name,
-        supplierId: e.supplier.id,
-        supplierName: e.supplier.name,
-        date: new Date(e.updated_at).toLocaleDateString('en-CA'),
-        time: new Date(e.updated_at).toLocaleTimeString('en-GB'),
-        status: e.status.value,
-        updatedAt: e.updated_at,
-      })),
-    ),
-  ).sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
+interface MasterDashboard {
+  overview: { companies: number; fields: number; forms: number; requests: number; suppliers: number; users: number }
+  companies: { total: number; by_plan: { plan: string; count: number }[] }
+  users: { total: number; suppliers: number; company_users: number }
+  requests: { total: number; forms: number; fields: number }
 }
 
-const myId = computed(() => authStore.user?.id as number)
-const isCompanyUser = computed(() => authStore.user?.roles === 'company-user')
+const requests = ref<Request[]>([])
+const cardStats = ref<CardStats | null>(null)
+const recentData = ref<{ assigned: DashboardAssigned[]; cleanSearchData: DashboardRecentRequest[] } | null>(null)
+const masterData = ref<MasterDashboard | null>(null)
+const loadingRequests = ref(true)
+const isMaster = computed(() => authStore.user?.roles === 'master')
 const isSupplier = computed(() => authStore.user?.roles === 'supplier')
 
-const ownRequests = computed(() =>
-  isCompanyUser.value
-    ? requests.value.filter(r => r.created_by?.id === myId.value)
-    : requests.value,
+onMounted(async () => {
+  console.log('[Dashboard] auth user:', authStore.user)
+  console.log('[Dashboard] auth company:', authStore.company)
+  const api = useApi()
+  try {
+    if (isMaster.value) {
+      const res = await api<{ data: MasterDashboard }>('/master/dashboard').catch(() => null)
+      masterData.value = res?.data ?? null
+    }
+    else if (isSupplier.value) {
+      const res = await api<{ data: Request[] | { data: Request[] } }>('/requests')
+      const d = res.data
+      requests.value = Array.isArray(d) ? d : (d as { data: Request[] }).data ?? []
+    }
+    else {
+      const [cardRes, recentRes] = await Promise.allSettled([
+        api<{ data: CardStats }>('/dashboard/card'),
+        api<{ data: typeof recentData.value }>('/dashboard/recent-data'),
+      ])
+      if (cardRes.status === 'fulfilled') cardStats.value = cardRes.value.data
+      if (recentRes.status === 'fulfilled') recentData.value = recentRes.value.data
+    }
+  }
+  finally {
+    loadingRequests.value = false
+  }
+})
+
+const allSupplierEntries = computed(() =>
+  requests.value.flatMap(r => r.forms.flatMap(f => f.suppliers)),
 )
 
-const allEntries = computed(() => ownRequests.value.flatMap(r => r.forms.flatMap(f => f.suppliers)))
+const stats = computed(() => {
+  if (isSupplier.value) {
+    return {
+      requests: 0,
+      completed: allSupplierEntries.value.filter(e => e.status.value === 'completed').length,
+      pending: allSupplierEntries.value.filter(e => e.status.value !== 'completed').length,
+      suppliers: 0,
+      forms: 0,
+    }
+  }
+  return {
+    requests: cardStats.value?.countRequests ?? 0,
+    completed: cardStats.value?.countCompleted ?? 0,
+    pending: 0,
+    suppliers: cardStats.value?.countSuppliers ?? 0,
+    forms: cardStats.value?.countForms ?? 0,
+  }
+})
 
-const stats = computed(() => ({
-  requests: ownRequests.value.length,
-  completed: isSupplier.value
-    ? allEntries.value.filter(e => e.status.value === 'completed').length
-    : ownRequests.value.filter(r =>
-        r.forms.flatMap(f => f.suppliers).every(e => e.status.value === 'completed'),
-      ).length,
-  pending: allEntries.value.filter(e => e.status.value !== 'completed').length,
-  suppliers: supplierCount.value,
-  forms: formCount.value,
-}))
+function toFlatEntry(updatedAt: string, requestId: number, entryId: number | null, formName: string, supplierName: string, status: string): FlatEntry {
+  return {
+    requestId,
+    entryId,
+    formName,
+    supplierName,
+    date: new Date(updatedAt).toLocaleDateString('en-CA'),
+    time: new Date(updatedAt).toLocaleTimeString('en-GB'),
+    status,
+    updatedAt,
+  }
+}
 
-const assignedEntries = computed(() => flattenEntries(ownRequests.value).slice(0, 6))
+const assignedEntries = computed((): FlatEntry[] => {
+  if (isSupplier.value) {
+    return requests.value
+      .flatMap(r => r.forms.flatMap(f =>
+        f.suppliers.map(e => toFlatEntry(e.updated_at, r.id, e.id, f.form_name, authStore.user?.name as string ?? '', e.status.value)),
+      ))
+      .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
+      .slice(0, 6)
+  }
+  return (recentData.value?.cleanSearchData ?? [])
+    .flatMap(r => (r.supplierlist ?? []).map(s =>
+      toFlatEntry(s.editado, r.request_id, null, s.form_name, s.supplier_name, s.estado),
+    ))
+    .slice(0, 6)
+})
 
-const approvalEntries = computed(() =>
-  flattenEntries(ownRequests.value).filter(e => e.status === 'pending_approval').slice(0, 6),
-)
+const approvalEntries = computed((): FlatEntry[] => {
+  if (isSupplier.value) {
+    return requests.value
+      .flatMap(r => r.forms.flatMap(f =>
+        f.suppliers
+          .filter(e => e.status.value === 'pending_approval')
+          .map(e => toFlatEntry(e.updated_at, r.id, e.id, f.form_name, authStore.user?.name as string ?? '', e.status.value)),
+      ))
+      .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
+      .slice(0, 6)
+  }
+  return (recentData.value?.assigned ?? []).map(e =>
+    toFlatEntry(e.editado, e.request_id, null, e.form?.name ?? '', e.supplier?.name ?? '', e.status),
+  )
+})
 </script>
 
 <style scoped>
 .dash-container {
-  margin-top: 68px; 
+  margin-top: 68px;
 }
 
 .dash {
@@ -449,5 +597,119 @@ const approvalEntries = computed(() =>
   font-size: var(--text-sm);
   color: var(--color-text-muted);
   text-align: left;
+}
+
+.master-bar {
+  display: flex;
+  gap: var(--space-6);
+  flex-wrap: wrap;
+  padding: var(--space-4) 0 var(--space-6);
+}
+
+.master-bar__item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.master-bar__value {
+  font-size: var(--text-lg);
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.master-bar__label {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}
+
+.master-cards {
+  padding-bottom: var(--space-8);
+}
+
+.master-card {
+  background: var(--color-surface);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  margin-bottom: var(--space-4);
+  padding: var(--space-5);
+}
+
+.master-card__top {
+  display: flex;
+  gap: var(--space-4);
+  margin-bottom: var(--space-3);
+}
+
+.master-card__icon-box {
+  width: 72px;
+  height: 72px;
+  border-radius: var(--radius-md);
+  background: var(--color-primary-subtle);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: var(--color-primary);
+  font-size: 28px;
+
+  @media (min-width: 1280px) {
+    width: 116px;
+    height: 116px;
+  }
+
+  .material-icons-round {
+    font-size: 40px;
+
+    @media (min-width: 1280px) {
+      font-size: 64px;
+    }
+  }
+}
+
+.master-card__info {
+  width: -webkit-fill-available;
+  display: grid;
+}
+
+.master-card__label {
+  font-size: var(--text-base);
+  font-weight: 700;
+  color: var(--color-primary);
+}
+
+.master-card__value {
+  margin-top: auto;
+  text-align: end;
+  font-size: 2.5rem;
+  font-weight: 800;
+  color: var(--color-primary);
+  line-height: 1.1;
+}
+
+.master-card__rows {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.master-card__row {
+  background-color: var(--color-primary-subtle);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-2);
+  font-size: var(--text-sm);
+  color: var(--color-text);
+  border-radius: var(--radius-md);
+}
+
+.master-card__row:last-child {
+  border-bottom: none;
+}
+
+.master-card__row span:last-child {
+  font-weight: 600;
+  color: var(--color-primary);
 }
 </style>

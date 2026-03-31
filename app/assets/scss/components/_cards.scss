@@ -1,10 +1,6 @@
 @use '../base/variables' as *;
 @use '../base/viewport' as *;
 
-// ================================
-// Card Components
-// ================================
-
 .card {
 
   &__header {
@@ -39,11 +35,9 @@
     border-top: 1px solid $white60;
   }
 
-  // Variants
   &--primary  { border-color: $primary50; }
   &--compact  { padding: 12px 16px; }
 
-  // List row card
   &--list-item {
     border-radius: 8px;
     padding: 16px 20px;

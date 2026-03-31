@@ -171,6 +171,12 @@ $grid-columns: 12;
       width: math.percentage(math.div($i, $grid-columns));
     }
   }
+
+  @for $i from 0 through ($grid-columns - 1) {
+    .offset-md-#{$i} {
+      margin-left: math.percentage(math.div($i, $grid-columns));
+    }
+  }
 }
 
 

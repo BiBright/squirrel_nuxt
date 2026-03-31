@@ -92,6 +92,7 @@ interface RequestForm {
   total: number
   completed: number
   suppliers: RequestEntry[]
+  assigned_to: { id: number; name: string } | null
 }
 
 interface Request {
@@ -141,8 +142,19 @@ onMounted(async () => {
 
   if (isSupplier.value) {
     try {
-      const res = await api<{ data: SupplierRequest[] }>('/supplier/requests')
-      supplierRequests.value = res.data
+      const res = await api<{ data: unknown }>('/supplier/requests')
+      const d = res.data as Record<string, unknown>
+      const items: unknown[] = Array.isArray(d) ? d : ((d.data as unknown[]) ?? [])
+      supplierRequests.value = (items as Record<string, unknown>[]).map(req => ({
+        request_id: req.id as number,
+        title: (req.title as string | null) ?? null,
+        company: (req.company as Record<string, unknown>)?.name as string ?? '',
+        forms: ((req.entries as Record<string, unknown>[]) ?? []).map(e => ({
+          entry_id: e.id as number,
+          form_name: (e.form as Record<string, unknown>)?.name as string ?? '',
+          status: e.status as string,
+        })),
+      }))
     }
     catch { supplierRequests.value = [] }
     finally { loading.value = false }
@@ -169,9 +181,6 @@ onMounted(async () => {
 
 const filtered = computed(() => {
   let result = [...requests.value]
-  if (authStore.user?.roles === 'company-user') {
-    result = result.filter(r => r.created_by?.id === (authStore.user?.id as number))
-  }
   if (search.value) {
     const q = search.value.toLowerCase()
     result = result.filter(r =>
@@ -254,9 +263,21 @@ function onSelectionChange(entryIds: number[]) {
 async function onAssign(req: Request, user: User) {
   try {
     const api = useApi()
-    await api(`/requests/${req.id}/assign`, { method: 'PATCH', body: { assigned_to: user.id } })
-    const target = requests.value.find(r => r.id === req.id)
-    if (target) target.assigned_to = { id: user.id, name: user.name }
+    await api(`/requests/${req.id}/assign`, {
+      method: 'PATCH',
+      body: {
+        assignments: req.forms.flatMap(f =>
+          f.suppliers.filter(s => s.supplier !== null).map(s => ({ form_id: f.form_id, assigned_to: user.id, supplier_id: s.supplier!.id })),
+        ),
+      },
+    })
+    requests.value = requests.value.map(r =>
+      r.id !== req.id ? r : {
+        ...r,
+        assigned_to: { id: user.id, name: user.name },
+        forms: r.forms.map(f => ({ ...f, assigned_to: { id: user.id, name: user.name } })),
+      },
+    )
     toast.success(`Request assigned to ${user.name}`, { category: 'request' })
   }
   catch (err) { toast.error(err, 'Failed to assign request', { category: 'request' }) }
@@ -276,19 +297,37 @@ function onFilterChange(f: typeof activeFilters.value) { activeFilters.value = f
 function onAdd() { navigateTo('/requests/create') }
 function onDelete() { selectedCount.value = 0 }
 
-async function onBulkAssign(_entryIds: number[], user: User) {
-  const affectedReqs = requests.value.filter(r =>
-    r.forms.some(f => f.suppliers.some(s => _entryIds.includes(s.id))),
-  )
+async function onBulkAssign(entryIds: number[], user: User) {
   try {
     const api = useApi()
+    const affectedReqs = requests.value.filter(r =>
+      r.forms.some(f => f.suppliers.some(s => entryIds.includes(s.id))),
+    )
     await Promise.all(affectedReqs.map(r =>
-      api(`/requests/${r.id}/assign`, { method: 'PATCH', body: { user_id: user.id } }),
+      api(`/requests/${r.id}/assign`, {
+        method: 'PATCH',
+        body: {
+          assignments: r.forms
+            .filter(f => f.suppliers.some(s => entryIds.includes(s.id)))
+            .flatMap(f =>
+              f.suppliers
+                .filter(s => entryIds.includes(s.id) && s.supplier !== null)
+                .map(s => ({ form_id: f.form_id, assigned_to: user.id, supplier_id: s.supplier!.id })),
+            ),
+        },
+      }),
     ))
-    affectedReqs.forEach(r => {
-      const target = requests.value.find(req => req.id === r.id)
-      if (target) target.assigned_to = { id: user.id, name: user.name }
-    })
+    const affectedIds = new Set(affectedReqs.map(r => r.id))
+    requests.value = requests.value.map(r =>
+      !affectedIds.has(r.id) ? r : {
+        ...r,
+        forms: r.forms.map(f =>
+          f.suppliers.some(s => entryIds.includes(s.id))
+            ? { ...f, assigned_to: { id: user.id, name: user.name } }
+            : f,
+        ),
+      },
+    )
     toast.success(`${affectedReqs.length} request${affectedReqs.length !== 1 ? 's' : ''} assigned to ${user.name}`, { category: 'request' })
   }
   catch (err) { toast.error(err, 'Failed to assign requests', { category: 'request' }) }

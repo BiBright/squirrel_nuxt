@@ -3,11 +3,12 @@
     <img src="/images/image_login.png" alt="" class="login-visual__bg" />
     <div class="login-visual__container">
       <img src="/images/logo.png" alt="Squirrel" class="login-visual__logo" />
+      <h1 class="login-visual__title">Management, Communication, and
+        Optimization of Supplier Processes</h1>
     </div>
   </div>
 
   <div class="login-form-wrapper">
-    <!-- Logo shown only on mobile (left panel is hidden) -->
     <div class="login-mobile-logo">
       <img src="/images/logo.png" alt="Squirrel" />
     </div>
@@ -21,20 +22,9 @@
     </div>
 
     <form novalidate @submit.prevent="onSubmit">
-      <AppInput
-        v-model="form.email"
-        label="Email"
-        type="email"
-        placeholder="Insert email"
-        :error="errors.email"
-      />
-      <AppInput
-        v-model="form.password"
-        label="Password"
-        type="password"
-        placeholder="Insert password"
-        :error="errors.password"
-      />
+      <AppInput v-model="form.email" label="Email" type="email" placeholder="Insert email" :error="errors.email" />
+      <AppInput v-model="form.password" label="Password" type="password" placeholder="Insert password"
+        :error="errors.password" />
 
       <div class="login-form-submit">
         <AppButton type="submit" :loading="loading" :full-width="true">
@@ -124,6 +114,7 @@ async function onSubmit() {
     console.log('[Login] full response:', res)
     console.log('[Login] user being stored:', res.data.user)
     authStore.setUser(res.data.user)
+    if (res.data.company) authStore.setCompany(res.data.company)
 
     await navigateTo('/')
   }

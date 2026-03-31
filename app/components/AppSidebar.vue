@@ -2,7 +2,7 @@
   <aside :class="['app-sidebar', { 'is-open': isOpen }]" aria-label="Main navigation">
 
     <div class="app-sidebar__logo">
-      <NuxtLink :to="isMaster ? '/admin' : '/'" @click="emit('close')">
+      <NuxtLink to="/" @click="emit('close')">
         <img src="/images/logo_cor.png" alt="Squirrel" />
       </NuxtLink>
     </div>
@@ -14,42 +14,31 @@
     <nav class="app-sidebar__nav">
       <ul class="app-sidebar__list">
 
-        <template v-if="isMaster">
+        <li>
+          <NuxtLink to="/" class="app-sidebar__link" @click="emit('close')">
+            <span class="material-icons-round">home</span>
+            Dashboard
+          </NuxtLink>
+        </li>
 
-          <li class="app-sidebar__home">
-            <NuxtLink to="/admin" class="app-sidebar__link" @click="emit('close')">
-              <span class="material-icons-round">home</span>
-              Dashboard
-            </NuxtLink>
-            <hr class="app-sidebar__separator" />
-          </li>
+        <li class="app-sidebar__separator" />
+
+        <template v-if="isMaster">
           <li>
             <NuxtLink to="/admin/companies" class="app-sidebar__link" @click="emit('close')">
               <span class="material-icons-round">factory</span>
               Companies
             </NuxtLink>
           </li>
-
           <li>
             <NuxtLink to="/admin/maintenance" class="app-sidebar__link" @click="emit('close')">
               <span class="material-icons-round">build</span>
               Maintenance
             </NuxtLink>
           </li>
-
         </template>
 
-        <!-- ── Regular user nav ─────────────────────── -->
         <template v-else>
-
-          <li class="app-sidebar__home">
-            <NuxtLink to="/" class="app-sidebar__link" @click="emit('close')">
-              <span class="material-icons-round">home</span>
-              Dashboard
-            </NuxtLink>
-            <hr class="app-sidebar__separator" />
-          </li>
-
           <li>
             <NuxtLink to="/requests" class="app-sidebar__link" @click="emit('close')">
               <span class="material-icons-round">description</span>
@@ -88,7 +77,6 @@
               </NuxtLink>
             </li>
           </template>
-
         </template>
 
       </ul>

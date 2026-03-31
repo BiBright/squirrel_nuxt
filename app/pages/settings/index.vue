@@ -5,7 +5,10 @@
         <div class="col-12 col-sm-4 col-md-2">
           <aside class="settings-menu" :class="{ 'settings-menu--hidden': mobileShowContent }">
             <div class="settings-menu__user">
-              <div class="avatar">{{ initials }}</div>
+              <div class="avatar">
+                <img v-if="companyLogoUrl" :src="companyLogoUrl" alt="Company logo" class="avatar__img" />
+                <template v-else>{{ initials }}</template>
+              </div>
               <p class="username">{{ user?.name ?? 'User' }}</p>
               <p class="role caption2">{{ user?.email ?? '' }}</p>
               <button type="button" class="logout-btn" @click="onLogout">
@@ -61,11 +64,7 @@
                     <img v-if="companyLogoPreview" :src="companyLogoPreview" class="company-logo-img" alt="Logo preview">
                     <span v-else class="company-logo-placeholder material-icons-round">business</span>
                   </div>
-                  <label for="company-logo-input" class="attach-btn">
-                    <span class="material-icons-round">upload</span>
-                    {{ companyLogoPreview ? 'Change logo' : 'Upload logo' }}
-                  </label>
-                  <input id="company-logo-input" type="file" accept=".jpg,.jpeg,.png" class="input-file" @change="onLogoChange">
+                  <AppFileUpload icon="upload" :label="companyLogoPreview ? 'Change logo' : 'Upload logo'" accept=".jpg,.jpeg,.png" @change="onLogoChange" />
                 </div>
 
                 <AppInput v-model="companyForm.name" label="Company Name" placeholder="Your company name" />
@@ -158,6 +157,7 @@ const router = useRouter()
 const toast = useAppToast()
 
 const user = computed(() => authStore.user as Record<string, string> | null)
+const { companyLogoUrl } = useCompanyLogo()
 const initials = computed(() => {
   const name = user.value?.name ?? ''
   return name.split(' ').slice(0, 2).map((w: string) => w[0]).join('').toUpperCase() || 'U'
@@ -254,7 +254,7 @@ const companyForm = reactive({ name: '', country: '', city: '', address: '', zip
 const companyLoading = ref(false)
 const companySaving = ref(false)
 const companyLogoFile = ref<File | null>(null)
-const companyLogoPreview = ref<string | null>(null)
+const companyLogoPreview = ref<string | null>(companyLogoUrl.value)
 
 async function loadCompany() {
   const companyId = (user.value?.company_id ?? user.value?.company?.id) as number | undefined
@@ -269,15 +269,12 @@ async function loadCompany() {
     companyForm.address = (d.address as string) ?? ''
     companyForm.zip_code = (d.zip_code as string) ?? ''
     companyForm.plan_id = (d.plan_id as number) ?? null
-    if (d.logo_path) companyLogoPreview.value = d.logo_path as string
   }
   catch { /* leave defaults */ }
   finally { companyLoading.value = false }
 }
 
-function onLogoChange(e: Event) {
-  const file = (e.target as HTMLInputElement).files?.[0]
-  if (!file) return
+function onLogoChange(file: File) {
   companyLogoFile.value = file
   companyLogoPreview.value = URL.createObjectURL(file)
 }

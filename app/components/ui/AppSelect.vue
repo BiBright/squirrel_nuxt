@@ -40,15 +40,17 @@ const selectedLabel = computed(
 <style scoped>
 .app-select {
   position: relative;
-  display: inline-block;
+  display: block;
+  width: 100%;
 }
 
 .app-select__btn {
   display: flex;
   align-items: center;
   gap: 6px;
-  height: 36px;
-  padding: 0 10px;
+  width: 100%;
+  height: 40px;
+  padding: 0 16px;
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
@@ -58,8 +60,11 @@ const selectedLabel = computed(
   cursor: pointer;
   white-space: nowrap;
   transition: border-color 0.15s;
-  min-width: 110px;
   justify-content: space-between;
+
+  @media (min-width: 1280px) {
+    height: 44px;
+  }
 }
 
 .app-select__btn:hover,

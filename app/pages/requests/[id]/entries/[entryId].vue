@@ -20,7 +20,16 @@
             <div class="entry-header">
               <h1 class="label-01">{{ form?.name ?? entry.form.name }}</h1>
             </div>
+          </div>
 
+          <div v-if="!isSupplier || !isCompanyUser" class="col-12 col-md-5">
+            <div class="entry-header__pill" :data-status="entry.status.value">
+              <span class="material-icons-round">{{ statusIcon(entry.status.value) }}</span>
+              {{ entry.status.label }}
+            </div>
+          </div>
+
+          <div class="col-12 col-md-7">
             <div class="request-entry-card">
               <AppCard>
                 <div v-if="entry.supplier?.name" class="entry-supplier">
@@ -58,12 +67,7 @@
                         </a>
                       </p>
                       <div class="entry-field__upload">
-                        <label :for="`file-${field.id}`" class="entry-upload-btn">
-                          <span class="material-icons-round">attach_file</span>
-                          Attach File
-                        </label>
-                        <input :id="`file-${field.id}`" type="file" class="entry-file-input"
-                          @change="onFileChange(field.id, $event)">
+                        <AppFileUpload @change="onFileChange(field.id, $event)" />
                       </div>
                       <div v-if="uploadedFiles[field.id] || getAnswer(field.id)?.file_name" class="entry-file-uploaded">
                         <p class="label02">File uploaded</p>
@@ -89,20 +93,14 @@
             </div>
           </div>
 
-
           <div v-if="!isSupplier || !isCompanyUser" class="col-12 col-md-5">
             <div class="entry-status">
-              <div class="entry-header__pill" :data-status="entry.status.value">
-                <span class="material-icons-round">{{ statusIcon(entry.status.value) }}</span>
-                {{ entry.status.label }}
-              </div>
-
               <div class="entry-status__card">
                 <div class="entry-status__card-header" :data-status="entry.status.value">
                   <span class="material-icons-round">{{ statusIcon(entry.status.value) }}</span>
                   <h4>{{ statusTitle(entry.status.value) }}</h4>
                 </div>
-                <div class="entry-status__card-body">
+                <div v-if="!isSupplier" class="entry-status__card-body">
                   <p class="entry-status__card-text">{{ statusDescription(entry.status.value) }}</p>
 
                   <template v-if="entry.status.value === 'pending_approval' && !isCompanyUser">
@@ -211,6 +209,18 @@ interface RequestData {
 
 interface UserOption { id: number; name: string }
 
+interface SupplierEntryDetail {
+  entry_id: number
+  status: string
+  request: { id: number; title: string | null; company: string }
+  form: {
+    id: number
+    name: string
+    fields: { id: number; name: string; type: string; required: boolean; order: number }[]
+  }
+  responses: Record<string, { field_id: number; value: string | null; file_path: string | null; file_name: string | null }>
+}
+
 const route = useRoute()
 const api = useApi()
 const toast = useAppToast()
@@ -265,32 +275,65 @@ function getAnswer(fieldId: number): EntryAnswer | undefined {
 
 onMounted(async () => {
   try {
-    const requestRes = await api<{ data: RequestData }>(`/requests/${requestId}`)
-    console.log('[Entry] raw response:', requestRes)
-    request.value = requestRes.data
-    selectedAssigneeId.value = requestRes.data.assigned_to?.id ?? null
-
-    for (const formGroup of requestRes.data.forms) {
-      const found = formGroup.suppliers.find((s: RequestEntry) => s.id === entryId)
-      if (found) { entry.value = found; break }
-    }
-    console.log('[Entry] entryId looking for:', entryId, '| found:', entry.value)
-
-    if (!entry.value) return
-
     if (isSupplier.value) {
-      if (entry.value.form.fields) {
-        form.value = {
-          id: entry.value.form.id,
-          name: entry.value.form.name,
+      const res = await api<{ data: SupplierEntryDetail }>(`/supplier/request/${requestId}`)
+      console.log('[Entry] supplier response:', res)
+
+      request.value = {
+        id: res.data.request.id,
+        title: res.data.request.title,
+        assigned_to: null,
+        forms: [],
+      }
+
+      const statusLabel = res.data.status.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
+      entry.value = {
+        id: res.data.entry_id,
+        supplier: null,
+        form: { id: res.data.form.id, name: res.data.form.name },
+        status: { value: res.data.status, label: statusLabel },
+        created_at: '',
+        updated_at: '',
+        answers: Object.values(res.data.responses).map(r => ({
+          field_id: r.field_id,
+          value: r.value,
+          file_name: r.file_name,
+          file_url: null,
+        })),
+      }
+
+      form.value = {
+        id: res.data.form.id,
+        name: res.data.form.name,
+        description: null,
+        has_template: false,
+        template_file_name: null,
+        fields: res.data.form.fields.map(f => ({
+          id: f.id,
+          name: f.name,
           description: null,
-          has_template: false,
+          type: f.type,
+          type_label: f.type,
+          requires_file: false,
           template_file_name: null,
-          fields: entry.value.form.fields,
-        }
+          order: f.order,
+          required: f.required,
+        })),
       }
     }
     else {
+      const requestRes = await api<{ data: RequestData }>(`/requests/${requestId}`)
+      console.log('[Entry] raw response:', requestRes)
+      request.value = requestRes.data
+      selectedAssigneeId.value = requestRes.data.assigned_to?.id ?? null
+
+      for (const formGroup of requestRes.data.forms) {
+        const found = formGroup.suppliers.find((s: RequestEntry) => s.id === entryId)
+        if (found) { entry.value = found; break }
+      }
+
+      if (!entry.value) return
+
       const [formRes, usersRes] = await Promise.allSettled([
         api<{ data: FormDetail }>(`/forms/${entry.value.form.id}`),
         api<{ data: UserOption[] }>('/users'),
@@ -299,7 +342,7 @@ onMounted(async () => {
       if (usersRes.status === 'fulfilled') availableUsers.value = usersRes.value.data
     }
 
-    entry.value.answers?.forEach((a) => {
+    entry.value?.answers?.forEach((a) => {
       if (a.value) answers[a.field_id] = a.value
     })
   }
@@ -312,9 +355,8 @@ onMounted(async () => {
   }
 })
 
-function onFileChange(fieldId: number, event: Event) {
-  const file = (event.target as HTMLInputElement).files?.[0]
-  if (file) uploadedFiles[fieldId] = file
+function onFileChange(fieldId: number, file: File) {
+  uploadedFiles[fieldId] = file
 }
 
 async function onAssigneeChange() {
@@ -526,19 +568,23 @@ function statusDescription(value: string): string {
 .entry-file-link {
   display: inline-flex;
   align-items: center;
-  gap: var(--space-1);
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-md);
+  background: var(--color-primary-25);
   color: var(--color-primary);
   font-size: var(--text-sm);
   font-weight: 500;
   text-decoration: none;
+  transition: background 0.15s;
 }
 
 .entry-file-link:hover {
-  text-decoration: underline;
+  background: var(--color-primary-subtle);
 }
 
 .entry-file-link .material-icons-round {
-  font-size: 16px;
+  font-size: 18px;
 }
 
 .entry-fields {
@@ -580,31 +626,6 @@ function statusDescription(value: string): string {
   align-items: center;
 }
 
-.entry-upload-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2);
-  padding: var(--space-2) var(--space-4);
-  border-radius: var(--radius-md);
-  background: var(--color-primary-25);
-  color: var(--color-primary);
-  font-size: var(--text-sm);
-  font-weight: 500;
-  cursor: pointer;
-  transition: background 0.15s;
-}
-
-.entry-upload-btn:hover {
-  background: var(--color-primary-subtle);
-}
-
-.entry-upload-btn .material-icons-round {
-  font-size: 18px;
-}
-
-.entry-file-input {
-  display: none;
-}
 
 .entry-file-uploaded {
   display: flex;
@@ -626,16 +647,16 @@ function statusDescription(value: string): string {
 }
 
 .entry-status {
-  padding: 0 0 0 var(--space-6);
+  padding: 0;
+  border-top: 1px solid var(--color-border);
   display: flex;
   flex-direction: column;
   gap: var(--space-4);
 }
 
-@media (max-width: 1279px) {
+@media (min-width: 1280px) {
   .entry-status {
-    padding: var(--space-4) 0 0;
-    border-top: 1px solid var(--color-border);
+    border-top: none;
   }
 }
 
@@ -728,7 +749,6 @@ function statusDescription(value: string): string {
   gap: var(--space-3);
   justify-content: flex-end;
   padding-top: var(--space-2);
-  border-top: 1px solid var(--color-border);
 }
 
 .entry-status__assigned {

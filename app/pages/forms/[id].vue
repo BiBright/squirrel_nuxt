@@ -3,7 +3,7 @@
     <div class="container">
       <div class="row">
         <div class="col-12">
-          <AppBreadcrumb :items="[{ label: 'Models' }, { label: 'Forms', to: '/forms' }]" />
+          <AppBreadcrumb :items="[{ label: 'Models' }, { label: 'Forms', to: '/forms' }, { label: isEdit ? (form.name || 'Edit Form') : 'New Form' }]" />
         </div>
 
         <div class="col-12">
@@ -51,11 +51,7 @@
                   </button>
                 </div>
                 <template v-else>
-                  <label for="form-file-input" class="attach-btn">
-                    <span class="material-icons-round">attach_file</span>
-                    Attach File
-                  </label>
-                  <input id="form-file-input" ref="fileInput" type="file" class="input-file" accept=".pdf,.doc,.docx,.xls,.xlsx" @change="onFileChange">
+                  <AppFileUpload accept=".pdf,.doc,.docx,.xls,.xlsx" @change="onFileChange" />
                 </template>
               </div>
 
@@ -160,7 +156,6 @@ const selectedFields = ref<SelectedField[]>([])
 const availableFields = ref<FieldOption[]>([])
 const fieldSearch = ref('')
 const selectedFile = ref<File | null>(null)
-const fileInput = ref<HTMLInputElement | null>(null)
 const existingTemplate = ref<string | null>(null)
 const removeTemplate = ref(false)
 const toast = useAppToast()
@@ -219,12 +214,11 @@ function addField(field: FieldOption) {
   selectedFields.value.push({ ...field, required: false })
 }
 function removeField(idx: number) { selectedFields.value.splice(idx, 1) }
-function onFileChange(e: Event) {
-  selectedFile.value = (e.target as HTMLInputElement).files?.[0] ?? null
+function onFileChange(file: File) {
+  selectedFile.value = file
 }
 function removeFile() {
   selectedFile.value = null
-  if (fileInput.value) fileInput.value.value = ''
 }
 
 function validate(): boolean {
@@ -291,32 +285,6 @@ async function onSubmit() {
   cursor: pointer;
 }
 
-.input-file {
-  display: none;
-}
-
-.attach-btn {
-  width: fit-content;
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2);
-  margin-top: var(--space-2);
-  padding: var(--space-2) var(--space-4);
-  border-radius: var(--radius-md);
-  background: var(--color-primary-25);
-  color: var(--color-primary);
-  font-size: var(--text-sm);
-  font-weight: 500;
-  cursor: pointer;
-}
-
-.attach-btn:hover {
-  background: var(--color-primary-subtle);
-}
-
-.attach-btn .material-icons-round {
-  font-size: 18px;
-}
 
 .file-selected {
   width: fit-content;

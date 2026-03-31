@@ -39,7 +39,13 @@
               </template>
 
               <template #cell-contact="{ row }">
-                <div v-if="(row._raw as Supplier).supplier_number" class="text-muted" style="font-size: 0.85em">{{ (row._raw as Supplier).supplier_number }}</div>
+                <div class="supplier-contact">
+                  <span v-if="(row._raw as Supplier).contact_person" class="supplier-contact__name">{{ (row._raw as Supplier).contact_person }}</span>
+                  <span v-if="(row._raw as Supplier).contact_phone" class="supplier-contact__phone">
+                    {{ [(row._raw as Supplier).phone_code, (row._raw as Supplier).contact_phone].filter(Boolean).join(' ') }}
+                  </span>
+                  <span v-if="!(row._raw as Supplier).contact_person && !(row._raw as Supplier).contact_phone" class="text-muted">—</span>
+                </div>
               </template>
 
               <template #cell-category="{ value }">
@@ -91,6 +97,7 @@ interface Supplier {
   material_type: string | null
   contact_person: string | null
   contact_email: string | null
+  phone_code: string | null
   contact_phone: string | null
 }
 
@@ -194,3 +201,21 @@ function formatDate(date: string) {
   return new Date(date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
 }
 </script>
+
+<style scoped>
+.supplier-contact {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.supplier-contact__name {
+  font-size: var(--text-sm);
+  color: var(--color-text);
+}
+
+.supplier-contact__phone {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}
+</style>

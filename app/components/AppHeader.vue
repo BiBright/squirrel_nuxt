@@ -11,8 +11,10 @@
 
     <div class="app-header__actions">
       <div class="app-header__user" @click="emit('toggleUserMenu')">
-        <div class="avatar">{{ initials }}</div>
-        <span class="name">{{ user?.name ?? 'Account' }}</span>
+        <div class="avatar">
+          <img v-if="companyLogoUrl" :src="companyLogoUrl" alt="Company logo" class="avatar__img" />
+          <template v-else>{{ initials }}</template>
+        </div>
       </div>
     </div>
 
@@ -26,6 +28,7 @@
 <script setup lang="ts">
 const authStore = useAuthStore()
 const user = computed(() => authStore.user as Record<string, string> | null)
+const { companyLogoUrl } = useCompanyLogo()
 const initials = computed(() => {
   const name = user.value?.name ?? ''
   return name

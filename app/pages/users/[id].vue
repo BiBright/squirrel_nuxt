@@ -4,7 +4,7 @@
       <div class="row">
 
         <div class="col-12">
-          <AppBreadcrumb :items="[{ label: 'Users', to: '/users' }]" />
+          <AppBreadcrumb :items="[{ label: 'Users', to: '/users' }, { label: isEdit ? (form.name || 'Edit User') : 'New User' }]" />
         </div>
 
         <div class="col-12">

@@ -4,7 +4,7 @@
       <div class="row">
 
         <div class="col-12">
-          <AppBreadcrumb :items="[{ label: 'Suppliers', to: '/suppliers' }]" />
+          <AppBreadcrumb :items="[{ label: 'Suppliers', to: '/suppliers' }, { label: isEdit ? (form.name || 'Edit Supplier') : 'New Supplier' }]" />
         </div>
 
         <div class="col-12">
@@ -29,14 +29,16 @@
                 <AppInput v-model="form.contact_email" label="Primary Email" type="email" placeholder="Insert primary email" :optional="true" :error="errors.contact_email" />
                 <div class="form-group">
                   <label class="label01">Contact Phone <span class="optional">(optional)</span></label>
-                  <div class="input-phone">
-                    <input v-model="form.phone_code" type="text" class="input-text input-phone__code" placeholder="+?" style="flex: 0 0 72px" />
-                    <input v-model="form.contact_phone" type="text" class="input-text input-phone__input" placeholder="Insert contact phone" style="flex: 1; min-width: 0" />
-                  </div>
+                  <AppPhoneInput
+                    v-model="form.contact_phone"
+                    v-model:code="form.phone_code"
+                    :countries="countries"
+                    placeholder="Insert contact phone"
+                  />
                 </div>
                 <div class="form-group">
                   <label class="label01">Country <span class="optional">(optional)</span></label>
-                  <AppSelect v-model="form.country" :options="countryOptions" style="display: block; width: 100%" />
+                  <AppSearchSelect v-model="form.country" :options="countryOptions" placeholder="Select a country" />
                 </div>
               </AppCard>
             </div>
@@ -60,8 +62,8 @@ definePageMeta({ middleware: ['auth'] })
 interface Country {
   id: number
   name: string
-  code: string
-  phone_code: string
+  iso_code: string
+  phone_prefix: string
 }
 
 const route = useRoute()
@@ -69,10 +71,9 @@ const id = computed(() => route.params.id as string | undefined)
 const isEdit = computed(() => !!id.value && id.value !== 'create')
 
 const countries = ref<Country[]>([])
-const countryOptions = computed(() => [
-  { value: '', label: 'Select a country' },
-  ...countries.value.map(c => ({ value: c.name, label: c.name })),
-])
+const countryOptions = computed(() =>
+  countries.value.map(c => ({ value: c.name, label: c.name })),
+)
 
 const form = reactive({
   name: '', email: '',
@@ -82,7 +83,7 @@ const form = reactive({
 
 watch(() => form.country, (val) => {
   const match = countries.value.find(c => c.name === val)
-  if (match) form.phone_code = match.phone_code
+  if (match?.phone_prefix) form.phone_code = match.phone_prefix
 })
 const errors = reactive({ name: '', email: '', contact_email: '' })
 const toast = useAppToast()
@@ -95,7 +96,10 @@ watch(form, () => { _ready.value && (isDirty.value = true) }, { deep: true })
 
 onMounted(async () => {
   const api = useApi()
-  api<{ data: Country[] }>('/countries').then(res => { countries.value = res.data })
+  api<{ data: Country[] }>('/countries').then(res => {
+    console.log('[Suppliers] countries:', res.data)
+    countries.value = res.data
+  })
 
   if (!isEdit.value) return
   loadingRecord.value = true
@@ -173,31 +177,6 @@ async function onSubmit() {
   gap: var(--space-6);
 }
 
-.input-phone {
-  display: flex;
-
-  &__code {
-    padding: 0 var(--space-3);
-    background: var(--color-surface-alt);
-    border: 1px solid var(--color-border);
-    border-right: none;
-    border-radius: var(--radius-md) 0 0 var(--radius-md);
-    font-size: var(--text-sm);
-    color: var(--color-text-muted);
-    white-space: nowrap;
-  }
-
-  &__input {
-    flex: 1;
-    border-radius: 0 var(--radius-md) var(--radius-md) 0 !important;
-  }
-}
-
-:deep(.app-select__btn) {
-  width: 100%;
-  height: 44px;
-  font-size: var(--text-sm);
-}
 
 .create-form__actions {
   display: flex;

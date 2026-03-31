@@ -81,7 +81,7 @@ defineProps<{
 
 .breadcrumb__current {
   font-size: var(--text-sm);
-  font-weight: 600;
+  font-weight: 400;
   color: var(--color-text);
 }
 </style>

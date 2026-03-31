@@ -38,6 +38,13 @@
       align-items: center;
       justify-content: center;
       margin: 0 auto 16px;
+      overflow: hidden;
+
+      &__img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
     }
 
     .username {
@@ -178,7 +185,6 @@
   .notif-toggle.is-on & { transform: translateX(20px); }
 }
 
-// Frequency list
 .notif-freq-list {
   border-top: 1px solid $white60;
   background: $white80;
@@ -232,8 +238,6 @@
   flex-wrap: wrap;
 }
 
-
-// Actions row (outside the card)
 .notif-actions {
   width: 360px;
 
@@ -256,7 +260,6 @@
   margin-bottom: 12px;
 }
 
-// Right column — settings content
 .settings-back {
   display: none;
 
@@ -310,10 +313,6 @@
   }
 }
 
-// ================================
-// Company settings — logo upload
-// ================================
-
 .company-logo-field {
   display: flex;
   flex-direction: column;
@@ -343,23 +342,3 @@
   font-size: 40px;
   color: $black40;
 }
-
-.attach-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  width: fit-content;
-  padding: 8px 16px;
-  border-radius: 8px;
-  background: $primary25;
-  color: $primary100;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-
-  .material-icons-round { font-size: 18px; }
-
-  &:hover { background: darken($primary25, 4%); }
-}
-
-.input-file { display: none; }

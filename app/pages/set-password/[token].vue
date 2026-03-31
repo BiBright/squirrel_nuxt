@@ -51,10 +51,19 @@ const route = useRoute()
 const token = route.params.token as string
 const authStore = useAuthStore()
 
+const config = useRuntimeConfig()
+
 const form = reactive({ password: '', password_confirmation: '' })
 const errors = reactive({ password: '', password_confirmation: '' })
 const loading = ref(false)
 const errorMsg = ref('')
+
+async function fetchCsrfCookie() {
+  await $fetch('/sanctum/csrf-cookie', {
+    baseURL: config.public.apiOrigin,
+    credentials: 'include',
+  })
+}
 
 function validate(): boolean {
   errors.password = ''
@@ -89,6 +98,13 @@ async function onSubmit() {
   errorMsg.value = ''
 
   try {
+    await fetchCsrfCookie()
+
+    const xsrfToken = document.cookie
+      .split('; ')
+      .find(row => row.startsWith('XSRF-TOKEN='))
+      ?.split('=')[1] ?? ''
+
     const api = useApi()
     const res = await api<{ data: { user: Record<string, unknown> } }>(`/set-password/${token}`, {
       method: 'POST',

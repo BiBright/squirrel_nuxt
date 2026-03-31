@@ -27,35 +27,39 @@
         </span>
 
         <span class="request-table__progress">
-          {{ form.completed }}/{{ form.total }}
+          <span class="request-table__progress-primary">{{ form.completed }}</span>
+          <span class="request-table__progress-muted">/{{ form.total }}</span>
         </span>
 
         <div class="request-table__more-wrapper" @click.stop>
-          <button class="request-table__more-btn" :class="{ 'is-active': openMenu === groupKey(req, form) }" @click.stop="toggleMenu(groupKey(req, form))">
+          <button class="request-table__more-btn" :class="{ 'is-active': openMenu === groupKey(req, form) }" @click.stop="toggleMenu(groupKey(req, form), form)">
             <span class="material-icons-round">more_horiz</span>
           </button>
 
           <div v-if="openMenu === groupKey(req, form)" class="request-table__more-panel">
 
             <div class="request-table__more-item request-table__more-item--info">
-              <span class="material-icons-round">check_box</span>
-              {{ selectedInGroup(form).length }} supplier{{ selectedInGroup(form).length !== 1 ? 's' : '' }} selected
+              <div class="request-table_selected_number">{{ selectedInGroup(form).length }}</div>
+              <span class="request-table_selected_tag">Selected</span>
+
+              <div class="request-table_selected_clear" @click="clearGroup(form); closeMenu()">Clear
+                <span class="material-icons-round request-table__more-close">close</span>
+              </div>
             </div>
 
             <button class="request-table__more-item request-table__more-item--expandable"
               @click="groupMenuSection = groupMenuSection === 'assign' ? 'none' : 'assign'">
               <span class="material-icons-round">person</span>
-              Assign to
+              Assignee User
               <span class="material-icons-round request-table__more-chevron">{{ groupMenuSection === 'assign' ? 'expand_less' :
                 'expand_more' }}</span>
             </button>
             <div v-if="groupMenuSection === 'assign'" class="request-table__assignee-list">
               <div v-if="loadingUsers" class="request-table__assignee-loading">Loading users...</div>
               <button v-for="user in users" :key="user.id" class="request-table__assignee-option"
-                :class="{ 'is-selected': req.assigned_to?.id === user.id }" @click="emit('assign', req, user)">
-                <span class="material-icons-round">person_outline</span>
+                :class="{ 'is-selected': form.assigned_to?.id === user.id }" @click="emit('bulkAssign', selectedInGroup(form), user); closeMenu()">
                 {{ user.name }}
-                <span v-if="req.assigned_to?.id === user.id"
+                <span v-if="form.assigned_to?.id === user.id"
                   class="material-icons-round request-table__assignee-check">check</span>
               </button>
             </div>
@@ -72,7 +76,7 @@
       <div v-if="expanded.has(groupKey(req, form))" class="request-table__entries">
         <div class="request-table__entries-header">
           <div class="request-table__col request-table__col--check">Select</div>
-          <div class="request-table__col request-table__col--supplier">Supplier</div>
+          <div class="request-table__col request-table__col--supplier">Supplier name</div>
           <div class="request-table__col request-table__col--date">Created at</div>
           <div class="request-table__col request-table__col--date">Updated at</div>
           <div class="request-table__col request-table__col--assigned">Assigned to</div>
@@ -86,12 +90,12 @@
               <input type="checkbox" :checked="selectedEntries.has(entry.id)" @change="toggleEntry(entry.id)" />
             </div>
             <div class="request-table__col request-table__col--supplier">
-              <NuxtLink :to="`/requests/${req.id}/entries/${entry.id}`" class="request-table__supplier-link">{{ entry.supplier.name }}
+              <NuxtLink :to="`/requests/${req.id}/entries/${entry.id}`" class="request-table__supplier-link">{{ entry.supplier?.name ?? '—' }}
               </NuxtLink>
             </div>
             <div class="request-table__col request-table__col--date">{{ formatDate(entry.created_at) }}</div>
             <div class="request-table__col request-table__col--date">{{ formatDate(entry.updated_at) }}</div>
-            <div class="request-table__col request-table__col--assigned">{{ req.assigned_to?.name ?? '—' }}</div>
+            <div class="request-table__col request-table__col--assigned">{{ entry.assigned_to?.name ?? '—' }}</div>
             <div class="request-table__col request-table__col--status">
               <AppBadge :variant="statusVariant(entry.status.value)">
                 {{ entry.status.label }}
@@ -108,15 +112,14 @@
                 <div v-if="openEntryMenu === entry.id" class="request-table__more-panel request-table__more-panel--entry">
 
                   <template v-if="selectedEntries.has(entry.id) && selectedEntries.size > 1">
-
                     <div class="request-table__more-item request-table__more-item--section">Selected Requests</div>
 
-                    <div class="request-table__more-item request-table__more-item--selected-count">
-                      <AppBadge variant="neutral">{{ selectedEntries.size }} Selected</AppBadge>
-                      <button class="request-table__clear-btn" @click="clearSelection">
-                        Clear <span class="material-icons-round"
-                          style="font-size:12px;vertical-align:middle">close</span>
-                      </button>
+                    <div class="request-table__more-item request-table__more-item--info">
+                      <div class="request-table_selected_number">{{ selectedEntries.size }}</div>
+                      <span class="request-table_selected_tag">Selected</span>
+                      <div class="request-table_selected_clear" @click="clearSelection">Clear
+                        <span class="material-icons-round request-table__more-close">close</span>
+                      </div>
                     </div>
 
                     <button class="request-table__more-item request-table__more-item--expandable" @click="toggleEntrySection('bulk-assign')">
@@ -129,7 +132,6 @@
                       <div v-if="loadingUsers" class="request-table__assignee-loading">Loading users...</div>
                       <button v-for="user in users" :key="user.id" class="request-table__assignee-option"
                         @click="emit('bulkAssign', [...selectedEntries], user); closeEntryMenu()">
-                        <span class="material-icons-round">person_outline</span>
                         {{ user.name }}
                       </button>
                     </div>
@@ -140,8 +142,7 @@
                       Remove requests
                     </button>
 
-                    <div class="request-table__more-item request-table__more-item--section"
-                      style="border-top: 1px solid var(--color-border); margin-top: 2px;">This Request</div>
+                    <div class="request-table__more-item request-table__more-item--section">This Request</div>
                   </template>
 
                   <NuxtLink :to="`/requests/${req.id}/entries/${entry.id}`" class="request-table__more-item request-table__more-item--link"
@@ -160,11 +161,10 @@
                   <div v-if="entryMenuSection === 'single-assign'" class="request-table__assignee-list">
                     <div v-if="loadingUsers" class="request-table__assignee-loading">Loading users...</div>
                     <button v-for="user in users" :key="user.id" class="request-table__assignee-option"
-                      :class="{ 'is-selected': req.assigned_to?.id === user.id }"
-                      @click="emit('assign', req, user); closeEntryMenu()">
-                      <span class="material-icons-round">person_outline</span>
+                      :class="{ 'is-selected': form.assigned_to?.id === user.id }"
+                      @click="emit('bulkAssign', [entry.id], user); closeEntryMenu()">
                       {{ user.name }}
-                      <span v-if="req.assigned_to?.id === user.id"
+                      <span v-if="form.assigned_to?.id === user.id"
                         class="material-icons-round request-table__assignee-check">check</span>
                     </button>
                   </div>
@@ -187,7 +187,7 @@
 <script setup lang="ts">
 interface RequestEntry {
   id: number
-  supplier: { id: number; name: string; email: string }
+  supplier: { id: number; name: string; email: string } | null
   status: { value: string; label: string }
   submitted_at: string | null
   created_at: string
@@ -200,6 +200,7 @@ interface RequestForm {
   total: number
   completed: number
   suppliers: RequestEntry[]
+  assigned_to: { id: number; name: string } | null
 }
 
 interface Request {
@@ -286,10 +287,21 @@ function toggleExpand(key: string) {
   expanded.value.has(key) ? expanded.value.delete(key) : expanded.value.add(key)
 }
 
-function toggleMenu(key: string) {
-  openMenu.value = openMenu.value === key ? null : key
+function toggleMenu(key: string, form?: RequestForm) {
+  const opening = openMenu.value !== key
+  openMenu.value = opening ? key : null
   groupMenuSection.value = 'none'
   openEntryMenu.value = null
+  if (opening && form) {
+    expanded.value.add(key)
+    form.suppliers.forEach(e => selectedEntries.value.add(e.id))
+    emit('selectionChange', [...selectedEntries.value])
+  }
+}
+
+function clearGroup(form: RequestForm) {
+  form.suppliers.forEach(e => selectedEntries.value.delete(e.id))
+  emit('selectionChange', [...selectedEntries.value])
 }
 
 function closeMenu() {
@@ -391,14 +403,14 @@ function formatDate(date: string): string {
 .request-table__col--date {
   width: 110px;
   flex-shrink: 0;
-  font-size: var(--text-xs);
+  font-size: var(--text-base);
   color: var(--color-text-muted);
 }
 
 .request-table__col--assigned {
   width: 120px;
   flex-shrink: 0;
-  font-size: var(--text-xs);
+  font-size: var(--text-base);
   color: var(--color-text-muted);
   overflow: hidden;
   white-space: nowrap;
@@ -417,8 +429,9 @@ function formatDate(date: string): string {
 }
 
 .request-table__supplier-link {
+  font-size: var(--text-base);
   color: var(--color-primary);
-  font-weight: 500;
+  font-weight: 700;
   text-decoration: none;
 }
 
@@ -441,7 +454,7 @@ function formatDate(date: string): string {
 .request-table__title {
   flex: 1;
   font-weight: 700;
-  font-size: var(--text-sm);
+  font-size: var(--text-xl);
   color: var(--color-text);
   text-decoration: none;
   white-space: nowrap;
@@ -453,15 +466,21 @@ function formatDate(date: string): string {
   color: var(--color-primary);
 }
 
-/* Progress */
 .request-table__progress {
-  font-size: var(--text-sm);
-  color: var(--color-text-muted);
+  font-size: var(--text-xl);
+  font-weight: 700;
   white-space: nowrap;
   margin-left: auto;
 }
 
-/* More button */
+.request-table__progress-primary {
+  color: var(--color-primary);
+}
+
+.request-table__progress-muted {
+  color: var(--color-text-muted);
+}
+
 .request-table__more-wrapper {
   position: relative;
   flex-shrink: 0;
@@ -485,7 +504,6 @@ function formatDate(date: string): string {
   background: var(--color-surface-hover);
 }
 
-/* More panel */
 .request-table__more-panel {
   position: absolute;
   right: 0;
@@ -495,7 +513,7 @@ function formatDate(date: string): string {
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
-  min-width: 220px;
+  min-width: 204px;
   overflow: hidden;
 }
 
@@ -503,7 +521,7 @@ function formatDate(date: string): string {
   display: flex;
   align-items: center;
   gap: var(--space-2);
-  padding: var(--space-2) var(--space-3);
+  padding: var(--space-3);
   font-size: var(--text-sm);
   width: 100%;
   background: none;
@@ -514,34 +532,57 @@ function formatDate(date: string): string {
 }
 
 .request-table__more-item--info {
-  color: var(--color-text-muted);
-  border-bottom: 1px solid var(--color-border);
-  font-size: var(--text-xs);
+  color: var(--color-primary);
+  font-size: var(--text-sm);
+  background-color: var(--color-primary-25);
+  border-radius: 8px 8px 0 0;
+}
+
+.request-table_selected_number {
+  color: var(--color-primary);
+  font-weight: 700;
+  background-color: var(--color-white);
+  border-radius: var(--space-1);
+  padding: 2px 4px;
+}
+
+.request-table_selected_tag {
+  color: var(--color-primary);
+  font-weight: 700;
+}
+
+.request-table_selected_clear {
+  display: flex;
+  align-items: center;
+  background-color: var(--color-primary-50);
+  border-radius: var(--space-1);
+  padding: 2px 4px;
+  margin-left: auto;
 }
 
 .request-table__more-item--section {
   color: var(--color-text-muted);
-  font-size: var(--text-xs);
+  font-size: var(--text-sm);
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  border-bottom: 1px solid var(--color-border);
+  text-decoration: underline;
 }
 
 .request-table__more-item--danger {
   cursor: pointer;
-  color: var(--color-danger);
-  border-top: 1px solid var(--color-border);
+  color: var(--color-black80);
   transition: background 0.1s;
 }
 
 .request-table__more-item--danger:hover {
-  background: var(--color-danger-subtle);
+  background: var(--color-surface-hover);
 }
 
 .request-table__more-item--link {
   text-decoration: none;
   cursor: pointer;
+  color: var(--color-black80);
   transition: background 0.1s;
 }
 
@@ -550,6 +591,7 @@ function formatDate(date: string): string {
 }
 
 .request-table__more-item--expandable {
+  color: var(--color-black80);
   cursor: pointer;
   transition: background 0.1s;
 }
@@ -561,6 +603,11 @@ function formatDate(date: string): string {
 .request-table__more-chevron {
   margin-left: auto;
   font-size: 16px !important;
+}
+
+.request-table__more-close {
+  margin-left: auto;
+  font-size: 12px !important;
 }
 
 .request-table__more-item--selected-count {
@@ -631,11 +678,6 @@ function formatDate(date: string): string {
   font-size: 16px;
 }
 
-/* Entries sub-table */
-.request-table__entries {
-  border-top: 1px solid var(--color-border);
-}
-
 .request-table__form-group:last-child .request-table__entry:last-child {
   border-radius: 0 0 var(--radius-lg) var(--radius-lg);
 }
@@ -651,7 +693,7 @@ function formatDate(date: string): string {
 }
 
 .request-table__entries-header .request-table__col {
-  font-size: var(--text-xs);
+  font-size: var(--text-base);
   font-weight: 500;
   color: var(--color-text-muted);
 }
@@ -660,7 +702,7 @@ function formatDate(date: string): string {
   display: flex;
   align-items: center;
   gap: var(--space-3);
-  padding: var(--space-3) var(--space-4);
+  padding: var(--space-4);
   border-bottom: 1px solid var(--color-border);
   transition: background 0.1s;
   font-size: var(--text-sm);
@@ -717,7 +759,6 @@ function formatDate(date: string): string {
     grid-area: more;
   }
 
-  /* Entries: hide column header, switch to card grid */
   .request-table__entries-header {
     display: none;
   }
@@ -751,7 +792,7 @@ function formatDate(date: string): string {
   .request-table__entry .request-table__col--assigned {
     grid-area: assigned;
     width: auto;
-    font-size: var(--text-xs);
+    font-size: var(--text-base);
   }
 
   .request-table__entry .request-table__col--status {

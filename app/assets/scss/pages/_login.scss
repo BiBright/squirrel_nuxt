@@ -7,7 +7,7 @@
   flex-direction: column;
   background: $white;
 
-  @include tablet-up {
+  @include desktop-up {
     flex-direction: row;
   }
 }
@@ -15,7 +15,7 @@
 .login-visual {
   display: none;
 
-  @include tablet-up {
+  @include desktop-up {
     display: block;
     flex: 1;
     position: relative;
@@ -32,18 +32,31 @@
 
   &__container {
     position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
     justify-content: center;
     align-items: center;
-    display: flex;
-    top: 0;
-    left: 0;
-    height: 400px;
-    width: 100%;
+    text-align: center;
+    padding: 0 60px 216px 60px;
+    gap: 24px;
   }
 
   &__logo {
     height: 60px;
-    width: auto; 
+    width: auto;
+  }
+
+  &__title {
+    color: var(--color-white);
+  }
+
+  &__tagline {
+    font-size: var(--text-lg);
+    font-weight: 600;
+    color: var(--color-white);
+    line-height: 1.5;
+    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
   }
 }
 
@@ -55,7 +68,7 @@
   padding: 48px 24px;
   background: $white;
 
-  @include tablet-up {
+  @include desktop-up {
     width: 480px;
     flex-shrink: 0;
     padding: 64px 56px;

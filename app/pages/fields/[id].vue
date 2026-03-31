@@ -4,7 +4,7 @@
       <div class="row">
 
         <div class="col-12">
-          <AppBreadcrumb :items="[{ label: 'Models' }, { label: 'Fields', to: '/fields' }]" />
+          <AppBreadcrumb :items="[{ label: 'Models' }, { label: 'Fields', to: '/fields' }, { label: isEdit ? (form.name || 'Edit Field') : 'New Field' }]" />
         </div>
 
         <div class="col-12">
@@ -79,11 +79,7 @@
                     </button>
                   </div>
                   <template v-else>
-                    <label for="template-file-input" class="attach-btn">
-                      <span class="material-icons-round">attach_file</span>
-                      Attach File
-                    </label>
-                    <input id="template-file-input" ref="templateFileInput" type="file" class="input-file" accept=".pdf,.doc,.docx,.xls,.xlsx" @change="onTemplateFileChange">
+                    <AppFileUpload accept=".pdf,.doc,.docx,.xls,.xlsx" @change="onTemplateFileChange" />
                   </template>
                 </div>
               </AppCard>
@@ -124,7 +120,6 @@ const toast = useAppToast()
 const loading = ref(false)
 const loadingRecord = ref(false)
 const templateFile = ref<File | null>(null)
-const templateFileInput = ref<HTMLInputElement | null>(null)
 const existingTemplateFile = ref<string | null>(null)
 const existingTemplateFileUrl = ref<string | null>(null)
 
@@ -132,8 +127,8 @@ const { isDirty, showModal, confirmLeave, cancelLeave } = useUnsavedChanges()
 const _ready = ref(!isEdit.value)
 watch(form, () => { _ready.value && (isDirty.value = true) }, { deep: true })
 
-function onTemplateFileChange(e: Event) {
-  templateFile.value = (e.target as HTMLInputElement).files?.[0] ?? null
+function onTemplateFileChange(file: File) {
+  templateFile.value = file
 }
 
 onMounted(async () => {
@@ -252,28 +247,6 @@ async function onSubmit() {
   cursor: pointer;
 }
 
-.input-file {
-  display: none;
-}
-
-.attach-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2);
-  margin-top: var(--space-2);
-  padding: var(--space-3) var(--space-6);
-  border-radius: var(--radius-md);
-  background: var(--color-primary-25);
-  color: var(--color-primary);
-  font-size: var(--text-sm);
-  font-weight: 500;
-  cursor: pointer;
-  user-select: none;
-  width: fit-content;
-}
-
-.attach-btn:hover { background: var(--color-primary-subtle); }
-.attach-btn .material-icons-round { font-size: 18px; }
 .file-selected .material-icons-round {
   font-size: 18px;
 }
