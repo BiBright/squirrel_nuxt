@@ -238,17 +238,17 @@ async function onSubmit() {
     const body = new FormData()
     body.append('name', form.name)
     if (form.description) body.append('description', form.description)
-    body.append('is_active', String(form.is_active))
+    body.append('is_active', form.is_active ? '1' : '0')
     if (selectedFile.value) body.append('template_file', selectedFile.value)
     selectedFields.value.forEach((sf, idx) => {
       body.append(`fields[${idx}][id]`, String(sf.id))
       body.append(`fields[${idx}][order]`, String(idx))
-      body.append(`fields[${idx}][required]`, String(sf.required))
+      body.append(`fields[${idx}][required]`, sf.required ? '1' : '0')
     })
 
     if (isEdit.value) {
       body.append('_method', 'PATCH')
-      if (removeTemplate.value) body.append('remove_template', 'true')
+      if (removeTemplate.value) body.append('remove_template', '1')
       await api(`/forms/${id.value}`, { method: 'POST', body })
       toast.success('Form updated', { category: 'form' })
     }

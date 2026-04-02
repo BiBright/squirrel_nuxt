@@ -112,6 +112,21 @@
   }
 }
 
+// Success — green action
+.btn-success {
+  @extend %btn-base;
+  background: $green100;
+  color: $white;
+
+  &:hover {
+    background: $green75;
+  }
+  &:active,
+  &:focus {
+    background: $green75;
+  }
+}
+
 // View toggle — card / list toggle buttons
 .btn-view {
   display: inline-flex;

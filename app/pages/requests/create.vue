@@ -279,19 +279,14 @@ async function onSubmit() {
   loading.value = true
   try {
     const api = useApi()
-    const res = await api<{ data: { id: number } }>('/requests', {
+    await api('/requests', {
       method: 'POST',
       body: {
         form_ids: selectedForms.value.map(f => f.id),
         supplier_ids: selectedSuppliers.value.map(s => s.id),
+        ...(assignee.value ? { assigned_user_id: assignee.value.id } : {}),
       },
     })
-    if (assignee.value) {
-      await api(`/requests/${res.data.id}/assign`, {
-        method: 'PATCH',
-        body: { assigned_to: assignee.value.id },
-      })
-    }
     toast.success('Request created', { category: 'request' })
     isDirty.value = false
     await navigateTo('/requests')

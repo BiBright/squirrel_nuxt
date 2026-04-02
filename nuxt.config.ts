@@ -19,7 +19,7 @@ devtools: { enabled: true },
       link: [
         {
           rel: 'stylesheet',
-          href: 'https://fonts.googleapis.com/icon?family=Material+Icons+Round',
+          href: 'https://fonts.googleapis.com/icon?family=Material+Icons+Round|Material+Icons+Outlined',
         },
       ],
     },

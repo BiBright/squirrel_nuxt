@@ -188,6 +188,7 @@
 interface RequestEntry {
   id: number
   supplier: { id: number; name: string; email: string } | null
+  assigned_to: { id: number; name: string } | null
   status: { value: string; label: string }
   submitted_at: string | null
   created_at: string

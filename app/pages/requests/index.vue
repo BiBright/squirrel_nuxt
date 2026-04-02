@@ -119,6 +119,7 @@ interface SupplierRequest {
   request_id: number
   title: string | null
   company: string
+  created_at: string
   forms: SupplierForm[]
 }
 
@@ -144,11 +145,13 @@ onMounted(async () => {
     try {
       const res = await api<{ data: unknown }>('/supplier/requests')
       const d = res.data as Record<string, unknown>
+      console.log(d);
       const items: unknown[] = Array.isArray(d) ? d : ((d.data as unknown[]) ?? [])
       supplierRequests.value = (items as Record<string, unknown>[]).map(req => ({
         request_id: req.id as number,
         title: (req.title as string | null) ?? null,
         company: (req.company as Record<string, unknown>)?.name as string ?? '',
+        created_at: req.created_at as string,
         forms: ((req.entries as Record<string, unknown>[]) ?? []).map(e => ({
           entry_id: e.id as number,
           form_name: (e.form as Record<string, unknown>)?.name as string ?? '',
@@ -217,7 +220,7 @@ const supplierEntries = computed(() =>
       status: form.status,
       statusLabel: form.status.replace(/_/g, ' '),
       statusVariant: entryStatusVariant(form.status),
-      date: '—',
+      date: new Date(req.created_at).toLocaleDateString('pt-PT', { day: '2-digit', month: '2-digit', year: 'numeric' }),
     })),
   ),
 )
@@ -323,7 +326,13 @@ async function onBulkAssign(entryIds: number[], user: User) {
         ...r,
         forms: r.forms.map(f =>
           f.suppliers.some(s => entryIds.includes(s.id))
-            ? { ...f, assigned_to: { id: user.id, name: user.name } }
+            ? {
+                ...f,
+                assigned_to: { id: user.id, name: user.name },
+                suppliers: f.suppliers.map(s =>
+                  entryIds.includes(s.id) ? { ...s, assigned_to: { id: user.id, name: user.name } } : s,
+                ),
+              }
             : f,
         ),
       },
@@ -359,7 +368,7 @@ function displayTitle(req: Request): string {
 .supplier-list {
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
+  gap: var(--space-8);
   padding-bottom: var(--space-8);
 }
 
@@ -367,7 +376,7 @@ function displayTitle(req: Request): string {
   display: flex;
   align-items: center;
   gap: var(--space-3);
-  padding: var(--space-4) var(--space-5);
+  padding: var(--space-5);
   background: var(--color-surface);
   border-radius: var(--radius-md);
   text-decoration: none;
@@ -384,14 +393,14 @@ function displayTitle(req: Request): string {
 }
 
 .supplier-entry__name {
-  font-size: var(--text-sm);
-  font-weight: 600;
-  color: var(--color-text);
+  font-size: var(--text-base);
+  font-weight: 700;
+  color: var(--color-primary);
 }
 
 .supplier-entry__date {
-  font-size: var(--text-xs);
-  color: var(--color-text-muted);
+  font-size: var(--text-base);
+  color: var(--color-text);
   margin-top: 2px;
 }
 

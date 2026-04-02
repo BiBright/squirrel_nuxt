@@ -24,7 +24,7 @@
 
           <div v-if="!isSupplier || !isCompanyUser" class="col-12 col-md-5">
             <div class="entry-header__pill" :data-status="entry.status.value">
-              <span class="material-icons-round">{{ statusIcon(entry.status.value) }}</span>
+              <span class="material-icons-outlined">{{ statusIcon(entry.status.value) }}</span>
               {{ entry.status.label }}
             </div>
           </div>
@@ -36,10 +36,13 @@
                   <span class="material-icons-round">local_shipping</span>
                   {{ entry.supplier.name }}
                 </div>
-
-                <p v-if="form?.description" class="entry-description">{{ form.description }}</p>
-
+                
                 <hr class="entry-divider">
+
+                <div class="entry-form-info">
+                  <h1 class="subtitle01">{{ form?.name ?? entry.form.name }}</h1>
+                  <p v-if="form?.description" class="body01">{{ form.description }}</p>
+                </div>
 
                 <div v-if="form?.has_template" class="entry-attached-files">
                   <p class="label01">Attached Files</p>
@@ -59,16 +62,13 @@
                     </div>
                     <p v-if="field.description" class="entry-field__description">{{ field.description }}</p>
 
-                    <template v-if="field.requires_file">
+                    <template v-if="needsFile(field)">
                       <p v-if="field.template_file_name" class="entry-field__template-msg">
                         Download the statement and reattach it after filling it out
                         <a :href="`${apiBase}/fields/${field.id}/template`" class="entry-file-link" target="_blank">
                           {{ field.template_file_name }}
                         </a>
                       </p>
-                      <div class="entry-field__upload">
-                        <AppFileUpload @change="onFileChange(field.id, $event)" />
-                      </div>
                       <div v-if="uploadedFiles[field.id] || getAnswer(field.id)?.file_name" class="entry-file-uploaded">
                         <p class="label02">File uploaded</p>
                         <a :href="getAnswer(field.id)?.file_url ?? '#'" class="entry-file-link" target="_blank">
@@ -76,18 +76,34 @@
                           {{ uploadedFiles[field.id]?.name ?? getAnswer(field.id)?.file_name }}
                         </a>
                       </div>
+                      <div v-if="canEdit" class="entry-field__upload">
+                        <AppFileUpload @change="onFileChange(field.id, $event)" />
+                      </div>
+                      <p v-else-if="!getAnswer(field.id)?.file_name" class="entry-field__description">No file uploaded yet.</p>
                     </template>
 
                     <AppInput v-else v-model="answers[field.id]" :type="fieldInputType(field.type)"
-                      :placeholder="fieldPlaceholder(field.type)" />
+                      :placeholder="fieldPlaceholder(field.type)" :disabled="!canEdit" />
                   </div>
                 </div>
 
-                <div class="entry-actions">
+                <template v-if="entry.comments?.length">
+                  <hr class="entry-divider">
+                  <div class="entry-comments">
+                    <p class="label01">Comments</p>
+                    <div v-for="(c, i) in entry.comments" :key="i" class="entry-comment">
+                      <div class="entry-comment__meta">
+                        <span class="entry-comment__user">{{ c.user }}</span>
+                        <span class="entry-comment__date">{{ c.date }}</span>
+                      </div>
+                      <p class="entry-comment__text">{{ c.comment }}</p>
+                    </div>
+                  </div>
+                </template>
+
+                <div v-if="canEdit" class="entry-actions">
                   <AppButton variant="ghost" to="/requests">Cancel</AppButton>
-                  <AppButton :loading="saving" @click="onSave">
-                    {{ entry.status.value === 'awaiting_answer' ? 'Submit' : 'Save' }}
-                  </AppButton>
+                  <AppButton :loading="saving" @click="onSave">Submit</AppButton>
                 </div>
               </AppCard>
             </div>
@@ -97,13 +113,13 @@
             <div class="entry-status">
               <div class="entry-status__card">
                 <div class="entry-status__card-header" :data-status="entry.status.value">
-                  <span class="material-icons-round">{{ statusIcon(entry.status.value) }}</span>
+                  <span class="material-icons-outlined">{{ statusIcon(entry.status.value) }}</span>
                   <h4>{{ statusTitle(entry.status.value) }}</h4>
                 </div>
                 <div v-if="!isSupplier" class="entry-status__card-body">
                   <p class="entry-status__card-text">{{ statusDescription(entry.status.value) }}</p>
 
-                  <template v-if="entry.status.value === 'pending_approval' && !isCompanyUser">
+                  <template v-if="entry.status.value === 'pending_approval'">
                     <div class="entry-status__comments">
                       <label class="label01">
                         Comments <span class="entry-status__comments-hint">*Fill in if there is something wrong</span>
@@ -113,11 +129,11 @@
                     </div>
                     <div class="entry-status__actions">
                       <AppButton variant="danger" :loading="rejecting" @click="onReject">
-                        <span class="material-icons-round">highlight_off</span>
+                        <span class="material-icons-outlined">highlight_off</span>
                         Rejected
                       </AppButton>
-                      <AppButton :loading="approving" @click="onApprove">
-                        <span class="material-icons-round">check_circle</span>
+                      <AppButton variant="success" :loading="approving" @click="onApprove">
+                        <span class="material-icons-outlined">check_circle</span>
                         Approve
                       </AppButton>
                     </div>
@@ -186,12 +202,20 @@ interface EntryAnswer {
   file_url: string | null
 }
 
+interface EntryComment {
+  user: string
+  date: string
+  comment: string
+}
+
 interface RequestEntry {
   id: number
   supplier: { id: number; name: string; email: string } | null
+  assigned_to: { id: number; name: string } | null
   form: { id: number; name: string; fields?: Field[] }
   status: { value: string; label: string }
   answers?: EntryAnswer[]
+  comments?: EntryComment[]
   created_at: string
   updated_at: string
 }
@@ -268,16 +292,23 @@ const apiBase = config.public.apiBase as string
 const isSupplier = computed(() => authStore.user?.roles === 'supplier')
 const isCompanyUser = computed(() => authStore.user?.roles === 'company-user')
 const requestTitle = computed(() => request.value?.title ?? entry.value?.form.name ?? 'Request')
+const canEdit = computed(() => true)
 
 function getAnswer(fieldId: number): EntryAnswer | undefined {
   return entry.value?.answers?.find(a => a.field_id === fieldId)
 }
 
+function needsFile(field: Field): boolean {
+  return field.requires_file || field.type === 'template_file' || field.type === 'supplier_file'
+}
+
 onMounted(async () => {
+  // Clear stale answers from any previous navigation
+  for (const key of Object.keys(answers)) delete answers[Number(key)]
+
   try {
     if (isSupplier.value) {
       const res = await api<{ data: SupplierEntryDetail }>(`/supplier/request/${requestId}`)
-      console.log('[Entry] supplier response:', res)
 
       request.value = {
         id: res.data.request.id,
@@ -289,7 +320,10 @@ onMounted(async () => {
       const statusLabel = res.data.status.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
       entry.value = {
         id: res.data.entry_id,
-        supplier: null,
+        supplier: authStore.user
+          ? { id: authStore.user.id as number, name: authStore.user.name as string, email: authStore.user.email as string ?? '' }
+          : null,
+        assigned_to: null,
         form: { id: res.data.form.id, name: res.data.form.name },
         status: { value: res.data.status, label: statusLabel },
         created_at: '',
@@ -302,49 +336,75 @@ onMounted(async () => {
         })),
       }
 
-      form.value = {
-        id: res.data.form.id,
-        name: res.data.form.name,
-        description: null,
-        has_template: false,
-        template_file_name: null,
-        fields: res.data.form.fields.map(f => ({
-          id: f.id,
-          name: f.name,
+      const formDetail = await api<{ data: FormDetail }>(`/forms/${res.data.form.id}`).catch(() => null)
+      if (formDetail) {
+        form.value = formDetail.data
+      }
+      else {
+        form.value = {
+          id: res.data.form.id,
+          name: res.data.form.name,
           description: null,
-          type: f.type,
-          type_label: f.type,
-          requires_file: false,
+          has_template: false,
           template_file_name: null,
-          order: f.order,
-          required: f.required,
-        })),
+          fields: res.data.form.fields.map(f => ({
+            id: f.id,
+            name: f.name,
+            description: null,
+            type: f.type,
+            type_label: f.type,
+            requires_file: false,
+            template_file_name: null,
+            order: f.order,
+            required: f.required,
+          })),
+        }
       }
     }
     else {
       const requestRes = await api<{ data: RequestData }>(`/requests/${requestId}`)
-      console.log('[Entry] raw response:', requestRes)
       request.value = requestRes.data
-      selectedAssigneeId.value = requestRes.data.assigned_to?.id ?? null
 
       for (const formGroup of requestRes.data.forms) {
         const found = formGroup.suppliers.find((s: RequestEntry) => s.id === entryId)
         if (found) { entry.value = found; break }
       }
 
+      selectedAssigneeId.value = entry.value?.assigned_to?.id ?? null
+
       if (!entry.value) return
 
-      const [formRes, usersRes] = await Promise.allSettled([
+      const [formRes, usersRes, entryDetailRes] = await Promise.allSettled([
         api<{ data: FormDetail }>(`/forms/${entry.value.form.id}`),
         api<{ data: UserOption[] }>('/users'),
+        api<{ data: { responses: { field_id: number; value: string | null; file_name: string | null; file_path: string | null }[]; comments?: EntryComment[] } }>(`/request-entries/${entryId}`),
       ])
-      if (formRes.status === 'fulfilled') form.value = formRes.value.data
-      if (usersRes.status === 'fulfilled') availableUsers.value = usersRes.value.data
+      if (formRes.status === 'fulfilled') {
+        form.value = formRes.value.data
+      }
+      if (usersRes.status === 'fulfilled') {
+        const d = usersRes.value.data
+        availableUsers.value = Array.isArray(d) ? d : (d as unknown as { data: UserOption[] }).data ?? []
+      }
+      if (entryDetailRes.status === 'fulfilled') {
+        const rawResponses = entryDetailRes.value.data.responses
+        const responsesArr = Array.isArray(rawResponses) ? rawResponses : Object.values(rawResponses as Record<string, { field_id: number; value: string | null; file_name: string | null; file_path: string | null }>)
+        entry.value.answers = responsesArr.map(r => ({
+          field_id: r.field_id,
+          value: r.value,
+          file_name: r.file_name,
+          file_url: r.file_path,
+        }))
+        if (entryDetailRes.value.data.comments) {
+          entry.value.comments = entryDetailRes.value.data.comments
+        }
+      }
     }
 
     entry.value?.answers?.forEach((a) => {
       if (a.value) answers[a.field_id] = a.value
     })
+
   }
   catch {
     toast.error(null, 'Failed to load entry', { category: 'request' })
@@ -360,10 +420,17 @@ function onFileChange(fieldId: number, file: File) {
 }
 
 async function onAssigneeChange() {
+  if (!entry.value?.supplier) return
   try {
     await api(`/requests/${requestId}/assign`, {
       method: 'PATCH',
-      body: { assigned_to: selectedAssigneeId.value },
+      body: {
+        assignments: [{
+          form_id: entry.value.form.id,
+          supplier_id: entry.value.supplier.id,
+          assigned_to: selectedAssigneeId.value,
+        }],
+      },
     })
     toast.success('Assignee updated', { category: 'request' })
   }
@@ -379,7 +446,7 @@ async function onSave() {
     const body = new FormData()
     form.value?.fields.forEach((field, index) => {
       body.append(`responses[${index}][field_id]`, String(field.id))
-      if (field.requires_file) {
+      if (needsFile(field)) {
         if (uploadedFiles[field.id]) body.append(`responses[${index}][file]`, uploadedFiles[field.id]!)
       }
       else {
@@ -402,8 +469,10 @@ async function onApprove() {
   if (!entry.value) return
   approving.value = true
   try {
-    await api(`/request-entries/${entry.value.id}/approve`, { method: 'POST', body: { comment: comment.value } })
-    entry.value.status = { value: 'completed', label: 'Completed' }
+    const res = await api<{ data: { status: { value: string; label: string }; comments?: EntryComment[] } }>(`/request-entries/${entry.value.id}/approve`, { method: 'POST', body: { comment: comment.value } })
+    if (res.data?.status) entry.value.status = res.data.status
+    if (res.data?.comments) entry.value.comments = res.data.comments
+    comment.value = ''
     toast.success('Entry approved', { category: 'request' })
   }
   catch (err) {
@@ -416,8 +485,10 @@ async function onReject() {
   if (!entry.value) return
   rejecting.value = true
   try {
-    await api(`/request-entries/${entry.value.id}/reject`, { method: 'POST', body: { comment: comment.value } })
-    entry.value.status = { value: 'awaiting_answer', label: 'Awaiting Answer' }
+    const res = await api<{ data: { status: { value: string; label: string }; comments?: EntryComment[] } }>(`/request-entries/${entry.value.id}/reject`, { method: 'POST', body: { comment: comment.value } })
+    if (res.data?.status) entry.value.status = res.data.status
+    if (res.data?.comments) entry.value.comments = res.data.comments
+    comment.value = ''
     toast.success('Entry rejected', { category: 'request' })
   }
   catch (err) {
@@ -427,7 +498,7 @@ async function onReject() {
 }
 
 function fieldInputType(type: string): 'number' | 'text' | 'date' | 'textarea' {
-  const map: Record<string, 'number' | 'text' | 'date' | 'textarea'> = { numeric: 'number', date: 'date', long_text: 'textarea' }
+  const map: Record<string, 'number' | 'text' | 'date' | 'textarea'> = { numeric: 'number', date: 'date', long_text: 'textarea', short_text: 'text' }
   return map[type] ?? 'text'
 }
 
@@ -447,6 +518,7 @@ function statusIcon(value: string): string {
     pending_approval: 'pending',
     completed: 'check_circle',
     cancelled: 'highlight_off',
+    rejected: 'highlight_off',
   }
   return map[value] ?? 'help_outline'
 }
@@ -457,6 +529,7 @@ function statusTitle(value: string): string {
     pending_approval: 'This request is waiting for approval',
     completed: 'This request is complete',
     cancelled: 'This request was cancelled',
+    rejected: 'This request was rejected',
   }
   return map[value] ?? value
 }
@@ -467,6 +540,7 @@ function statusDescription(value: string): string {
     pending_approval: 'Confirm that all information provided aligns with the request requirements.',
     completed: 'This request is complete. Any modifications will revert it back to the Approval status.',
     cancelled: 'The request has been cancelled.',
+    rejected: 'The submission was rejected. It can be revised and resubmitted.',
   }
   return map[value] ?? ''
 }
@@ -522,7 +596,8 @@ function statusDescription(value: string): string {
   background: var(--color-green);
 }
 
-.entry-header__pill[data-status="cancelled"] {
+.entry-header__pill[data-status="cancelled"],
+.entry-header__pill[data-status="rejected"] {
   background: var(--color-red);
 }
 
@@ -538,14 +613,20 @@ function statusDescription(value: string): string {
   gap: var(--space-2);
   font-size: var(--text-sm);
   font-weight: 600;
-  color: var(--color-text-muted);
+  color: var(--color-black80);
   text-transform: uppercase;
   letter-spacing: 0.03em;
-  margin-bottom: var(--space-2);
+  margin-bottom: var(--space-8);
 }
 
 .entry-supplier .material-icons-round {
   font-size: 18px;
+}
+
+.entry-form-info {
+  display: grid;
+  gap: 12px;
+  margin: 36px 0 16px;
 }
 
 .entry-description {
@@ -567,20 +648,12 @@ function statusDescription(value: string): string {
 
 .entry-file-link {
   display: inline-flex;
-  align-items: center;
   gap: var(--space-2);
-  padding: var(--space-2) var(--space-4);
-  border-radius: var(--radius-md);
-  background: var(--color-primary-25);
+  align-items: center;
   color: var(--color-primary);
   font-size: var(--text-sm);
   font-weight: 500;
   text-decoration: none;
-  transition: background 0.15s;
-}
-
-.entry-file-link:hover {
-  background: var(--color-primary-subtle);
 }
 
 .entry-file-link .material-icons-round {
@@ -638,6 +711,45 @@ function statusDescription(value: string): string {
   color: var(--color-text-muted);
 }
 
+.entry-comments {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.entry-comment {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-3);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.entry-comment__meta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.entry-comment__user {
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.entry-comment__date {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}
+
+.entry-comment__text {
+  font-size: var(--text-sm);
+  color: var(--color-text);
+  line-height: 1.5;
+}
+
 .entry-actions {
   display: flex;
   justify-content: flex-end;
@@ -661,7 +773,7 @@ function statusDescription(value: string): string {
 }
 
 .entry-status__card {
-  background: var(--color-surface);
+  background: var(--color-white60);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
   overflow: hidden;
@@ -681,22 +793,24 @@ function statusDescription(value: string): string {
 }
 
 .entry-status__card-header[data-status="awaiting_answer"] h4,
-.entry-status__card-header[data-status="awaiting_answer"] .material-icons-round {
+.entry-status__card-header[data-status="awaiting_answer"] .material-icons-outlined {
   color: var(--color-yellow);
 }
 
 .entry-status__card-header[data-status="pending_approval"] h4,
-.entry-status__card-header[data-status="pending_approval"] .material-icons-round {
+.entry-status__card-header[data-status="pending_approval"] .material-icons-outlined {
   color: var(--color-primary);
 }
 
 .entry-status__card-header[data-status="completed"] h4,
-.entry-status__card-header[data-status="completed"] .material-icons-round {
+.entry-status__card-header[data-status="completed"] .material-icons-outlined {
   color: var(--color-green);
 }
 
 .entry-status__card-header[data-status="cancelled"] h4,
-.entry-status__card-header[data-status="cancelled"] .material-icons-round {
+.entry-status__card-header[data-status="cancelled"] .material-icons-outlined,
+.entry-status__card-header[data-status="rejected"] h4,
+.entry-status__card-header[data-status="rejected"] .material-icons-outlined {
   color: var(--color-danger);
 }
 
@@ -709,7 +823,7 @@ function statusDescription(value: string): string {
 
 .entry-status__card-text {
   font-size: var(--text-sm);
-  color: var(--color-text-muted);
+  color: var(--color-text);
   line-height: 1.6;
 }
 

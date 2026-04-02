@@ -13,7 +13,7 @@
 
 <script setup lang="ts">
 interface Props {
-  variant?: 'primary' | 'secondary' | 'ghost' | 'danger'
+  variant?: 'primary' | 'secondary' | 'ghost' | 'danger' | 'success'
   tag?: string
   type?: 'button' | 'submit' | 'reset'
   to?: string
