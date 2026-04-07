@@ -56,7 +56,7 @@
                 <hr v-if="form?.has_template && form?.fields?.length" class="entry-divider">
 
                 <div class="entry-fields">
-                  <div v-for="field in form?.fields" :key="field.id" class="entry-field">
+                  <div v-for="field in form?.fields" :key="field.id" :data-field-id="field.id" class="entry-field">
                     <div class="entry-field__name">
                       {{ field.name }}<span v-if="field.required" class="entry-field__required">*</span>
                     </div>
@@ -84,22 +84,11 @@
 
                     <AppInput v-else v-model="answers[field.id]" :type="fieldInputType(field.type)"
                       :placeholder="fieldPlaceholder(field.type)" :disabled="!canEdit" />
+
+                    <p v-if="fieldErrors[field.id]" class="entry-field__error">{{ fieldErrors[field.id] }}</p>
                   </div>
                 </div>
 
-                <template v-if="entry.comments?.length">
-                  <hr class="entry-divider">
-                  <div class="entry-comments">
-                    <p class="label01">Comments</p>
-                    <div v-for="(c, i) in entry.comments" :key="i" class="entry-comment">
-                      <div class="entry-comment__meta">
-                        <span class="entry-comment__user">{{ c.user }}</span>
-                        <span class="entry-comment__date">{{ c.date }}</span>
-                      </div>
-                      <p class="entry-comment__text">{{ c.comment }}</p>
-                    </div>
-                  </div>
-                </template>
 
                 <div v-if="canEdit" class="entry-actions">
                   <AppButton variant="ghost" to="/requests">Cancel</AppButton>
@@ -139,7 +128,20 @@
                     </div>
                   </template>
                 </div>
+                <template v-if="entry.comments?.length">
+                  <div class="entry-status__comments-list">
+                    <p class="label01">Comments</p>
+                    <div v-for="(c, i) in entry.comments" :key="i" class="entry-comment">
+                      <div class="entry-comment__meta">
+                        <span class="entry-comment__user">{{ c.user?.name ?? 'Unknown' }}</span>
+                        <span class="entry-comment__date">{{ formatCommentDate(c.created_at) }}</span>
+                      </div>
+                      <p v-if="c.body" class="entry-comment__text">{{ c.body }}</p>
+                    </div>
+                  </div>
+                </template>
               </div>
+
               <div v-if="!isSupplier" class="entry-status__assigned">
                 <p class="entry-status__assigned-label">Assigned to:</p>
                 <div ref="assigneeDropdownRef" class="assignee-dropdown">
@@ -203,9 +205,10 @@ interface EntryAnswer {
 }
 
 interface EntryComment {
-  user: string
-  date: string
-  comment: string
+  id: number
+  body: string | null
+  created_at: string
+  user: { id: number; name: string } | null
 }
 
 interface RequestEntry {
@@ -243,6 +246,7 @@ interface SupplierEntryDetail {
     fields: { id: number; name: string; type: string; required: boolean; order: number }[]
   }
   responses: Record<string, { field_id: number; value: string | null; file_path: string | null; file_name: string | null }>
+  comments?: EntryComment[]
 }
 
 const route = useRoute()
@@ -255,6 +259,7 @@ const requestId = Number(route.params.id)
 const entryId = Number(route.params.entryId)
 
 const { isDirty, showModal, confirmLeave, cancelLeave } = useUnsavedChanges()
+
 const _ready = ref(false)
 
 const loading = ref(true)
@@ -267,13 +272,24 @@ const form = ref<FormDetail | null>(null)
 const comment = ref('')
 const answers = reactive<Record<number, string>>({})
 const uploadedFiles = reactive<Record<number, File>>({})
+
+const formFields = computed(() => form.value?.fields ?? [])
+const { fieldErrors, validate } = useFormValidation({
+  fields: formFields,
+  answers,
+  uploadedFiles,
+  getExistingFile: (fieldId) => getAnswer(fieldId)?.file_name,
+  needsFile: needsFile as (field: { id: number; name: string; required: boolean }) => boolean,
+})
 const availableUsers = ref<UserOption[]>([])
 const selectedAssigneeId = ref<number | null>(null)
 const assigneeOpen = ref(false)
 const assigneeDropdownRef = ref<HTMLElement | null>(null)
 
 const selectedAssigneeName = computed(() =>
-  availableUsers.value.find(u => u.id === selectedAssigneeId.value)?.name ?? 'Select user'
+  availableUsers.value.find(u => u.id === selectedAssigneeId.value)?.name
+  ?? entry.value?.assigned_to?.name
+  ?? 'Select user'
 )
 
 onClickOutside(assigneeDropdownRef, () => { assigneeOpen.value = false })
@@ -335,6 +351,8 @@ onMounted(async () => {
           file_url: null,
         })),
       }
+
+      if (res.data.comments?.length) entry.value.comments = res.data.comments
 
       const formDetail = await api<{ data: FormDetail }>(`/forms/${res.data.form.id}`).catch(() => null)
       if (formDetail) {
@@ -441,6 +459,7 @@ async function onAssigneeChange() {
 
 async function onSave() {
   if (!entry.value) return
+  if (!validate()) return
   saving.value = true
   try {
     const body = new FormData()
@@ -468,11 +487,13 @@ async function onSave() {
 async function onApprove() {
   if (!entry.value) return
   approving.value = true
+  console.log('[onApprove] sending comment:', comment.value)
   try {
     const res = await api<{ data: { status: { value: string; label: string }; comments?: EntryComment[] } }>(`/request-entries/${entry.value.id}/approve`, { method: 'POST', body: { comment: comment.value } })
     if (res.data?.status) entry.value.status = res.data.status
     if (res.data?.comments) entry.value.comments = res.data.comments
     comment.value = ''
+    isDirty.value = false
     toast.success('Entry approved', { category: 'request' })
   }
   catch (err) {
@@ -484,17 +505,23 @@ async function onApprove() {
 async function onReject() {
   if (!entry.value) return
   rejecting.value = true
+  console.log('[onReject] sending comment:', comment.value)
   try {
     const res = await api<{ data: { status: { value: string; label: string }; comments?: EntryComment[] } }>(`/request-entries/${entry.value.id}/reject`, { method: 'POST', body: { comment: comment.value } })
     if (res.data?.status) entry.value.status = res.data.status
     if (res.data?.comments) entry.value.comments = res.data.comments
     comment.value = ''
+    isDirty.value = false
     toast.success('Entry rejected', { category: 'request' })
   }
   catch (err) {
     toast.error(err, 'Failed to reject entry', { category: 'request' })
   }
   finally { rejecting.value = false }
+}
+
+function formatCommentDate(iso: string): string {
+  return new Date(iso).toLocaleString('pt-PT', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
 }
 
 function fieldInputType(type: string): 'number' | 'text' | 'date' | 'textarea' {
@@ -683,6 +710,12 @@ function statusDescription(value: string): string {
   margin-left: 2px;
 }
 
+.entry-field__error {
+  font-size: var(--text-xs);
+  color: var(--color-danger);
+  margin-top: 2px;
+}
+
 .entry-field__description {
   font-size: var(--text-xs);
   color: var(--color-text-muted);
@@ -711,10 +744,11 @@ function statusDescription(value: string): string {
   color: var(--color-text-muted);
 }
 
-.entry-comments {
+.entry-status__comments-list {
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
+  padding: var(--space-4) var(--space-5);
 }
 
 .entry-comment {
@@ -737,6 +771,15 @@ function statusDescription(value: string): string {
   font-size: var(--text-xs);
   font-weight: 600;
   color: var(--color-text);
+}
+
+.entry-comment__action {
+  font-size: var(--text-xs);
+  font-weight: 600;
+  text-transform: capitalize;
+
+  &[data-action="approved"] { color: var(--color-green); }
+  &[data-action="rejected"] { color: var(--color-danger); }
 }
 
 .entry-comment__date {

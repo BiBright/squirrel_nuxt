@@ -49,7 +49,7 @@
               <AppInput v-model="passwordForm.current" label="Current password" type="password" />
               <AppInput v-model="passwordForm.new" label="New password" type="password" />
               <AppInput v-model="passwordForm.confirm" label="Confirm new password" type="password" />
-              <AppButton type="button" :loading="passwordSaving" @click="savePassword">Update password</AppButton>
+              <AppButton type="button" :loading="passwordSaving" @click="savePassword">Save</AppButton>
             </div>
 
             <div v-else-if="activeSection === 'company'" class="settings-section">
