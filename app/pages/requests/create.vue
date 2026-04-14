@@ -23,7 +23,7 @@
                   </div>
                   <button v-if="selectedForms.length > 0" type="button" class="remove-all-btn" @click="selectedForms = []">Remove all</button>
                 </div>
-                <p v-if="errors.form_ids" class="input-error-msg">{{ errors.form_ids }}</p>
+                <p v-if="errors.form_ids" class="input-error-msg caption3">{{ errors.form_ids }}</p>
                 <div v-if="selectedForms.length > 0" class="selected-list">
                   <div v-for="f in selectedForms" :key="f.id" class="selected-row">
                     <span class="selected-row__name">{{ f.name }}</span>
@@ -47,7 +47,7 @@
                   </div>
                   <button v-if="selectedSuppliers.length > 0" type="button" class="remove-all-btn" @click="selectedSuppliers = []">Remove all</button>
                 </div>
-                <p v-if="errors.supplier_ids" class="input-error-msg">{{ errors.supplier_ids }}</p>
+                <p v-if="errors.supplier_ids" class="input-error-msg caption3">{{ errors.supplier_ids }}</p>
                 <div v-if="selectedSuppliers.length > 0" class="selected-list">
                   <div v-for="s in selectedSuppliers" :key="s.id" class="selected-row">
                     <span class="selected-row__name">{{ s.name }}</span>

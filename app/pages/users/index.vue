@@ -11,16 +11,16 @@
 
         <div class="col-12">
           <AppListToolbar v-model:search="search" v-model:sort="sort" v-model:view="view" label="user"
-            add-label="Create User" :total-count="filtered.length" :selected-count="selectedCount" @add="onAdd"
-            @delete="onDelete" />
+            add-label="Create User" inactive-to="/users/inactive" @add="onAdd" />
         </div>
 
         <div class="col-12">
-          <div v-if="loading" class="list-container">
-            <div class="list-empty">
-              <span class="material-icons-round">hourglass_empty</span>
-              <p>Loading users...</p>
-            </div>
+          <div v-if="loading" class="skeleton-rows">
+            <div class="skeleton-row"><AppSkeleton width="45%" /><AppSkeleton width="30%" /><AppSkeleton width="15%" /></div>
+            <div class="skeleton-row"><AppSkeleton width="35%" /><AppSkeleton width="40%" /><AppSkeleton width="15%" /></div>
+            <div class="skeleton-row"><AppSkeleton width="50%" /><AppSkeleton width="25%" /><AppSkeleton width="15%" /></div>
+            <div class="skeleton-row"><AppSkeleton width="30%" /><AppSkeleton width="35%" /><AppSkeleton width="15%" /></div>
+            <div class="skeleton-row"><AppSkeleton width="40%" /><AppSkeleton width="28%" /><AppSkeleton width="15%" /></div>
           </div>
 
           <AppBlankState v-else-if="blankState.show.value" :image="blankState.image.value"
@@ -32,9 +32,9 @@
           </AppBlankState>
 
           <template v-else-if="effectiveView === 'list'">
-            <AppTable button-edit :columns="columns" :rows="tableRows" @edit="(row) => navigateTo(`/users/${(row._raw as User).id}`)" @delete="onDeleteRow" @select="onSelect">
+            <AppTable button-edit button-deactivate :columns="columns" :rows="tableRows" @edit="(row) => navigateTo(`/users/${(row._raw as User).id}`)" @deactivate="onDeleteRow">
               <template #cell-name="{ value, row }">
-                <NuxtLink :to="`/users/${(row._raw as User).id}`" class="app-table__cell-link">{{ value }}</NuxtLink>
+                <NuxtLink :to="`/users/${(row._raw as User).id}`" class="app-table__cell-link subheading-1">{{ value }}</NuxtLink>
               </template>
 
               <template #cell-role="{ value }">
@@ -47,14 +47,14 @@
             <div class="list-mosaic">
               <div v-for="user in filtered" :key="user.id" class="list-card">
                 <div class="list-card__header">
-                  <NuxtLink :to="`/users/${user.id}`" class="list-card__title">{{ user.name }}</NuxtLink>
+                  <NuxtLink :to="`/users/${user.id}`" class="list-card__title cta2">{{ user.name }}</NuxtLink>
                 </div>
-                <div class="list-card__meta-row">
+                <div class="list-card__meta-row caption3">
                   {{ user.phone }}
                 </div>
 
                 <div class="list-card__meta">
-                  <div class="list-card__meta-row">
+                  <div class="list-card__meta-row caption3">
                     {{ user.email }}
                   </div>
                 </div>
@@ -109,7 +109,7 @@ const authStore = useAuthStore()
 const usersCache = useState<User[]>('users-list', () => [])
 const users = ref<User[]>([])
 const loading = ref(true)
-const { search, sort, view, selectedCount, onSelect, onDelete } = useListToolbar()
+const { search, sort, view } = useListToolbar()
 const isMobile = ref(false)
 onMounted(() => {
   const mq = window.matchMedia('(max-width: 767px)')
@@ -185,13 +185,12 @@ async function onDeleteRow(row: Record<string, unknown>, _idx: number) {
   const user = row._raw as User
   try {
     const api = useApi()
-    await api(`/users/${user.id}`, { method: 'DELETE' })
-    users.value = users.value.filter(u => u.id !== user.id)
-    usersCache.value = users.value
-    toast.success('User deleted', { category: 'user' })
+    await api(`/users/${user.id}/toggle-active`, { method: 'PATCH' })
+    toast.success('User deactivated', { category: 'user' })
+    await navigateTo('/users/inactive')
   }
   catch (err) {
-    toast.error(err, 'Could not delete user', { category: 'user' })
+    toast.error(err, 'Could not deactivate user', { category: 'user' })
   }
 }
 

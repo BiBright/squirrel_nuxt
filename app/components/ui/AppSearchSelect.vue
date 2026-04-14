@@ -5,7 +5,7 @@
       <span class="material-icons-round app-select__chevron">{{ open ? 'expand_less' : 'expand_more' }}</span>
     </button>
     <div v-if="open" class="app-select__panel">
-      <div class="app-select__search-wrap">
+      <div v-if="searchable" class="app-select__search-wrap">
         <span class="material-icons-round app-select__search-icon">search</span>
         <input
           ref="searchRef"
@@ -36,11 +36,14 @@
 </template>
 
 <script setup lang="ts">
-const props = defineProps<{
+const props = withDefaults(defineProps<{
   modelValue: string | number
   options: { value: string | number; label: string }[]
   placeholder?: string
-}>()
+  searchable?: boolean
+}>(), {
+  searchable: true,
+})
 
 const emit = defineEmits<{ 'update:modelValue': [value: string | number] }>()
 
@@ -55,7 +58,7 @@ function toggle() {
   open.value = !open.value
   if (open.value) {
     query.value = ''
-    nextTick(() => searchRef.value?.focus())
+    if (props.searchable) nextTick(() => searchRef.value?.focus())
   }
 }
 

@@ -49,7 +49,7 @@ function buildChart() {
     },
     options: {
       responsive: true,
-      maintainAspectRatio: true,
+      maintainAspectRatio: false,
       plugins: {
         legend: { display: props.legend !== false, position: 'bottom', labels: { boxWidth: 12, padding: 16 } },
         tooltip: { mode: 'index', intersect: false },
@@ -68,5 +68,5 @@ onBeforeUnmount(() => chart?.destroy())
 </script>
 
 <style scoped>
-.chart-wrap { position: relative; width: 100%; }
+.chart-wrap { position: relative; width: 100%; height: 220px; }
 </style>

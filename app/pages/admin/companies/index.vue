@@ -9,8 +9,7 @@
         <AppPageHeader title="Companies" subtitle="Manage platform companies and their plans" />
 
         <AppListToolbar v-model:search="search" v-model:sort="sort" v-model:view="view" label="company"
-          add-label="Create company" :total-count="filtered.length" :selected-count="selected.length"
-          :hide-view-toggle="true" @add="navigateTo('/admin/companies/new')" @delete="onDelete" />
+          add-label="Create company" :hide-view-toggle="true" @add="navigateTo('/admin/companies/new')" />
 
         <div class="companies-table-wrap">
           <div v-if="loading" class="companies-empty">

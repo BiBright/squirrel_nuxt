@@ -2,51 +2,6 @@
 @use '../base/viewport' as *;
 
 // ================================
-// Form Labels
-// ================================
-
-.label01 {
-  font-size: 16px;
-  line-height: 20px;
-  color: $black80;
-  font-weight: 700;
-  margin-bottom: 12px;
-  display: flex;
-  align-items: center;
-
-  @include desktop-up { font-size: 18px; }
-
-  .optional {
-    color: $black60;
-    font-weight: 400;
-    font-size: 14px;
-    padding-left: 4px;
-    text-transform: lowercase;
-  }
-}
-
-.label02 {
-  font-size: 14px;
-  line-height: 16px;
-  color: $black80;
-  font-weight: 400;
-
-  @include desktop-up { font-size: 16px; line-height: 24px; }
-}
-
-.label03 {
-  font-size: 16px;
-  line-height: 20px;
-  color: $black80;
-  font-weight: 700;
-  margin-bottom: 16px;
-  display: flex;
-  align-items: center;
-
-  @include desktop-up { font-size: 18px; }
-}
-
-// ================================
 // Input Base
 // ================================
 
@@ -55,10 +10,10 @@
   border: 1px solid $black20;
   font-size: 14px;
   line-height: 20px;
-  padding: 12px 24px;
+  padding: var(--space-3) var(--space-6);
   background: $white;
   color: $black80;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   transition: border-color 0.3s;
   font-family: $font-base;
   outline: none;
@@ -66,9 +21,9 @@
 
   @include desktop-up { font-size: 16px; }
 
-  &::placeholder    { color: $black40; }
-  &:hover           { border-color: $white40; }
-  &:focus           { border-color: $primary100; box-shadow: none; }
+  &::placeholder { color: $black40; }
+  &:hover        { border-color: $white40; }
+  &:focus        { border-color: $primary100; box-shadow: none; }
 }
 
 // Text input
@@ -95,7 +50,7 @@
 
   &__icon {
     position: absolute;
-    left: 12px;
+    left: var(--space-3);
     font-size: 20px;
     color: $black60;
     pointer-events: none;
@@ -112,11 +67,11 @@
 .input-select {
   @extend %input-base;
   height: 44px;
-  padding: 12px 40px 12px 16px;
+  padding: var(--space-3) 40px var(--space-3) var(--space-4);
   background-color: $white60;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='%239b9b9b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
-  background-position: right 12px center;
+  background-position: right var(--space-3) center;
   background-size: 20px;
   cursor: pointer;
 }
@@ -128,12 +83,12 @@
 .form-group {
   display: flex;
   flex-direction: column;
-  margin-bottom: 24px;
+  margin-bottom: var(--space-6);
 
   @include desktop-up { margin-bottom: 36px; }
 }
 
-// Password field — relative wrapper for toggle icon
+// Password field
 .input-password-wrapper {
   position: relative;
 
@@ -143,7 +98,7 @@
     position: absolute;
     top: 50%;
     transform: translateY(-50%);
-    right: 16px;
+    right: var(--space-4);
     cursor: pointer;
     color: $black40;
     display: flex;
@@ -160,15 +115,11 @@
 
 .input-error-msg {
   color: $red100;
-  font-size: 12px;
-  line-height: 16px;
   margin-top: 6px;
 }
 
 .input-success-msg {
   color: $green100;
-  font-size: 12px;
-  line-height: 16px;
   margin-top: 6px;
 }
 

@@ -7,7 +7,8 @@
             :class="{ 'app-table__th--primary': col.primary }">
             {{ col.label }}
           </th>
-          <th v-if="buttonEdit" class="app-table__th app-table__th--action" />
+          <th v-if="buttonEdit" class="app-table__th app-table__th--action">Edit</th>
+          <th v-if="buttonDeactivate" class="app-table__th app-table__th--action" />
           <th v-if="buttonDelete" class="app-table__th app-table__th--action" />
           <th v-if="dropDownActions.length" :colspan="dropDownActions.length"
             class="app-table__th app-table__th--action" />
@@ -29,6 +30,13 @@
               <button class="app-table__action-btn app-table__action-btn--edit" title="Edit"
                 @click="emit('edit', row, rowIdx)">
                 <span class="material-icons-round">edit</span>
+              </button>
+            </td>
+
+            <td v-if="buttonDeactivate" class="app-table__td app-table__td--action">
+              <button class="app-table__action-btn app-table__action-btn--deactivate" title="Deactivate"
+                @click="emit('deactivate', row, rowIdx)">
+                <span class="material-icons-round">toggle_off</span>
               </button>
             </td>
 
@@ -85,12 +93,14 @@ const props = defineProps<{
   columns: Column[]
   rows: Record<string, unknown>[]
   buttonEdit?: boolean
+  buttonDeactivate?: boolean
   buttonDelete?: boolean
   dropDown?: boolean | DropDownAction[]
 }>()
 
 const emit = defineEmits<{
   edit: [row: Record<string, unknown>, index: number]
+  deactivate: [row: Record<string, unknown>, index: number]
   delete: [row: Record<string, unknown>, index: number]
 }>()
 
@@ -105,6 +115,7 @@ const openPanel = ref<{ rowIdx: number, key: string } | null>(null)
 const totalCols = computed(() => {
   let count = props.columns.length
   if (props.buttonEdit) count++
+  if (props.buttonDeactivate) count++
   if (props.buttonDelete) count++
   count += dropDownActions.value.length
   return count
@@ -158,7 +169,7 @@ function closePanel() {
   text-align: left;
   font-size: var(--text-xs);
   font-weight: 500;
-  color: var(--color-text-muted);
+  color: var(--color-black80);
   white-space: nowrap;
 }
 
@@ -266,6 +277,25 @@ function closePanel() {
 .app-table__action-btn--edit .material-icons-round {
   color: var(--color-primary);
   font-size: 20px;
+}
+
+.app-table__action-btn--deactivate {
+  opacity: 0;
+  transition: opacity 0.2s, color 0.2s, background 0.15s;
+}
+
+.app-table__action-btn--deactivate .material-icons-round {
+  color: var(--color-text-muted);
+  font-size: 20px;
+  transition: color 0.2s;
+}
+
+.app-table__row:hover .app-table__action-btn--deactivate {
+  opacity: 1;
+}
+
+.app-table__action-btn--deactivate:hover .material-icons-round {
+  color: var(--color-danger);
 }
 
 .app-table__action-btn--danger .material-icons-round {

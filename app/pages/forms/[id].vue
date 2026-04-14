@@ -67,7 +67,7 @@
                 <button v-if="selectedFields.length > 0" type="button" class="remove-all-btn" @click="selectedFields = []">Remove all</button>
               </div>
 
-              <p v-if="errors.fields" class="input-error-msg">{{ errors.fields }}</p>
+              <p v-if="errors.fields" class="input-error-msg caption3">{{ errors.fields }}</p>
 
               <div v-if="selectedFields.length > 0" class="fields-list">
                 <div v-for="(sf, idx) in selectedFields" :key="sf.id" class="field-row">

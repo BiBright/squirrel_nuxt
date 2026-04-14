@@ -36,7 +36,7 @@
     </form>
 
     <div class="login-form-footer">
-      <AppButton variant="ghost" tag="a" href="#" @click.prevent="onForgotPassword">
+      <AppButton variant="secondary" tag="a" href="#" @click.prevent="onForgotPassword">
         Forgot your password?
       </AppButton>
     </div>

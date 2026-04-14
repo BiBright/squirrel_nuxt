@@ -5,13 +5,12 @@
 // Settings Page
 // ================================
 
-// Left column — user info + nav
 .settings-menu {
   border-right: 1px solid $black20;
-  padding-right: 24px;
+  padding-right: var(--space-6);
   display: flex;
   flex-direction: column;
-  margin-top: 20px;
+  margin-top: var(--space-5);
 
   @include mobile-only {
     border-right: none;
@@ -22,9 +21,9 @@
 
   &__user {
     text-align: center;
-    padding: 20px 0 32px;
+    padding: var(--space-5) 0 var(--space-8);
 
-    @include tablet-up { padding: 40px 0 32px; }
+    @include tablet-up { padding: var(--space-10) 0 var(--space-8); }
 
     .avatar {
       width: 84px;
@@ -37,7 +36,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      margin: 0 auto 16px;
+      margin: 0 auto var(--space-4);
       overflow: hidden;
 
       &__img {
@@ -48,16 +47,11 @@
     }
 
     .username {
-      font-size: 16px;
-      line-height: 24px;
-      font-weight: 700;
       color: $black;
-      margin-bottom: 4px;
+      margin-bottom: var(--space-1);
     }
 
     .role {
-      font-size: 12px;
-      line-height: 16px;
       color: $black60;
     }
 
@@ -65,12 +59,9 @@
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      gap: 4px;
+      gap: var(--space-1);
       color: $primary100;
-      font-size: 12px;
-      line-height: 16px;
-      font-weight: 400;
-      margin-top: 12px;
+      margin-top: var(--space-3);
       cursor: pointer;
       text-decoration: none;
       background: none;
@@ -83,21 +74,25 @@
   }
 
   &__nav {
-    padding-top: 16px;
+    padding-top: var(--space-4);
+  }
+
+  &__divider {
+    border: none;
+    border-top: 1px solid $black20;
+    margin: var(--space-2) 0 var(--space-4);
   }
 
   &__item {
     display: flex;
     align-items: center;
-    gap: 8px;
-    padding: 12px 16px;
-    border-radius: 8px;
-    font-size: 16px;
-    line-height: 20px;
+    gap: var(--space-2);
+    padding: var(--space-3) var(--space-4);
+    border-radius: var(--radius-md);
     color: $black80;
     cursor: pointer;
     transition: background-color 0.2s;
-    margin-bottom: 12px;
+    margin-bottom: var(--space-3);
     background: transparent;
     border: none;
     width: 100%;
@@ -119,11 +114,9 @@
 
 // ── Notifications section ─────────────────────────────
 .notif-loading {
-  font-size: 14px;
   color: $black60;
 }
 
-// Main card wrapper
 .notif-card {
   width: 360px;
 
@@ -131,31 +124,27 @@
   border: 1px solid $primary50;
   border-radius: 12px;
   overflow: hidden;
-  margin-bottom: 24px;
+  margin-bottom: var(--space-6);
 }
 
 .notif-card__header {
   display: flex;
   align-items: flex-start;
-  gap: 16px;
-  padding: 20px 24px;
+  gap: var(--space-4);
+  padding: var(--space-5) var(--space-6);
   background: $white;
 }
 
 .notif-card__title {
-  font-size: 15px;
-  font-weight: 700;
   color: $black;
-  margin-bottom: 4px;
+  margin-bottom: var(--space-1);
 }
 
 .notif-card__hint {
-  font-size: 13px;
   color: $black60;
   line-height: 1.4;
 }
 
-// Toggle switch
 .notif-toggle {
   position: relative;
   width: 44px;
@@ -199,8 +188,8 @@
 .notif-freq-item {
   display: flex;
   align-items: flex-start;
-  gap: 12px;
-  padding: 16px 24px;
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-6);
   cursor: pointer;
 
   & + & { border-top: 1px solid $white60; }
@@ -215,26 +204,21 @@
   cursor: pointer;
 }
 
-.notif-freq-item__body {
-  flex: 1;
-}
+.notif-freq-item__body { flex: 1; }
 
 .notif-freq-item__label {
-  font-size: 14px;
-  font-weight: 600;
   color: $black;
-  margin-bottom: 2px;
+  margin-bottom: var(--space-1);
 }
 
 .notif-freq-item__hint {
-  font-size: 12px;
   color: $black60;
-  margin-bottom: 10px;
+  margin-bottom: var(--space-3);
 }
 
 .notif-selects {
   display: flex;
-  gap: 10px;
+  gap: var(--space-3);
   flex-wrap: wrap;
 }
 
@@ -244,20 +228,18 @@
   @include mobile-only { width: 100%; }
   display: flex;
   justify-content: end;
-  gap: 12px;
-  margin-top: 8px;
+  gap: var(--space-3);
+  margin-top: var(--space-2);
 }
 
 .notif-error {
-  font-size: 13px;
   color: $red100;
-  margin-bottom: 12px;
+  margin-bottom: var(--space-3);
 }
 
 .notif-success {
-  font-size: 13px;
   color: $green100;
-  margin-bottom: 12px;
+  margin-bottom: var(--space-3);
 }
 
 .settings-back {
@@ -266,16 +248,14 @@
   @include mobile-only {
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: var(--space-2);
     background: none;
     border: none;
     cursor: pointer;
     font-family: $font-base;
-    font-size: 14px;
-    font-weight: 600;
     color: $primary100;
     padding: 0;
-    margin-bottom: 24px;
+    margin-bottom: var(--space-6);
 
     .material-icons-round { font-size: 20px; }
     &:hover { text-decoration: underline; }
@@ -294,21 +274,16 @@
   }
 
   .settings-section {
-    padding-bottom: 40px;
+    padding-bottom: var(--space-10);
 
     &-title {
-      font-size: 20px;
-      line-height: 28px;
-      font-weight: 700;
       color: $black;
-      margin-bottom: 8px;
+      margin-bottom: var(--space-2);
     }
 
     &-subtitle {
-      font-size: 14px;
-      line-height: 20px;
       color: $black60;
-      margin-bottom: 32px;
+      margin-bottom: var(--space-8);
     }
   }
 }
@@ -316,14 +291,14 @@
 .company-logo-field {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  margin-bottom: 24px;
+  gap: var(--space-3);
+  margin-bottom: var(--space-6);
 }
 
 .company-logo-preview {
   width: 96px;
   height: 96px;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   border: 1px solid $black20;
   background: $white60;
   display: flex;

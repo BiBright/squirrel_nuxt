@@ -36,10 +36,8 @@
                     placeholder="Insert contact phone"
                   />
                 </div>
-                <div class="form-group">
-                  <label class="label01">Country <span class="optional">(optional)</span></label>
-                  <AppSearchSelect v-model="form.country" :options="countryOptions" placeholder="Select a country" />
-                </div>
+                <AppSelectField v-model="form.country" :items="countries" value-key="name" label-key="name"
+                  label="Country" placeholder="Select a country" :optional="true" />
               </AppCard>
             </div>
 
@@ -71,9 +69,6 @@ const id = computed(() => route.params.id as string | undefined)
 const isEdit = computed(() => !!id.value && id.value !== 'create')
 
 const countries = ref<Country[]>([])
-const countryOptions = computed(() =>
-  countries.value.map(c => ({ value: c.name, label: c.name })),
-)
 
 const form = reactive({
   name: '', email: '',

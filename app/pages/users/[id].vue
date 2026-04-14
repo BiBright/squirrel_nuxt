@@ -23,7 +23,7 @@
                 <AppInput v-model="form.name" label="Name" placeholder="Insert name" :error="errors.name" />
                 <AppInput v-model="form.email" label="Email" type="email" placeholder="Insert email" :error="errors.email" />
                 <AppInput v-model="form.phone" label="Phone number" placeholder="Insert phone number" :optional="true" />
-                <AppInput v-model="form.role" label="Role" placeholder="Insert role" :optional="true" />
+                <AppSelectField v-model="form.role" :items="roleOptions" label="Role" placeholder="Select a role" :optional="true" :searchable="false" />
                 <AppInput v-model="form.job_sector" label="Job Sector" placeholder="Insert job sector" :optional="true" />
               </AppCard>
             </div>
@@ -48,7 +48,11 @@ const route = useRoute()
 const id = computed(() => route.params.id as string | undefined)
 const isEdit = computed(() => !!id.value && id.value !== 'create')
 
-const form = reactive({ name: '', email: '', phone: '', job_sector: '' })
+const form = reactive({ name: '', email: '', phone: '', job_sector: '', role: '' })
+const roleOptions = [
+  { value: 'admin', label: 'Admin' },
+  { value: 'company-user', label: 'Company User' },
+]
 const errors = reactive({ name: '', email: '' })
 const toast = useAppToast()
 const loading = ref(false)
@@ -67,6 +71,7 @@ onMounted(async () => {
   if (String(authStore.user?.id) === id.value) {
     form.name = (authStore.user?.name as string) ?? ''
     form.email = (authStore.user?.email as string) ?? ''
+    form.role = (authStore.user?.role as string) ?? ''
     loadingRecord.value = false
     nextTick(() => { _ready.value = true })
     return
@@ -79,6 +84,7 @@ onMounted(async () => {
   if (cached) {
     form.name = cached.name ?? ''
     form.email = cached.email ?? ''
+    form.role = cached.roles ?? ''
     loadingRecord.value = false
     nextTick(() => { _ready.value = true })
     return
@@ -93,6 +99,7 @@ onMounted(async () => {
     form.email = (d.email as string) ?? ''
     form.phone = (d.phone as string) ?? ''
     form.job_sector = (d.job_sector as string) ?? ''
+    form.role = (d.roles as string) ?? ''
   }
   catch (err) { toast.error(err, 'Could not load user data', { category: 'user' }) }
   finally { loadingRecord.value = false; nextTick(() => { _ready.value = true }) }
@@ -118,6 +125,7 @@ async function onSubmit() {
       email: form.email,
       phone: form.phone || null,
       job_sector: form.job_sector || null,
+      role: form.role || null,
     }
     if (isEdit.value) {
       await api(`/users/${id.value}`, { method: 'PATCH', body })

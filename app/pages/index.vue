@@ -6,7 +6,20 @@
       <template v-if="isMaster">
         <AppPageHeader title="Dashboard" />
 
-        <div v-if="loadingRequests" class="dash-state" style="padding: var(--space-8)">Loading...</div>
+        <div v-if="loadingRequests" class="skeleton-master">
+          <div class="skeleton-master__bar">
+            <AppSkeleton width="13%" height="32px" />
+            <AppSkeleton width="13%" height="32px" />
+            <AppSkeleton width="13%" height="32px" />
+            <AppSkeleton width="13%" height="32px" />
+            <AppSkeleton width="13%" height="32px" />
+          </div>
+          <div class="skeleton-master__cards">
+            <div class="skeleton-form skeleton-master__card"><AppSkeleton height="120px" /></div>
+            <div class="skeleton-form skeleton-master__card"><AppSkeleton height="120px" /></div>
+            <div class="skeleton-form skeleton-master__card"><AppSkeleton height="120px" /></div>
+          </div>
+        </div>
 
         <template v-else>
           <div class="master-bar">
@@ -105,66 +118,84 @@
         </template>
       </template>
 
-      <!-- ── Regular dashboard ── -->
       <template v-else>
-        <AppPageHeader title="Dashboard" />
-
-        <div class="dash">
-          <div class="dash__stats">
-            <div class="row">
-              <template v-if="isSupplier">
-                <div class="col-6">
-                  <div class="dash-stat">
-                    <p class="dash-stat__label">Pending</p>
-                    <p class="dash-stat__value">{{ stats.pending }}</p>
-                  </div>
-                </div>
-                <div class="col-6">
-                  <div class="dash-stat">
-                    <p class="dash-stat__label">Completed</p>
-                    <p class="dash-stat__value">{{ stats.completed }}</p>
-                  </div>
-                </div>
-              </template>
-              <template v-else>
-                <div class="col-12 col-sm-4">
-                  <div class="dash-stat">
-                    <p class="dash-stat__label">Requests</p>
-                    <p class="dash-stat__value">{{ stats.requests }}</p>
-                  </div>
-                </div>
-                <div class="col-6 col-sm-4">
-                  <div class="dash-stat">
-                    <p class="dash-stat__label">Suppliers</p>
-                    <p class="dash-stat__value">{{ stats.suppliers }}</p>
-                  </div>
-                </div>
-                <div class="col-6 col-sm-4">
-                  <div class="dash-stat">
-                    <p class="dash-stat__label">Forms</p>
-                    <p class="dash-stat__value">{{ stats.forms }}</p>
-                  </div>
-                </div>
-              </template>
+        <AppPageHeader title="Dashboard">
+          <div v-if="!isSupplier" ref="excelMenuRef" class="dash-excel-menu">
+            <button class="dash-excel-btn" @click="excelMenuOpen = !excelMenuOpen">
+              <span class="material-icons-round">more_horiz</span>
+            </button>
+            <div v-if="excelMenuOpen" class="dash-excel-dropdown">
+              <button class="dash-excel-option" disabled>
+                <span class="material-icons-round">download</span>
+                Download Excel
+              </button>
             </div>
           </div>
+        </AppPageHeader>
 
-          <div class="dash__chart">
+        <div class="dash">
+          <div class="dash__left">
+          <div v-if="!isSupplier" class="dash__stats">
             <div class="row">
-              <div class="col-6 col-sm-12">
-                <div class="dash-card">
-                  <h3 class="dash-card__title">Total request vs completed</h3>
-                  <div v-if="loadingRequests" class="dash-state">Loading...</div>
-                  <div v-else-if="stats.requests === 0" class="dash-state">No request data yet.</div>
-                  <ClientOnly v-else>
-                    <AppChartBar :labels="['Total requests', 'Completed']"
-                      :datasets="[{ label: '', data: [stats.requests, stats.completed], color: ['#367B8A', '#A0E797'] }]"
-                      :legend="false" />
-                  </ClientOnly>
+              <div class="col-12 col-sm-4">
+                <div class="dash-stat">
+                  <p class="dash-stat__label">Requests</p>
+                  <p class="dash-stat__value">{{ stats.requests }}</p>
+                </div>
+              </div>
+              <div class="col-6 col-sm-4">
+                <div class="dash-stat">
+                  <p class="dash-stat__label">Suppliers</p>
+                  <p class="dash-stat__value">{{ stats.suppliers }}</p>
+                </div>
+              </div>
+              <div class="col-6 col-sm-4">
+                <div class="dash-stat">
+                  <p class="dash-stat__label">Forms</p>
+                  <p class="dash-stat__value">{{ stats.forms }}</p>
                 </div>
               </div>
             </div>
           </div>
+
+          <div class="dash__charts">
+            <div class="dash-card">
+              <h3 class="dash-card__title">Total request vs completed</h3>
+              <AppSkeleton v-if="loadingRequests" class="skeleton-chart" />
+              <div v-else-if="stats.requests === 0" class="dash-state">No request data yet.</div>
+              <ClientOnly v-else>
+                <AppChartBar :labels="['Total requests', 'Completed']"
+                  :datasets="[{ label: '', data: [stats.requests, stats.completed], color: ['#367B8A', '#A0E797'] }]"
+                  :legend="false" />
+              </ClientOnly>
+            </div>
+
+            <div class="dash-card">
+              <h3 class="dash-card__title">Requests status</h3>
+              <AppSkeleton v-if="loadingRequests" class="skeleton-chart" />
+              <div v-else-if="stats.requests === 0" class="dash-state">No request data yet.</div>
+              <ClientOnly v-else>
+                <AppChartDonut
+                  :labels="['Awaiting answer', 'For Approval', 'Rejected', 'Complete']"
+                  :data="[stats.awaiting, stats.approval, stats.rejected, stats.completed]"
+                  :colors="['#F3DFA9', '#C5CBE4', '#E49890', '#A0E797']"
+                  cutout="0%"
+                />
+              </ClientOnly>
+            </div>
+          </div>
+
+          <div class="dash__yearly">
+            <div class="dash-card">
+              <h3 class="dash-card__title">Yearly view</h3>
+              <AppSkeleton v-if="loadingRequests || loadingGraphic" class="skeleton-chart" />
+              <div v-else-if="yearlyDatasets.every(ds => ds.data.every(v => v === 0))" class="dash-state">No data for this year yet.</div>
+              <ClientOnly v-else>
+                <AppChartLine :labels="yearlyLabels" :datasets="yearlyDatasets" />
+              </ClientOnly>
+            </div>
+          </div>
+          </div><!-- end dash__left -->
 
           <div class="dash__right">
             <div class="dash-recent">
@@ -173,7 +204,11 @@
                 <NuxtLink to="/requests" class="dash-recent__view-all">View All</NuxtLink>
               </div>
 
-              <div v-if="loadingRequests" class="dash-state" style="padding: var(--space-6)">Loading...</div>
+              <div v-if="loadingRequests" class="skeleton-recent">
+                <div class="skeleton-row"><AppSkeleton width="60%" /><AppSkeleton width="18%" /></div>
+                <div class="skeleton-row"><AppSkeleton width="50%" /><AppSkeleton width="18%" /></div>
+                <div class="skeleton-row"><AppSkeleton width="55%" /><AppSkeleton width="18%" /></div>
+              </div>
               <div v-else-if="assignedEntries.length === 0 && approvalEntries.length === 0" class="dash-state"
                 style="padding: var(--space-6)">
                 No recent requests.
@@ -252,8 +287,17 @@ interface CardStats {
   countCompleted: number
   countForms: number
   countSuppliers: number
+  countAwaiting: number
+  countApproval: number
+  countRejected: number
+}
+interface GraphicData {
+  allMonths: string[]
+  allFormsFill: number[]
+  allFormsNotFill: number[]
 }
 interface DashboardAssigned {
+  entry_id: number
   request_id: number
   editado: string
   status: string
@@ -261,6 +305,7 @@ interface DashboardAssigned {
   supplier: { id: number; name: string } | null
 }
 interface DashboardSupplierItem {
+  entry_id: number
   request_id: number
   form_name: string
   supplier_name: string
@@ -292,9 +337,14 @@ interface MasterDashboard {
 
 const requests = ref<Request[]>([])
 const cardStats = ref<CardStats | null>(null)
+const graphicData = ref<GraphicData | null>(null)
 const recentData = ref<{ assigned: DashboardAssigned[]; cleanSearchData: DashboardRecentRequest[] } | null>(null)
 const masterData = ref<MasterDashboard | null>(null)
 const loadingRequests = ref(true)
+const loadingGraphic = ref(false)
+const excelMenuOpen = ref(false)
+const excelMenuRef = ref<HTMLElement | null>(null)
+onClickOutside(excelMenuRef, () => { excelMenuOpen.value = false })
 const isMaster = computed(() => authStore.user?.roles === 'master')
 const isSupplier = computed(() => authStore.user?.roles === 'supplier')
 
@@ -313,12 +363,16 @@ onMounted(async () => {
       requests.value = Array.isArray(d) ? d : (d as { data: Request[] }).data ?? []
     }
     else {
-      const [cardRes, recentRes] = await Promise.allSettled([
+      loadingGraphic.value = true
+      const [cardRes, recentRes, graphicRes] = await Promise.allSettled([
         api<{ data: CardStats }>('/dashboard/card'),
         api<{ data: typeof recentData.value }>('/dashboard/recent-data'),
+        api<{ data: GraphicData }>('/dashboard/graphic'),
       ])
       if (cardRes.status === 'fulfilled') cardStats.value = cardRes.value.data
       if (recentRes.status === 'fulfilled') recentData.value = recentRes.value.data
+      if (graphicRes.status === 'fulfilled') graphicData.value = graphicRes.value.data
+      loadingGraphic.value = false
     }
   }
   finally {
@@ -332,10 +386,18 @@ const allSupplierEntries = computed(() =>
 
 const stats = computed(() => {
   if (isSupplier.value) {
+    const entries = allSupplierEntries.value
+    const completed = entries.filter(e => e.status.value === 'completed').length
+    const approval = entries.filter(e => e.status.value === 'pending_approval').length
+    const rejected = entries.filter(e => e.status.value === 'rejected').length
+    const awaiting = entries.length - completed - approval - rejected
     return {
-      requests: 0,
-      completed: allSupplierEntries.value.filter(e => e.status.value === 'completed').length,
-      pending: allSupplierEntries.value.filter(e => e.status.value !== 'completed').length,
+      requests: entries.length,
+      completed,
+      pending: entries.length - completed,
+      awaiting: Math.max(0, awaiting),
+      approval,
+      rejected,
       suppliers: 0,
       forms: 0,
     }
@@ -344,6 +406,9 @@ const stats = computed(() => {
     requests: cardStats.value?.countRequests ?? 0,
     completed: cardStats.value?.countCompleted ?? 0,
     pending: 0,
+    awaiting: cardStats.value?.countAwaiting ?? 0,
+    approval: cardStats.value?.countApproval ?? 0,
+    rejected: cardStats.value?.countRejected ?? 0,
     suppliers: cardStats.value?.countSuppliers ?? 0,
     forms: cardStats.value?.countForms ?? 0,
   }
@@ -373,9 +438,38 @@ const assignedEntries = computed((): FlatEntry[] => {
   }
   return (recentData.value?.cleanSearchData ?? [])
     .flatMap(r => (r.supplierlist ?? []).map(s =>
-      toFlatEntry(s.editado, r.request_id, null, s.form_name, s.supplier_name, s.estado),
+      toFlatEntry(s.editado, r.request_id, s.entry_id, s.form_name, s.supplier_name, s.estado),
     ))
     .slice(0, 6)
+})
+
+const yearlyLabels = computed<string[]>(() => {
+  if (!isSupplier.value && graphicData.value?.allMonths) return graphicData.value.allMonths
+  return ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+})
+
+const yearlyDatasets = computed(() => {
+  if (!isSupplier.value && graphicData.value) {
+    return [
+      { label: 'Filled', data: graphicData.value.allFormsFill, color: '#A0E797' },
+      { label: 'Not Filled', data: graphicData.value.allFormsNotFill, color: '#E49890' },
+    ]
+  }
+  const year = new Date().getFullYear()
+  const totalByMonth = Array(12).fill(0)
+  const completedByMonth = Array(12).fill(0)
+  allSupplierEntries.value.forEach((e) => {
+    const d = new Date(e.updated_at)
+    if (d.getFullYear() === year) {
+      const m = d.getMonth()
+      totalByMonth[m]++
+      if (e.status.value === 'completed') completedByMonth[m]++
+    }
+  })
+  return [
+    { label: 'Total Requests', data: totalByMonth, color: '#A0C4E7' },
+    { label: 'Completed', data: completedByMonth, color: '#A0E797' },
+  ]
 })
 
 const approvalEntries = computed((): FlatEntry[] => {
@@ -390,7 +484,7 @@ const approvalEntries = computed((): FlatEntry[] => {
       .slice(0, 6)
   }
   return (recentData.value?.assigned ?? []).map(e =>
-    toFlatEntry(e.editado, e.request_id, null, e.form?.name ?? '', e.supplier?.name ?? '', e.status),
+    toFlatEntry(e.editado, e.request_id, e.entry_id, e.form?.name ?? '', e.supplier?.name ?? '', e.status),
   )
 })
 </script>
@@ -402,51 +496,97 @@ const approvalEntries = computed((): FlatEntry[] => {
 
 .dash {
   display: grid;
-  grid-template-areas:
-    "stats"
-    "chart"
-    "recent";
+  grid-template-columns: 1fr 1fr;
   gap: var(--space-4);
   padding-block: var(--space-4);
 }
 
-.dash__stats {
-  grid-area: stats;
+.dash {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding-block: var(--space-4);
 }
 
-.dash__chart {
-  grid-area: chart;
+.dash__left {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
 }
 
-.dash__right {
-  grid-area: recent;
+.dash__charts {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-4);
 }
 
 @media (min-width: 1280px) {
   .dash {
-    grid-template-columns: 1fr 1fr;
-    grid-template-areas: none;
+    flex-direction: row;
     gap: var(--space-6);
   }
 
-  .dash__stats {
-    grid-column: 1;
-    grid-row: 1;
-  }
-
-  .dash__chart {
-    grid-column: 1;
-    grid-row: 2;
+  .dash__left {
+    flex: 1;
+    gap: var(--space-6);
   }
 
   .dash__right {
-    grid-column: 2;
-    grid-row: 1 / span 2;
+    flex: 1;
   }
 
-  .dash-recent {
-    height: 100%;
-  }
+  .dash__charts { gap: var(--space-6); }
+}
+
+.dash-excel-menu {
+  position: relative;
+}
+
+.dash-excel-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  cursor: pointer;
+  color: var(--color-text);
+  transition: border-color 0.15s;
+
+  &:hover { border-color: var(--color-primary); }
+  .material-icons-round { font-size: 20px; }
+}
+
+.dash-excel-dropdown {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 4px);
+  z-index: 50;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  min-width: 180px;
+  overflow: hidden;
+}
+
+.dash-excel-option {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  width: 100%;
+  padding: 10px var(--space-3);
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+  background: none;
+  border: none;
+  cursor: not-allowed;
+  opacity: 0.6;
+  text-align: left;
+
+  .material-icons-round { font-size: 18px; }
 }
 
 .dash-stat {

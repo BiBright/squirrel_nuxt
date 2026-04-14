@@ -76,12 +76,8 @@
               <p class="create-section__title title04">Company location</p>
               <div class="row">
                 <div class="col-6">
-                  <AppInput
-                    v-model="form.country"
-                    label="Country"
-                    placeholder="Insert country"
-                    :error="errors.country"
-                  />
+                  <AppSelectField v-model="form.country" :items="countries" value-key="name" label-key="name"
+                    label="Country" placeholder="Select a country" :error="errors.country" />
                 </div>
                 <div class="col-6">
                   <AppInput
@@ -124,6 +120,13 @@
 <script setup lang="ts">
 definePageMeta({ middleware: 'auth' })
 
+interface Country {
+  id: number
+  name: string
+  iso_code: string
+  phone_prefix: string
+}
+
 interface Plan {
   id: number
   name: string
@@ -144,6 +147,8 @@ interface Company {
 const route = useRoute()
 const id = route.params.id as string
 const isEdit = computed(() => id !== 'new')
+
+const countries = ref<Country[]>([])
 
 const plans = ref<Plan[]>([])
 const planOptions = computed(() => [
@@ -197,6 +202,8 @@ const { isDirty, showModal, confirmLeave, cancelLeave } = useUnsavedChanges()
 
 onMounted(async () => {
   const api = useApi()
+
+  api<{ data: Country[] }>('/countries').then(res => { countries.value = res.data })
 
   try {
     if (isEdit.value) {
@@ -302,84 +309,3 @@ async function onSubmit() {
   }
 }
 </script>
-
-<style scoped>
-.company-status-row {
-  border: 1px solid var(--color-white20);
-  padding: var(--space-5);
-  border-radius: var(--space-1);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-6);
-  margin-bottom: var(--space-2);
-}
-
-.company-status-left {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-}
-
-.company-status-title {
-  margin: 0;
-}
-
-.company-status-hint {
-  font-size: var(--text-sm);
-  color: var(--color-text-muted);
-  margin-bottom: var(--space-8);
-}
-
-.company-plan-hint {
-  font-size: var(--text-sm);
-  color: var(--color-text-muted);
-  margin-bottom: var(--space-3);
-}
-
-.create-section {
-  margin-bottom: var(--space-8);
-}
-
-.create-section__title {
-  color: var(--color-text);
-  margin-bottom: var(--space-4);
-}
-
-.create-columns {
-  margin-bottom: var(--space-4);
-}
-
-.logo-uploaded {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  margin-top: var(--space-2);
-}
-
-.logo-preview {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  object-fit: cover;
-  flex-shrink: 0;
-}
-
-.logo-filename {
-  font-size: var(--text-xs);
-  color: var(--color-text-muted);
-}
-
-.create-field-error {
-  font-size: var(--text-sm);
-  color: var(--color-danger);
-  margin-top: var(--space-1);
-}
-
-.create-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: var(--space-3);
-  padding-bottom: var(--space-8);
-}
-</style>

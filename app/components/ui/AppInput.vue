@@ -54,8 +54,8 @@
       v-bind="$attrs"
     />
 
-    <span v-if="error" class="input-error-msg">{{ error }}</span>
-    <span v-else-if="success" class="input-success-msg">{{ success }}</span>
+    <span v-if="error" class="input-error-msg caption3">{{ error }}</span>
+    <span v-else-if="success" class="input-success-msg caption3">{{ success }}</span>
   </div>
 </template>
 

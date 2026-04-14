@@ -9,20 +9,20 @@
         <AppPageHeader title="Requests" />
 
         <AppListToolbar v-if="!isSupplier" v-model:search="search" v-model:sort="sort" :view="'list'" hide-view-toggle label="request"
-          add-label="New Request" :total-count="filtered.length" :selected-count="selectedCount" @add="onAdd"
-          @delete="onDelete" />
+          add-label="New Request" inactive-to="/requests/inactive" @add="onAdd" />
 
-        <div v-if="loading" class="list-container">
-          <div class="list-empty">
-            <span class="material-icons-round">hourglass_empty</span>
-            <p>Loading requests...</p>
-          </div>
+        <div v-if="loading" class="skeleton-rows">
+          <div class="skeleton-row"><AppSkeleton width="45%" height="18px" /><AppSkeleton width="8%" height="18px" /></div>
+          <div class="skeleton-row"><AppSkeleton width="38%" height="18px" /><AppSkeleton width="8%" height="18px" /></div>
+          <div class="skeleton-row"><AppSkeleton width="52%" height="18px" /><AppSkeleton width="8%" height="18px" /></div>
+          <div class="skeleton-row"><AppSkeleton width="33%" height="18px" /><AppSkeleton width="8%" height="18px" /></div>
+          <div class="skeleton-row"><AppSkeleton width="42%" height="18px" /><AppSkeleton width="8%" height="18px" /></div>
         </div>
 
         <template v-else-if="isSupplier">
           <div v-if="filteredSupplierEntries.length === 0" class="list-empty">
             <span class="material-icons-round">inbox</span>
-            <p>No requests assigned to you.</p>
+            <p class="cta1">No requests assigned to you.</p>
           </div>
           <div v-else class="supplier-list">
             <NuxtLink
@@ -33,8 +33,8 @@
             >
               <div class="supplier-entry__main">
                 <p class="supplier-entry__name">{{ entry.formName }}</p>
-                <p class="supplier-entry__date">{{ entry.date }}</p>
               </div>
+              <p class="supplier-entry__date">{{ entry.date }}</p>
               <AppBadge :variant="entry.statusVariant">{{ entry.statusLabel }}</AppBadge>
             </NuxtLink>
           </div>
@@ -50,8 +50,7 @@
           </AppBlankState>
 
           <RequestsTable v-else :requests="filtered" :users="users" :loading-users="loadingUsers" @assign="onAssign"
-            @remove="onRemove" @bulk-assign="onBulkAssign" @bulk-remove="onBulkRemove"
-            @selection-change="onSelectionChange" />
+            @remove="onRemove" @bulk-assign="onBulkAssign" @bulk-remove="onBulkRemove" />
         </template>
       </div>
 
@@ -134,8 +133,6 @@ const loadingUsers = ref(false)
 const search = ref('')
 const sort = ref('recent')
 const view = ref<'list' | 'grid'>('list')
-const selectedCount = ref(0)
-const selectedEntryIds = ref<number[]>([])
 const activeFilters = ref({ status: [] as string[], forms: [] as string[], suppliers: [] as string[], assigned: [] as string[] })
 
 onMounted(async () => {
@@ -147,7 +144,7 @@ onMounted(async () => {
       const d = res.data as Record<string, unknown>
       console.log(d);
       const items: unknown[] = Array.isArray(d) ? d : ((d.data as unknown[]) ?? [])
-      supplierRequests.value = (items as Record<string, unknown>[]).map(req => ({
+      supplierRequests.value = (items as Record<string, unknown>[]).filter(req => req.is_active !== false).map(req => ({
         request_id: req.id as number,
         title: (req.title as string | null) ?? null,
         company: (req.company as Record<string, unknown>)?.name as string ?? '',
@@ -258,10 +255,6 @@ const blankState = useBlankState(filtered, search, {
   message: 'Create your first request to get started.',
 })
 
-function onSelectionChange(entryIds: number[]) {
-  selectedEntryIds.value = entryIds
-  selectedCount.value = entryIds.length
-}
 
 async function onAssign(req: Request, user: User) {
   try {
@@ -289,16 +282,16 @@ async function onAssign(req: Request, user: User) {
 async function onRemove(req: Request) {
   try {
     const api = useApi()
-    await api(`/requests/${req.id}`, { method: 'DELETE' })
+    await api(`/requests/${req.id}/toggle-active`, { method: 'PATCH' })
     requests.value = requests.value.filter(r => r.id !== req.id)
-    toast.success('Request removed', { category: 'request' })
+    toast.success('Request deactivated', { category: 'request' })
+    await navigateTo('/requests/inactive')
   }
-  catch (err) { toast.error(err, 'Failed to remove request', { category: 'request' }) }
+  catch (err) { toast.error(err, 'Failed to deactivate request', { category: 'request' }) }
 }
 
 function onFilterChange(f: typeof activeFilters.value) { activeFilters.value = f }
 function onAdd() { navigateTo('/requests/create') }
-function onDelete() { selectedCount.value = 0 }
 
 async function onBulkAssign(entryIds: number[], user: User) {
   try {
@@ -349,13 +342,13 @@ async function onBulkRemove(entryIds: number[]) {
   try {
     const api = useApi()
     await Promise.all(affectedReqs.map(r =>
-      api(`/requests/${r.id}`, { method: 'DELETE' }),
+      api(`/requests/${r.id}/toggle-active`, { method: 'PATCH' }),
     ))
     const removedIds = new Set(affectedReqs.map(r => r.id))
     requests.value = requests.value.filter(r => !removedIds.has(r.id))
-    toast.success(`${affectedReqs.length} request${affectedReqs.length !== 1 ? 's' : ''} removed`, { category: 'request' })
+    toast.success(`${affectedReqs.length} request${affectedReqs.length !== 1 ? 's' : ''} deactivated`, { category: 'request' })
   }
-  catch (err) { toast.error(err, 'Failed to remove requests', { category: 'request' }) }
+  catch (err) { toast.error(err, 'Failed to deactivate requests', { category: 'request' }) }
 }
 
 function displayTitle(req: Request): string {
@@ -399,9 +392,10 @@ function displayTitle(req: Request): string {
 }
 
 .supplier-entry__date {
-  font-size: var(--text-base);
-  color: var(--color-text);
-  margin-top: 2px;
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+  flex-shrink: 0;
+  text-align: center;
 }
 
 </style>

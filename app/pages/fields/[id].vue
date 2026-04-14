@@ -39,7 +39,7 @@
             <AppCard>
               <div class="form-group">
                 <label class="label01">Type</label>
-                <p v-if="errors.type" class="input-error-msg">{{ errors.type }}</p>
+                <p v-if="errors.type" class="input-error-msg caption3">{{ errors.type }}</p>
                 <div class="field-type-grid">
                   <label
                     v-for="t in FIELD_TYPES"

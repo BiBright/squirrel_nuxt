@@ -1,109 +1,124 @@
 $primary100: #4763e2;
-$primary75:  #7388e7;
-$primary50:  #c5cbe4;
-$primary25:  #e9ecf7;
+$primary75: #7388e7;
+$primary50: #c5cbe4;
+$primary25: #e9ecf7;
 
-$black:   #202020;
+$black: #202020;
 $black80: #646464;
 $black60: #9b9b9b;
 $black40: #bfbfbf;
 $black20: #d2d2d2;
 
-$white:   #ffffff;
+$white: #ffffff;
 $white80: #f9f9f9;
 $white60: #efefef;
 $white40: #ededed;
 $white20: #dadada;
 
 $red100: #d03827;
-$red75:  #da685b;
-$red50:  #e4988f;
-$red25:  #efc9c4;
+$red75: #da685b;
+$red50: #e4988f;
+$red25: #efc9c4;
 
 $yellow100: #edc55a;
-$yellow75:  #efd181;
-$yellow50:  #f3dfa9;
-$yellow25:  #f7edd1;
+$yellow75: #efd181;
+$yellow50: #f3dfa9;
+$yellow25: #f7edd1;
 
 $green100: #49d637;
-$green75:  #74de67;
-$green50:  #a0e797;
-$green25:  #cdf1c8;
+$green75: #74de67;
+$green50: #a0e797;
+$green25: #cdf1c8;
 
 $modal-overlay: rgba(155, 155, 155, 0.24);
 
-$mobile:      360px;
-$tablet:      768px;
-$desktop:     1280px;
+$mobile: 360px;
+$tablet: 768px;
+$desktop: 1280px;
 $desktop-l: 1536px;
 $desktop-xl: 1920px;
 
-$font-base: 'Lato', sans-serif;
+$font-base: "Lato", sans-serif;
 
 $sidebar-width: 216px;
 $sidebar-width-xxl: 324px;
 $header-height: 108px;
 
 :root {
-  --color-primary:        #{$primary100};
-  --color-primary-75:     #{$primary75};
-  --color-primary-50:     #{$primary50};
-  --color-primary-25:     #{$primary25};
+  --color-primary: #{$primary100};
+  --color-primary-75: #{$primary75};
+  --color-primary-50: #{$primary50};
+  --color-primary-25: #{$primary25};
   --color-primary-subtle: #{$primary25};
 
-  --color-black:   #{$black};
+  --color-black: #{$black};
   --color-black80: #{$black80};
   --color-black60: #{$black60};
   --color-black40: #{$black40};
   --color-black20: #{$black20};
 
-  --color-white:   #{$white};
+  --color-white: #{$white};
   --color-white80: #{$white80};
   --color-white60: #{$white60};
   --color-white40: #{$white40};
   --color-white20: #{$white20};
 
-  --color-red:    #{$red100};
+  --color-red: #{$red100};
   --color-red-75: #{$red75};
   --color-red-25: #{$red25};
-  --color-green:  #{$green100};
+  --color-green: #{$green100};
   --color-green-75: #{$green75};
   --color-green-25: #{$green25};
-  --color-yellow:    #{$yellow100};
+  --color-yellow: #{$yellow100};
   --color-yellow-50: #{$yellow50};
   --color-yellow-25: #{$yellow25};
 
-  // ── Semantic surface / text / border ──────────────
-  --color-surface:        #{$white};
-  --color-surface-raised: #{$white80};
-  --color-surface-hover:  #{$white60};
-  --color-border:         #{$black20};
-  --color-text:           #{$black};
-  --color-text-muted:     #{$black60};
 
-  // ── Danger ────────────────────────────────────────
-  --color-danger:        #{$red100};
+  --color-surface: #{$white};
+  --color-surface-raised: #{$white80};
+  --color-surface-hover: #{$white60};
+  --color-border: #{$black20};
+  --color-text: #{$black};
+  --color-text-muted: #{$black60};
+
+
+  --color-danger: #{$red100};
   --color-danger-subtle: #{$red25};
 
-  // ── Spacing (4 px base) ───────────────────────────
-  --space-1:  4px;
-  --space-2:  8px;
-  --space-3:  12px;
-  --space-4:  16px;
-  --space-5:  20px;
-  --space-6:  24px;
-  --space-8:  32px;
+
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-7: 28px;
+  --space-8: 32px;
+  --space-9: 36px;
   --space-10: 40px;
+  --space-11: 44px;
   --space-12: 48px;
+  --space-13: 56px;
+  --space-14: 80px;
+  --space-15: 64px;
+  --space-16: 72px;
+  --space-17: 88px;
+  --space-18: 96px;
+  --space-19: 104px;
+  --space-20: 112px;
+  --space-21: 120px;
 
-  // ── Typography ────────────────────────────────────
-  --text-xs:   12px;
-  --text-sm:   14px;
+
+
+  --text-xs: 12px;
+  --text-sm: 14px;
   --text-base: 16px;
-  --text-lg:   18px;
-  --text-xl:   20px;
+  --text-lg: 18px;
+  --text-xl: 20px;
 
-  // ── Border radius ─────────────────────────────────
+
+  
   --radius-sm: 4px;
   --radius-md: 8px;
   --radius-lg: 8px;

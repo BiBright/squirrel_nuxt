@@ -99,6 +99,48 @@
   font-weight: 700;
 }
 
+// ── Form labels ───────────────────────────────────
+.label01 {
+  font-size: 16px;
+  line-height: 20px;
+  color: $black80;
+  font-weight: 700;
+  margin-bottom: var(--space-3);
+  display: flex;
+  align-items: center;
+
+  @include desktop-up { font-size: 18px; }
+
+  .optional {
+    color: $black60;
+    font-weight: 400;
+    font-size: 14px;
+    padding-left: var(--space-1);
+    text-transform: lowercase;
+  }
+}
+
+.label02 {
+  font-size: 14px;
+  line-height: 16px;
+  color: $black80;
+  font-weight: 400;
+
+  @include desktop-up { font-size: 16px; line-height: 24px; }
+}
+
+.label03 {
+  font-size: 16px;
+  line-height: 20px;
+  color: $black80;
+  font-weight: 700;
+  margin-bottom: var(--space-4);
+  display: flex;
+  align-items: center;
+
+  @include desktop-up { font-size: 18px; }
+}
+
 .text-primary {
   color: $primary100;
 }

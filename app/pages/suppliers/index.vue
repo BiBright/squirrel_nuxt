@@ -11,16 +11,17 @@
 
         <div class="col-12">
           <AppListToolbar v-model:search="search" v-model:sort="sort" v-model:view="view" label="supplier"
-            add-label="New Supplier" :total-count="filtered.length" :selected-count="selectedCount"
-            @add="navigateTo('/suppliers/create')" @delete="onDelete" />
+            add-label="New Supplier" inactive-to="/suppliers/inactive"
+            @add="navigateTo('/suppliers/create')" />
         </div>
 
         <div class="col-12">
-          <div v-if="loading" class="list-container">
-            <div class="list-empty">
-              <span class="material-icons-round">hourglass_empty</span>
-              <p>Loading suppliers...</p>
-            </div>
+          <div v-if="loading" class="skeleton-rows">
+            <div class="skeleton-row"><AppSkeleton width="45%" /><AppSkeleton width="30%" /><AppSkeleton width="15%" /></div>
+            <div class="skeleton-row"><AppSkeleton width="35%" /><AppSkeleton width="40%" /><AppSkeleton width="15%" /></div>
+            <div class="skeleton-row"><AppSkeleton width="50%" /><AppSkeleton width="25%" /><AppSkeleton width="15%" /></div>
+            <div class="skeleton-row"><AppSkeleton width="30%" /><AppSkeleton width="35%" /><AppSkeleton width="15%" /></div>
+            <div class="skeleton-row"><AppSkeleton width="40%" /><AppSkeleton width="28%" /><AppSkeleton width="15%" /></div>
           </div>
 
           <AppBlankState v-else-if="blankState.show.value" :image="blankState.image.value"
@@ -32,10 +33,10 @@
           </AppBlankState>
 
           <template v-else-if="effectiveView === 'list'">
-            <AppTable :columns="columns" :rows="tableRows" button-edit :button-delete="true"
-              @edit="(row) => navigateTo(`/suppliers/${row._raw.id}`)" @delete="onDeleteRow" @select="onSelect">
+            <AppTable :columns="columns" :rows="tableRows" button-edit button-deactivate
+              @edit="(row) => navigateTo(`/suppliers/${row._raw.id}`)" @deactivate="onDeleteRow">
               <template #cell-name="{ value, row }">
-                <NuxtLink :to="`/suppliers/${row._raw.id}`" class="app-table__cell-link">{{ value }}</NuxtLink>
+                <NuxtLink :to="`/suppliers/${row._raw.id}`" class="app-table__cell-link subheading-1">{{ value }}</NuxtLink>
               </template>
 
               <template #cell-contact="{ row }">
@@ -59,19 +60,21 @@
             <div class="list-mosaic">
               <div v-for="supplier in filtered" :key="supplier.id" class="list-card">
                 <div class="list-card__header">
-                  <NuxtLink :to="`/suppliers/${supplier.id}`" class="list-card__title">{{ supplier.name }}</NuxtLink>
+                  <NuxtLink :to="`/suppliers/${supplier.id}`" class="list-card__title cta2">{{ supplier.name }}</NuxtLink>
+                  <button class="list-card__delete" type="button" @click.prevent="onDeleteRow({ _raw: supplier }, 0)">
+                    <span class="material-icons-round">delete_outline</span>
+                  </button>
                 </div>
                 <div class="list-card__meta">
-                  <div v-if="supplier.supplier_number" class="list-card__meta-row">
+                  <div v-if="supplier.supplier_number" class="list-card__meta-row caption3">
                     <span class="material-icons-round">phone</span>
                     {{ supplier.supplier_number }}
                   </div>
-                  <div class="list-card__meta-row">
+                  <div class="list-card__meta-row caption3">
                     <span class="material-icons-round">email</span>
                     {{ supplier.email }}
                   </div>
                 </div>
-                
               </div>
             </div>
           </template>
@@ -122,7 +125,7 @@ interface PaginatedResponse<T> {
 const toast = useAppToast()
 const suppliers = ref<Supplier[]>([])
 const loading = ref(true)
-const { search, sort, view, selectedCount, onSelect, onDelete } = useListToolbar()
+const { search, sort, view } = useListToolbar()
 const isMobile = ref(false)
 onMounted(() => {
   const mq = window.matchMedia('(max-width: 767px)')
@@ -138,7 +141,7 @@ async function fetchData() {
     const api = useApi()
     const res = await api<{ data: Supplier[] | PaginatedResponse<Supplier> }>(`/suppliers?page=${page.value}`)
     const d = res.data
-    console.log(d);
+    console.log('here the suppliers list:' , d);
     if (Array.isArray(d)) { suppliers.value = d }
     else { suppliers.value = d.data; setMeta(d.meta) }
   }
@@ -188,12 +191,12 @@ async function onDeleteRow(row: Record<string, unknown>, _idx: number) {
   const supplier = row._raw as Supplier
   try {
     const api = useApi()
-    await api(`/suppliers/${supplier.id}`, { method: 'DELETE' })
-    suppliers.value = suppliers.value.filter(s => s.id !== supplier.id)
-    toast.success('Supplier deleted', { category: 'supplier' })
+    await api(`/suppliers/${supplier.id}/toggle-active`, { method: 'PATCH' })
+    toast.success('Supplier deactivated', { category: 'supplier' })
+    await navigateTo('/suppliers/inactive')
   }
   catch (err) {
-    toast.error(err, 'Could not delete supplier', { category: 'supplier' })
+    toast.error(err, 'Could not deactivate supplier', { category: 'supplier' })
   }
 }
 

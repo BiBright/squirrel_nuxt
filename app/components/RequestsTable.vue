@@ -1,7 +1,7 @@
 <template>
   <div class="request-table">
 
-    <div v-if="requests.length === 0" class="request-table__empty">
+    <div v-if="flatItems.length === 0" class="request-table__empty">
       <span class="material-icons-round">inbox</span>
       <p>No requests found.</p>
     </div>
@@ -47,14 +47,14 @@
               </div>
             </div>
 
-            <button class="request-table__more-item request-table__more-item--expandable"
+            <button v-if="!inactive" class="request-table__more-item request-table__more-item--expandable"
               @click="groupMenuSection = groupMenuSection === 'assign' ? 'none' : 'assign'">
               <span class="material-icons-round">person</span>
               Assignee User
               <span class="material-icons-round request-table__more-chevron">{{ groupMenuSection === 'assign' ? 'expand_less' :
                 'expand_more' }}</span>
             </button>
-            <div v-if="groupMenuSection === 'assign'" class="request-table__assignee-list">
+            <div v-if="!inactive && groupMenuSection === 'assign'" class="request-table__assignee-list">
               <div v-if="loadingUsers" class="request-table__assignee-loading">Loading users...</div>
               <button v-for="user in users" :key="user.id" class="request-table__assignee-option"
                 :class="{ 'is-selected': form.assigned_to?.id === user.id }" @click="emit('bulkAssign', selectedInGroup(form), user); closeMenu()">
@@ -64,9 +64,19 @@
               </button>
             </div>
 
-            <button class="request-table__more-item request-table__more-item--danger" @click="emit('remove', req); closeMenu()">
-              <span class="material-icons-round">delete</span>
-              Remove request
+            <template v-if="inactive">
+              <button class="request-table__more-item request-table__more-item--expandable" @click="emit('activate', req); closeMenu()">
+                <span class="material-icons-round">toggle_on</span>
+                Activate request
+              </button>
+              <button class="request-table__more-item request-table__more-item--danger" @click="emit('delete', req); closeMenu()">
+                <span class="material-icons-round">delete</span>
+                Delete request
+              </button>
+            </template>
+            <button v-else class="request-table__more-item request-table__more-item--danger" @click="emit('remove', req); closeMenu()">
+              <span class="material-icons-round">toggle_off</span>
+              Deactivate request
             </button>
 
           </div>
@@ -122,13 +132,13 @@
                       </div>
                     </div>
 
-                    <button class="request-table__more-item request-table__more-item--expandable" @click="toggleEntrySection('bulk-assign')">
+                    <button v-if="!inactive" class="request-table__more-item request-table__more-item--expandable" @click="toggleEntrySection('bulk-assign')">
                       <span class="material-icons-round">person</span>
                       Assignee User
                       <span class="material-icons-round request-table__more-chevron">{{ entryMenuSection === 'bulk-assign' ?
                         'expand_less' : 'expand_more' }}</span>
                     </button>
-                    <div v-if="entryMenuSection === 'bulk-assign'" class="request-table__assignee-list">
+                    <div v-if="!inactive && entryMenuSection === 'bulk-assign'" class="request-table__assignee-list">
                       <div v-if="loadingUsers" class="request-table__assignee-loading">Loading users...</div>
                       <button v-for="user in users" :key="user.id" class="request-table__assignee-option"
                         @click="emit('bulkAssign', [...selectedEntries], user); closeEntryMenu()">
@@ -136,29 +146,41 @@
                       </button>
                     </div>
 
-                    <button class="request-table__more-item request-table__more-item--danger"
+                    <template v-if="inactive">
+                      <button class="request-table__more-item request-table__more-item--expandable"
+                        @click="emit('bulkActivate', [...selectedEntries]); closeEntryMenu()">
+                        <span class="material-icons-round">toggle_on</span>
+                        Activate requests
+                      </button>
+                      <button class="request-table__more-item request-table__more-item--danger"
+                        @click="emit('bulkDelete', [...selectedEntries]); closeEntryMenu()">
+                        <span class="material-icons-round">delete</span>
+                        Delete requests
+                      </button>
+                    </template>
+                    <button v-else class="request-table__more-item request-table__more-item--danger"
                       @click="emit('bulkRemove', [...selectedEntries]); closeEntryMenu()">
-                      <span class="material-icons-round">delete</span>
-                      Remove requests
+                      <span class="material-icons-round">toggle_off</span>
+                      Deactivate requests
                     </button>
 
                     <div class="request-table__more-item request-table__more-item--section">This Request</div>
                   </template>
 
-                  <NuxtLink :to="`/requests/${req.id}/entries/${entry.id}`" class="request-table__more-item request-table__more-item--link"
+                  <NuxtLink :to="`/requests/${req.id}/entries/${entry.id}${inactive ? '?inactive=1' : ''}`" class="request-table__more-item request-table__more-item--link"
                     @click="closeEntryMenu()">
                     <span class="material-icons-round">edit</span>
                     Edit Request
                   </NuxtLink>
 
-                  <button class="request-table__more-item request-table__more-item--expandable" @click="toggleEntrySection('single-assign')">
+                  <button v-if="!inactive" class="request-table__more-item request-table__more-item--expandable" @click="toggleEntrySection('single-assign')">
                     <span class="material-icons-round">person</span>
                     Assignee User
                     <span class="material-icons-round request-table__more-chevron">{{ entryMenuSection === 'single-assign' ?
                       'expand_less' :
                       'expand_more' }}</span>
                   </button>
-                  <div v-if="entryMenuSection === 'single-assign'" class="request-table__assignee-list">
+                  <div v-if="!inactive && entryMenuSection === 'single-assign'" class="request-table__assignee-list">
                     <div v-if="loadingUsers" class="request-table__assignee-loading">Loading users...</div>
                     <button v-for="user in users" :key="user.id" class="request-table__assignee-option"
                       :class="{ 'is-selected': form.assigned_to?.id === user.id }"
@@ -169,9 +191,19 @@
                     </button>
                   </div>
 
-                  <button class="request-table__more-item request-table__more-item--danger" @click="emit('remove', req); closeEntryMenu()">
-                    <span class="material-icons-round">delete</span>
-                    Remove request
+                  <template v-if="inactive">
+                    <button class="request-table__more-item request-table__more-item--expandable" @click="emit('activate', req); closeEntryMenu()">
+                      <span class="material-icons-round">toggle_on</span>
+                      Activate request
+                    </button>
+                    <button class="request-table__more-item request-table__more-item--danger" @click="emit('delete', req); closeEntryMenu()">
+                      <span class="material-icons-round">delete</span>
+                      Delete request
+                    </button>
+                  </template>
+                  <button v-else class="request-table__more-item request-table__more-item--danger" @click="emit('remove', req); closeEntryMenu()">
+                    <span class="material-icons-round">toggle_off</span>
+                    Deactivate request
                   </button>
 
                 </div>
@@ -222,14 +254,19 @@ const props = defineProps<{
   requests: Request[]
   users: User[]
   loadingUsers?: boolean
+  inactive?: boolean
 }>()
 
 const emit = defineEmits<{
   assign: [request: Request, user: User]
   remove: [request: Request]
+  activate: [request: Request]
+  delete: [request: Request]
   selectionChange: [entryIds: number[]]
   bulkAssign: [entryIds: number[], user: User]
   bulkRemove: [entryIds: number[]]
+  bulkActivate: [entryIds: number[]]
+  bulkDelete: [entryIds: number[]]
 }>()
 
 useEventListener('click', () => { closeMenu(); closeEntryMenu() })

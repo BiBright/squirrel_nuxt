@@ -8,12 +8,12 @@
 .list-toolbar {
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin-bottom: 20px;
+  gap: var(--space-3);
+  margin-bottom: var(--space-5);
   flex-wrap: wrap;
 
   @include desktop-up {
-    margin-bottom: 24px;
+    margin-bottom: var(--space-6);
     flex-wrap: nowrap;
   }
 
@@ -27,14 +27,14 @@
   }
 
   &__sort {
-    gap: 12px;
+    gap: var(--space-3);
     display: flex;
   }
 
   &__actions {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: var(--space-2);
     margin-left: auto;
     flex-shrink: 0;
   }
@@ -42,7 +42,7 @@
   &__count {
     white-space: nowrap;
     display: none;
-    padding-right: 4px;
+    padding-right: var(--space-1);
 
     @include desktop-up {
       display: block;
@@ -51,7 +51,7 @@
 
   &__view-toggle {
     display: none;
-    gap: 4px;
+    gap: var(--space-1);
 
     @include tablet-up { display: flex; }
   }

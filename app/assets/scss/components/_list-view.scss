@@ -5,7 +5,6 @@
 // List View — shared row/card styles
 // ================================
 
-// Outer container (list mode)
 .list-container {
   background: $white;
   border: 1px solid $white20;
@@ -13,69 +12,20 @@
   overflow: hidden;
 }
 
-// Column header row
-.list-header {
-  display: grid;
-  padding: 10px 20px;
-  background: $white80;
-  border-bottom: 1px solid $white20;
-  color: $black60;
-  font-size: 11px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.6px;
-  user-select: none;
-}
-
-// Individual row
 .list-row {
   display: grid;
-  padding: 14px 20px;
+  padding: 14px var(--space-5);
   border-bottom: 1px solid $white60;
   align-items: center;
   transition: background-color 0.2s;
   cursor: pointer;
 
-  &:last-child {
-    border-bottom: none;
-  }
-
-  &:hover {
-    background: $white80;
-  }
+  &:last-child { border-bottom: none; }
+  &:hover { background: $white80; }
 
   &--selected {
     background: $primary25;
-
-    &:hover {
-      background: $primary25;
-    }
-  }
-}
-
-// Title + subtitle cell
-.list-col-title {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  min-width: 0;
-
-  &__name {
-    font-size: 14px;
-    font-weight: 700;
-    color: $black;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-
-    @include desktop-up {
-      font-size: 15px;
-    }
-  }
-
-  &__sub {
-    font-size: 12px;
-    color: $black60;
+    &:hover { background: $primary25; }
   }
 }
 
@@ -116,9 +66,7 @@
       color: $black;
     }
 
-    .material-icons-round {
-      font-size: 20px;
-    }
+    .material-icons-round { font-size: 20px; }
   }
 }
 
@@ -129,15 +77,13 @@
 .list-mosaic {
   display: flex;
   flex-wrap: wrap;
-  gap: 16px;
+  gap: var(--space-4);
 }
 
 .list-mosaic > .list-card {
   width: 100%;
 
-  @media (min-width: $tablet) {
-    width: calc(50% - 8px);
-  }
+  @include tablet-up { width: calc(50% - 8px); }
 
   @media (min-width: $desktop-xl) {
     width: calc(33.333% - 10.667px);
@@ -147,33 +93,25 @@
 .list-card {
   background: $white;
   border-radius: 12px;
-  padding: 16px 20px;
+  padding: var(--space-4) var(--space-5);
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: var(--space-3);
   cursor: pointer;
   transition: box-shadow 0.2s;
 
-  &:hover {
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
-  }
+  &:hover { box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08); }
 
   &__header {
     display: flex;
     align-items: flex-start;
     justify-content: space-between;
-    gap: 8px;
+    gap: var(--space-2);
   }
 
   &__title {
-    font-size: 14px;
-    font-weight: 700;
     color: $black;
     line-height: 1.4;
-
-    @include desktop-up {
-      font-size: 15px;
-    }
   }
 
   &__meta {
@@ -186,7 +124,6 @@
     display: flex;
     align-items: center;
     gap: 6px;
-    font-size: 12px;
     color: $black60;
     line-height: 1.3;
 
@@ -196,12 +133,33 @@
     }
   }
 
+  &__delete {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--color-text-muted);
+    padding: 2px;
+    border-radius: var(--radius-sm);
+    transition: color 0.15s, background 0.15s;
+
+    .material-icons-round { font-size: 18px; }
+
+    &:hover {
+      color: var(--color-danger);
+      background: rgba(var(--color-danger-rgb, 220, 38, 38), 0.08);
+    }
+  }
+
   &__footer {
     display: flex;
     align-items: center;
     justify-content: space-between;
     margin-top: auto;
-    padding-top: 12px;
+    padding-top: var(--space-3);
   }
 }
 
@@ -211,9 +169,6 @@
 
 .app-table__cell-link {
   display: block;
-  font-size: 16px;
-  line-height: 24px;
-  font-weight: 700;
   color: var(--color-primary);
   text-decoration: none;
   overflow: hidden;
@@ -224,29 +179,18 @@
   &:hover { color: var(--color-primary-75); }
 }
 
-.app-table__cell-sub {
-  display: block;
-  font-size: var(--text-xs);
-  color: var(--color-text-muted);
-  margin-top: 2px;
-}
+// ================================
+// Empty state
+// ================================
 
 .list-empty {
-  padding: 48px 20px;
+  padding: var(--space-12) var(--space-5);
   text-align: center;
   color: $black60;
 
   .material-icons-round {
     font-size: 40px;
-    margin-bottom: 12px;
+    margin-bottom: var(--space-3);
     color: $black40;
-  }
-
-  p {
-    font-size: 14px;
-
-    @include desktop-up {
-      font-size: 16px;
-    }
   }
 }

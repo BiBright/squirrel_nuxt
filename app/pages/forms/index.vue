@@ -11,16 +11,17 @@
 
         <div class="col-12">
           <AppListToolbar v-model:search="search" v-model:sort="sort" v-model:view="view" label="form"
-            add-label="New Form" :total-count="filtered.length" :selected-count="selectedCount"
-            @add="navigateTo('/forms/create')" @delete="onDelete" />
+            add-label="New Form" inactive-to="/forms/inactive"
+            @add="navigateTo('/forms/create')" />
         </div>
 
         <div class="col-12">
-          <div v-if="loading" class="list-container">
-            <div class="list-empty">
-              <span class="material-icons-round">hourglass_empty</span>
-              <p>Loading forms...</p>
-            </div>
+          <div v-if="loading" class="skeleton-rows">
+            <div class="skeleton-row"><AppSkeleton width="45%" /><AppSkeleton width="30%" /><AppSkeleton width="15%" /></div>
+            <div class="skeleton-row"><AppSkeleton width="35%" /><AppSkeleton width="40%" /><AppSkeleton width="15%" /></div>
+            <div class="skeleton-row"><AppSkeleton width="50%" /><AppSkeleton width="25%" /><AppSkeleton width="15%" /></div>
+            <div class="skeleton-row"><AppSkeleton width="30%" /><AppSkeleton width="35%" /><AppSkeleton width="15%" /></div>
+            <div class="skeleton-row"><AppSkeleton width="40%" /><AppSkeleton width="28%" /><AppSkeleton width="15%" /></div>
           </div>
 
           <AppBlankState v-else-if="blankState.show.value" :image="blankState.image.value"
@@ -32,9 +33,9 @@
           </AppBlankState>
 
           <template v-else-if="effectiveView === 'list'">
-            <AppTable :columns="columns" :rows="tableRows" button-edit @select="onSelect" @edit="(row) => navigateTo(`/forms/${row._raw.id}`)">
+            <AppTable :columns="columns" :rows="tableRows" button-edit button-deactivate @edit="(row) => navigateTo(`/forms/${row._raw.id}`)" @deactivate="onDeleteRow">
               <template #cell-name="{ value, row }">
-                <NuxtLink :to="`/forms/${row._raw.id}`" class="app-table__cell-link">{{ value }}</NuxtLink>
+                <NuxtLink :to="`/forms/${row._raw.id}`" class="app-table__cell-link subheading-1">{{ value }}</NuxtLink>
               </template>
 
               <template #cell-fields="{ value }">
@@ -55,14 +56,14 @@
             <div class="list-mosaic">
               <div v-for="form in filtered" :key="form.id" class="list-card">
                 <div class="list-card__header">
-                  <NuxtLink :to="`/forms/${form.id}`" class="list-card__title">{{ form.name }}</NuxtLink>
+                  <NuxtLink :to="`/forms/${form.id}`" class="list-card__title cta2">{{ form.name }}</NuxtLink>
                 </div>
                 <div class="list-card__meta">
-                  <div v-if="form.description" class="list-card__meta-row">
+                  <div v-if="form.description" class="list-card__meta-row caption3">
                     {{ form.description }}
                   </div>
 
-                  <div v-if="form.has_template" class="list-card__meta-row">
+                  <div v-if="form.has_template" class="list-card__meta-row caption3">
                     <span class="material-icons-round">attach_file</span>
                     {{ form.template_file_name }}
                   </div>
@@ -94,7 +95,7 @@ interface Form {
 const columns = [
   { key: 'name', label: 'Name', primary: true },
   { key: 'description', label: 'Description' },
-  { key: 'template', label: 'File' }
+  { key: 'template', label: 'File' },
 ]
 
 interface PaginationMeta {
@@ -112,7 +113,7 @@ interface PaginatedResponse<T> {
 const toast = useAppToast()
 const forms = ref<Form[]>([])
 const loading = ref(true)
-const { search, sort, view, selectedCount, onSelect, onDelete } = useListToolbar()
+const { search, sort, view } = useListToolbar()
 const isMobile = ref(false)
 onMounted(() => {
   const mq = window.matchMedia('(max-width: 767px)')
@@ -174,12 +175,12 @@ async function onDeleteRow(row: Record<string, unknown>, _idx: number) {
   const form = row._raw as Form
   try {
     const api = useApi()
-    await api(`/forms/${form.id}`, { method: 'DELETE' })
-    forms.value = forms.value.filter(f => f.id !== form.id)
-    toast.success('Form deleted', { category: 'form' })
+    await api(`/forms/${form.id}/toggle-active`, { method: 'PATCH' })
+    toast.success('Form deactivated', { category: 'form' })
+    await navigateTo('/forms/inactive')
   }
   catch (err) {
-    toast.error(err, 'Could not delete form', { category: 'form' })
+    toast.error(err, 'Could not deactivate form', { category: 'form' })
   }
 }
 

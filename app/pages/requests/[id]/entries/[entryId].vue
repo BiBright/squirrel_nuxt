@@ -7,10 +7,27 @@
           <AppBreadcrumb :items="[{ label: 'Requests', to: '/requests' }, { label: requestTitle }]" />
         </div>
 
-        <div v-if="loading" class="col-12">
-          <div class="list-empty">
-            <span class="material-icons-round">hourglass_empty</span>
-            <p>Loading...</p>
+        <div v-if="loading" class="col-12 col-md-7">
+          <div class="skeleton-form">
+            <AppSkeleton width="55%" height="22px" />
+            <AppSkeleton width="75%" height="13px" />
+            <hr class="entry-divider">
+            <div class="skeleton-field">
+              <AppSkeleton width="28%" height="12px" />
+              <AppSkeleton height="40px" />
+            </div>
+            <div class="skeleton-field">
+              <AppSkeleton width="22%" height="12px" />
+              <AppSkeleton height="40px" />
+            </div>
+            <div class="skeleton-field">
+              <AppSkeleton width="35%" height="12px" />
+              <AppSkeleton height="90px" />
+            </div>
+            <div class="skeleton-field">
+              <AppSkeleton width="20%" height="12px" />
+              <AppSkeleton height="40px" />
+            </div>
           </div>
         </div>
 
@@ -108,7 +125,7 @@
                 <div v-if="!isSupplier" class="entry-status__card-body">
                   <p class="entry-status__card-text">{{ statusDescription(entry.status.value) }}</p>
 
-                  <template v-if="entry.status.value === 'pending_approval'">
+                  <template v-if="entry.status.value === 'pending_approval' && canEdit">
                     <div class="entry-status__comments">
                       <label class="label01">
                         Comments <span class="entry-status__comments-hint">*Fill in if there is something wrong</span>
@@ -142,7 +159,7 @@
                 </template>
               </div>
 
-              <div v-if="!isSupplier" class="entry-status__assigned">
+              <div v-if="!isSupplier && canEdit" class="entry-status__assigned">
                 <p class="entry-status__assigned-label">Assigned to:</p>
                 <div ref="assigneeDropdownRef" class="assignee-dropdown">
                   <button class="assignee-dropdown__trigger" type="button" @click="assigneeOpen = !assigneeOpen">
@@ -227,6 +244,7 @@ interface RequestData {
   id: number
   title: string | null
   assigned_to: { id: number; name: string } | null
+  is_active?: boolean
   forms: {
     form_id: number
     form_name: string
@@ -238,8 +256,9 @@ interface UserOption { id: number; name: string }
 
 interface SupplierEntryDetail {
   entry_id: number
+  is_active?: boolean
   status: string
-  request: { id: number; title: string | null; company: string }
+  request: { id: number; title: string | null; company: string; is_active?: boolean }
   form: {
     id: number
     name: string
@@ -308,7 +327,7 @@ const apiBase = config.public.apiBase as string
 const isSupplier = computed(() => authStore.user?.roles === 'supplier')
 const isCompanyUser = computed(() => authStore.user?.roles === 'company-user')
 const requestTitle = computed(() => request.value?.title ?? entry.value?.form.name ?? 'Request')
-const canEdit = computed(() => true)
+const canEdit = computed(() => !route.query.inactive && request.value?.is_active !== false)
 
 function getAnswer(fieldId: number): EntryAnswer | undefined {
   return entry.value?.answers?.find(a => a.field_id === fieldId)
@@ -330,6 +349,7 @@ onMounted(async () => {
         id: res.data.request.id,
         title: res.data.request.title,
         assigned_to: null,
+        is_active: res.data.is_active ?? res.data.request.is_active,
         forms: [],
       }
 
@@ -354,29 +374,23 @@ onMounted(async () => {
 
       if (res.data.comments?.length) entry.value.comments = res.data.comments
 
-      const formDetail = await api<{ data: FormDetail }>(`/forms/${res.data.form.id}`).catch(() => null)
-      if (formDetail) {
-        form.value = formDetail.data
-      }
-      else {
-        form.value = {
-          id: res.data.form.id,
-          name: res.data.form.name,
+      form.value = {
+        id: res.data.form.id,
+        name: res.data.form.name,
+        description: null,
+        has_template: false,
+        template_file_name: null,
+        fields: res.data.form.fields.map(f => ({
+          id: f.id,
+          name: f.name,
           description: null,
-          has_template: false,
+          type: f.type,
+          type_label: f.type,
+          requires_file: false,
           template_file_name: null,
-          fields: res.data.form.fields.map(f => ({
-            id: f.id,
-            name: f.name,
-            description: null,
-            type: f.type,
-            type_label: f.type,
-            requires_file: false,
-            template_file_name: null,
-            order: f.order,
-            required: f.required,
-          })),
-        }
+          order: f.order,
+          required: f.required,
+        })),
       }
     }
     else {

@@ -10,16 +10,17 @@
 
         <div class="col-12">
           <AppListToolbar v-model:search="search" v-model:sort="sort" v-model:view="view" label="field"
-            add-label="New Field" :total-count="filtered.length" :selected-count="selectedCount"
-            @add="navigateTo('/fields/create')" @delete="onDelete" />
+            add-label="New Field" inactive-to="/fields/inactive"
+            @add="navigateTo('/fields/create')" />
         </div>
 
         <div class="col-12">
-          <div v-if="loading" class="list-container">
-            <div class="list-empty">
-              <span class="material-icons-round">hourglass_empty</span>
-              <p>Loading fields...</p>
-            </div>
+          <div v-if="loading" class="skeleton-rows">
+            <div class="skeleton-row"><AppSkeleton width="45%" /><AppSkeleton width="30%" /><AppSkeleton width="15%" /></div>
+            <div class="skeleton-row"><AppSkeleton width="35%" /><AppSkeleton width="40%" /><AppSkeleton width="15%" /></div>
+            <div class="skeleton-row"><AppSkeleton width="50%" /><AppSkeleton width="25%" /><AppSkeleton width="15%" /></div>
+            <div class="skeleton-row"><AppSkeleton width="30%" /><AppSkeleton width="35%" /><AppSkeleton width="15%" /></div>
+            <div class="skeleton-row"><AppSkeleton width="40%" /><AppSkeleton width="28%" /><AppSkeleton width="15%" /></div>
           </div>
 
           <AppBlankState v-else-if="blankState.show.value" :image="blankState.image.value"
@@ -31,11 +32,11 @@
           </AppBlankState>
 
           <template v-else-if="effectiveView === 'list'">
-            <AppTable :columns="columns" button-edit :rows="tableRows" @select="onSelect"
-              @edit="(row) => navigateTo(`/fields/${row._raw.id}`)">
+            <AppTable :columns="columns" button-edit button-deactivate :rows="tableRows"
+              @edit="(row) => navigateTo(`/fields/${row._raw.id}`)" @deactivate="onDeleteRow">
 
               <template #cell-name="{ value, row }">
-                <NuxtLink :to="`/fields/${row._raw.id}`" class="app-table__cell-link">{{ value }}</NuxtLink>
+                <NuxtLink :to="`/fields/${row._raw.id}`" class="app-table__cell-link subheading-1">{{ value }}</NuxtLink>
               </template>
 
               <template #cell-file="{ value, row }">
@@ -60,10 +61,10 @@
             <div class="list-mosaic">
               <div v-for="field in filtered" :key="field.id" class="list-card">
                 <div class="list-card__header">
-                  <NuxtLink :to="`/fields/${field.id}`" class="list-card__title">{{ field.name }}</NuxtLink>
+                  <NuxtLink :to="`/fields/${field.id}`" class="list-card__title cta2">{{ field.name }}</NuxtLink>
                 </div>
                 <div class="list-card__meta">
-                  <div v-if="field.description" class="list-card__meta-row">
+                  <div v-if="field.description" class="list-card__meta-row caption3">
                     {{ field.description }}
                   </div>
                 </div>
@@ -119,7 +120,7 @@ interface PaginatedResponse<T> {
 const toast = useAppToast()
 const fields = ref<Field[]>([])
 const loading = ref(true)
-const { search, sort, view, selectedCount, onSelect, onDelete } = useListToolbar()
+const { search, sort, view } = useListToolbar()
 const isMobile = ref(false)
 
 onMounted(() => {
@@ -184,12 +185,12 @@ async function onDeleteRow(row: Record<string, unknown>, _idx: number) {
   const field = row._raw as Field
   try {
     const api = useApi()
-    await api(`/fields/${field.id}`, { method: 'DELETE' })
-    fields.value = fields.value.filter(f => f.id !== field.id)
-    toast.success('Field deleted', { category: 'field' })
+    await api(`/fields/${field.id}/toggle-active`, { method: 'PATCH' })
+    toast.success('Field deactivated', { category: 'field' })
+    await navigateTo('/fields/inactive')
   }
   catch (err) {
-    toast.error(err, 'Could not delete field', { category: 'field' })
+    toast.error(err, 'Could not deactivate field', { category: 'field' })
   }
 }
 

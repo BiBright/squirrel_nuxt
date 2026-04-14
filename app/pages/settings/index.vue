@@ -9,43 +9,46 @@
                 <img v-if="companyLogoUrl" :src="companyLogoUrl" alt="Company logo" class="avatar__img" />
                 <template v-else>{{ initials }}</template>
               </div>
-              <p class="username">{{ user?.name ?? 'User' }}</p>
-              <p class="role caption2">{{ user?.email ?? '' }}</p>
-              <button type="button" class="logout-btn" @click="onLogout">
+              <p class="username subheading-1">{{ user?.name ?? 'User' }}</p>
+              <p class="role caption3">{{ user?.email ?? '' }}</p>
+              <button type="button" class="logout-btn caption3" @click="onLogout">
                 <span class="icon material-icons-round">logout</span>
                 Sign out
               </button>
             </div>
 
             <nav class="settings-menu__nav">
-              <button v-for="item in menuItems" :key="item.key" type="button"
-                :class="['settings-menu__item', { 'is-active': activeSection === item.key }]"
-                @click="selectSection(item.key)">
-                <span class="icon material-icons-round">{{ item.icon }}</span>
-                {{ item.label }}
-              </button>
+              <template v-for="item in menuItems" :key="item.key">
+                <hr v-if="item.divider" class="settings-menu__divider" />
+                <button type="button"
+                  :class="['settings-menu__item caption1', { 'is-active': activeSection === item.key }]"
+                  @click="selectSection(item.key)">
+                  <span class="icon material-icons-round">{{ item.icon }}</span>
+                  {{ item.label }}
+                </button>
+              </template>
             </nav>
           </aside>
         </div>
 
-        <div class="col-12 col-sm-8 col-md-9">
+        <div class="col-12 col-sm-8 col-md-10">
           <section class="settings-content" :class="{ 'settings-content--visible': mobileShowContent }">
-            <button type="button" class="settings-back" @click="mobileShowContent = false">
+            <button type="button" class="settings-back cta2" @click="mobileShowContent = false">
               <span class="material-icons-round">arrow_back</span>
               Settings
             </button>
 
             <div v-if="activeSection === 'profile'" class="settings-section">
-              <h2 class="settings-section-title">Profile</h2>
-              <p class="settings-section-subtitle">Update your personal information.</p>
+              <h2 class="settings-section-title title02">Profile</h2>
+              <p class="settings-section-subtitle body01">Update your personal information.</p>
               <AppInput v-model="profileForm.name" label="Full name" placeholder="Your name" />
               <AppInput v-model="profileForm.email" label="Email" type="email" placeholder="you@company.com" />
               <AppButton type="button" :loading="profileSaving" @click="saveProfile">Save changes</AppButton>
             </div>
 
             <div v-else-if="activeSection === 'password'" class="settings-section">
-              <h2 class="settings-section-title">Change Password</h2>
-              <p class="settings-section-subtitle">Choose a strong password.</p>
+              <h2 class="settings-section-title title02">Change Password</h2>
+              <p class="settings-section-subtitle body01">Choose a strong password.</p>
               <AppInput v-model="passwordForm.current" label="Current password" type="password" />
               <AppInput v-model="passwordForm.new" label="New password" type="password" />
               <AppInput v-model="passwordForm.confirm" label="Confirm new password" type="password" />
@@ -53,8 +56,8 @@
             </div>
 
             <div v-else-if="activeSection === 'company'" class="settings-section">
-              <h2 class="settings-section-title">Company Settings</h2>
-              <p class="settings-section-subtitle">Update your company information.</p>
+              <h2 class="settings-section-title title02">Company Settings</h2>
+              <p class="settings-section-subtitle body01">Update your company information.</p>
 
               <div v-if="companyLoading" class="notif-loading">Loading…</div>
               <template v-else>
@@ -68,7 +71,7 @@
                 </div>
 
                 <AppInput v-model="companyForm.name" label="Company Name" placeholder="Your company name" />
-                <AppInput v-model="companyForm.country" label="Country" placeholder="e.g. Portugal" />
+                <AppSelectField v-model="companyForm.country" :items="countries" value-key="name" label-key="name" label="Country" placeholder="Select a country" />
                 <AppInput v-model="companyForm.city" label="City" placeholder="e.g. Lisbon" />
                 <AppInput v-model="companyForm.address" label="Address" placeholder="Street and number" :optional="true" />
                 <AppInput v-model="companyForm.zip_code" label="Zip Code" placeholder="e.g. 1000-001" :optional="true" />
@@ -78,10 +81,10 @@
             </div>
 
             <div v-else-if="activeSection === 'notifications'" class="settings-section">
-              <h2 class="settings-section-title">Send notifications</h2>
-              <p class="settings-section-subtitle">Change and update the suppliers notifications frequency.</p>
+              <h2 class="settings-section-title title02">Send notifications</h2>
+              <p class="settings-section-subtitle body01">Change and update the suppliers notifications frequency.</p>
 
-              <div v-if="notifLoading" class="notif-loading">Loading settings…</div>
+              <div v-if="notifLoading" class="notif-loading body01">Loading settings…</div>
               <template v-else>
                 <div class="notif-card">
                   <div class="notif-card__header">
@@ -90,8 +93,8 @@
                       <span class="notif-toggle__knob" />
                     </button>
                     <div>
-                      <p class="notif-card__title">Pending actions on requests</p>
-                      <p class="notif-card__hint">All suppliers will receive notifications related to their requests.
+                      <p class="notif-card__title subheading-1">Pending actions on requests</p>
+                      <p class="notif-card__hint body01">All suppliers will receive notifications related to their requests.
                       </p>
                     </div>
                   </div>
@@ -100,10 +103,10 @@
                     <label class="notif-freq-item">
                       <input v-model="notifForm.email_frequency" type="radio" value="daily" class="notif-radio">
                       <div class="notif-freq-item__body">
-                        <p class="notif-freq-item__label">Once a day</p>
-                        <p class="notif-freq-item__hint">Everyday at the same hour</p>
+                        <p class="notif-freq-item__label cta2">Once a day</p>
+                        <p class="notif-freq-item__hint caption3">Everyday at the same hour</p>
                         <div class="notif-selects">
-                          <AppSelect v-model="notifForm.email_frequency_time" :options="hourOptions" />
+                          <AppSearchSelect v-model="notifForm.email_frequency_time" :options="hourOptions" placeholder="Hour" />
                         </div>
                       </div>
                     </label>
@@ -111,11 +114,11 @@
                     <label class="notif-freq-item">
                       <input v-model="notifForm.email_frequency" type="radio" value="weekly" class="notif-radio">
                       <div class="notif-freq-item__body">
-                        <p class="notif-freq-item__label">Once a week</p>
-                        <p class="notif-freq-item__hint">Every 7 days</p>
+                        <p class="notif-freq-item__label cta2">Once a week</p>
+                        <p class="notif-freq-item__hint caption3">Every 7 days</p>
                         <div class="notif-selects">
-                          <AppSelect v-model="notifForm.email_frequency_weekday" :options="weekdayOptions" />
-                          <AppSelect v-model="notifForm.email_frequency_time" :options="hourOptions" />
+                          <AppSearchSelect v-model="notifForm.email_frequency_weekday" :options="weekdayOptions" :searchable="false" placeholder="Day" />
+                          <AppSearchSelect v-model="notifForm.email_frequency_time" :options="hourOptions" placeholder="Hour" />
                         </div>
                       </div>
                     </label>
@@ -123,11 +126,11 @@
                     <label class="notif-freq-item">
                       <input v-model="notifForm.email_frequency" type="radio" value="monthly" class="notif-radio">
                       <div class="notif-freq-item__body">
-                        <p class="notif-freq-item__label">Once a month</p>
-                        <p class="notif-freq-item__hint">Every 31 days</p>
+                        <p class="notif-freq-item__label cta2">Once a month</p>
+                        <p class="notif-freq-item__hint caption3">Every 31 days</p>
                         <div class="notif-selects">
-                          <AppSelect v-model="notifForm.email_frequency_day" :options="dayOptions" />
-                          <AppSelect v-model="notifForm.email_frequency_time" :options="hourOptions" />
+                          <AppSearchSelect v-model="notifForm.email_frequency_day" :options="dayOptions" placeholder="Day" />
+                          <AppSearchSelect v-model="notifForm.email_frequency_time" :options="hourOptions" placeholder="Hour" />
                         </div>
                       </div>
                     </label>
@@ -140,6 +143,11 @@
                 </div>
               </template>
             </div>
+
+            <SettingsSupport v-else-if="activeSection === 'support'" />
+            <SettingsLegal v-else-if="activeSection === 'legal'" />
+            <SettingsCookies v-else-if="activeSection === 'cookies'" />
+            <SettingsPrivacy v-else-if="activeSection === 'privacy'" />
           </section>
         </div>
 
@@ -150,6 +158,13 @@
 
 <script setup lang="ts">
 definePageMeta({ middleware: 'auth' })
+
+interface Country {
+  id: number
+  name: string
+  iso_code: string
+  phone_prefix: string
+}
 
 const authStore = useAuthStore()
 const api = useApi()
@@ -197,9 +212,11 @@ const notifLoading = ref(false)
 const notifSaving = ref(false)
 
 async function loadNotifSettings() {
+  const companyId = authStore.company?.id as number | undefined
+  if (!companyId) return
   notifLoading.value = true
   try {
-    const res = await api('/settings') as { data: Record<string, unknown> }
+    const res = await api(`/companies/${companyId}/settings`) as { data: Record<string, unknown> }
     const d = res.data
     notifForm.send_notification = Boolean(d.send_notification)
     notifForm.email_frequency = (d.email_frequency as typeof notifForm.email_frequency) ?? 'weekly'
@@ -212,9 +229,11 @@ async function loadNotifSettings() {
 }
 
 async function saveNotif() {
+  const companyId = authStore.company?.id as number | undefined
+  if (!companyId) { toast.error(null, 'Company ID not found', { category: 'general' }); return }
   notifSaving.value = true
   try {
-    await api('/settings', {
+    await api(`/companies/${companyId}/settings`, {
       method: 'PATCH',
       body: {
         send_notification: notifForm.send_notification,
@@ -224,10 +243,10 @@ async function saveNotif() {
         email_frequency_time: notifForm.email_frequency_time,
       },
     })
-    toast.success('Notification settings saved', { category: 'notifications' })
+    toast.success('Notification settings saved', { category: 'general' })
   }
   catch (err) {
-    toast.error(err, 'Failed to save notification settings', { category: 'notifications' })
+    toast.error(err, 'Failed to save notification settings', { category: 'general' })
   }
   finally { notifSaving.value = false }
 }
@@ -245,10 +264,16 @@ const menuItems = computed(() => [
     { key: 'notifications', icon: 'notifications', label: 'Notification' },
   ]),
   { key: 'support', icon: 'support', label: 'Support' },
+  { key: 'legal', icon: 'balance', label: 'Legal Notice', divider: true },
+  { key: 'cookies', icon: 'cookie', label: 'Cookies Policy' },
+  { key: 'privacy', icon: 'privacy_tip', label: 'Privacy Policy' },
 ])
 
 const profileForm = reactive({ name: user.value?.name ?? '', email: user.value?.email ?? '' })
 const passwordForm = reactive({ current: '', new: '', confirm: '' })
+
+const countries = ref<Country[]>([])
+api<{ data: Country[] }>('/countries').then(res => { countries.value = res.data })
 
 const companyForm = reactive({ name: '', country: '', city: '', address: '', zip_code: '', plan_id: null as number | null })
 const companyLoading = ref(false)
@@ -257,7 +282,7 @@ const companyLogoFile = ref<File | null>(null)
 const companyLogoPreview = ref<string | null>(companyLogoUrl.value)
 
 async function loadCompany() {
-  const companyId = (user.value?.company_id ?? user.value?.company?.id) as number | undefined
+  const companyId = authStore.company?.id as number | undefined
   if (!companyId) return
   companyLoading.value = true
   try {
@@ -280,8 +305,8 @@ function onLogoChange(file: File) {
 }
 
 async function saveCompany() {
-  const companyId = (user.value?.company_id ?? user.value?.company?.id) as number | undefined
-  if (!companyId) { toast.error(null, 'Company ID not found', { category: 'company' }); return }
+  const companyId = authStore.company?.id as number | undefined
+  if (!companyId) { toast.error(null, 'Company ID not found', { category: 'general' }); return }
   companySaving.value = true
   try {
     const body = new FormData()
@@ -294,10 +319,10 @@ async function saveCompany() {
     if (companyForm.plan_id) body.append('plan_id', String(companyForm.plan_id))
     if (companyLogoFile.value) body.append('logo', companyLogoFile.value)
     await api(`/companies/${companyId}`, { method: 'POST', body })
-    toast.success('Company settings saved', { category: 'company' })
+    toast.success('Company settings saved', { category: 'general' })
   }
   catch (err) {
-    toast.error(err, 'Failed to save company settings', { category: 'company' })
+    toast.error(err, 'Failed to save company settings', { category: 'general' })
   }
   finally { companySaving.value = false }
 }

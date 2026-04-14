@@ -60,7 +60,7 @@ function buildChart() {
     },
     options: {
       responsive: true,
-      maintainAspectRatio: true,
+      maintainAspectRatio: false,
       plugins: {
         legend: { position: 'bottom', labels: { boxWidth: 12, padding: 16 } },
         tooltip: { mode: 'index', intersect: false },
@@ -87,6 +87,6 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
-.chart-wrap { position: relative; width: 100%; overflow: hidden; }
-.chart-wrap canvas { max-width: 100%; }
+.chart-wrap { position: relative; width: 100%; height: 280px; }
 </style>
+
