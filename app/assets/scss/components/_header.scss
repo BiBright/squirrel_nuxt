@@ -1,12 +1,11 @@
 @use "../base/variables" as *;
-@use "../base/viewport" as *;
 
 .app-header {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
-  height: $header-height;
+  height: $header-height-mobile;
   background: $white;
   display: flex;
   align-items: center;
@@ -14,13 +13,13 @@
   padding: 0 20px;
   z-index: 250;
 
-  @include desktop-up {
+  @media (min-width: $bp-md) {
     left: $sidebar-width;
     padding: 0 32px;
     height: $header-height;
   }
 
-  @include desktop-l-up {
+  @media (min-width: $bp-xxl) {
     left: $sidebar-width-xxl;
   }
 
@@ -43,7 +42,7 @@
       background: $white60;
     }
 
-    @include desktop-up {
+    @media (min-width: $bp-md) {
       display: none;
     }
   }
@@ -60,7 +59,7 @@
       color: $primary100;
     }
 
-    @include desktop-up {
+    @media (min-width: $bp-md) {
       display: none;
     }
   }
@@ -69,14 +68,14 @@
   &__search {
     display: none;
 
-    @include tablet-up {
+    @media (min-width: $bp-sm) {
       flex: 1;
       max-width: 400px;
       margin: 0 24px;
       display: block;
     }
 
-    @include desktop-up {
+    @media (min-width: $bp-md) {
       margin: 0 24px 0 0;
     }
   }
@@ -126,9 +125,10 @@
       font-size: 14px;
       line-height: 20px;
       color: $black80;
+      display: none;
 
-      @include mobile-only {
-        display: none;
+      @media (min-width: $bp-sm) {
+        display: block;
       }
     }
   }

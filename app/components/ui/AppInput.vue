@@ -43,6 +43,19 @@
       <slot />
     </select>
 
+    <div v-else-if="type === 'search'" class="input-search-wrap">
+      <span class="material-icons-round input-search-wrap__icon">search</span>
+      <input
+        :id="inputId"
+        v-model="model"
+        type="search"
+        :placeholder="placeholder"
+        :disabled="disabled"
+        class="input-search"
+        v-bind="$attrs"
+      />
+    </div>
+
     <input
       v-else
       :id="inputId"
@@ -50,7 +63,7 @@
       :type="type"
       :placeholder="placeholder"
       :disabled="disabled"
-      :class="type === 'search' ? 'input-search' : 'input-text'"
+      class="input-text"
       v-bind="$attrs"
     />
 

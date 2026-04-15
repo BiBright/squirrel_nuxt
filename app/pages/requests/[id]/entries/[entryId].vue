@@ -46,7 +46,7 @@
             </div>
           </div>
 
-          <div class="col-12 col-md-7">
+          <div class="col-12 col-md-7 entry-form-col">
             <div class="request-entry-card">
               <AppCard>
                 <div v-if="entry.supplier?.name" class="entry-supplier">
@@ -88,10 +88,11 @@
                       </p>
                       <div v-if="uploadedFiles[field.id] || getAnswer(field.id)?.file_name" class="entry-file-uploaded">
                         <p class="label02">File uploaded</p>
-                        <a :href="getAnswer(field.id)?.file_url ?? '#'" class="entry-file-link" target="_blank">
+                        <button type="button" class="entry-file-link"
+                          @click="downloadFile(getAnswer(field.id)?.file_url ?? '', uploadedFiles[field.id]?.name ?? getAnswer(field.id)?.file_name ?? 'file')">
                           <span class="material-icons-round">file_download</span>
                           {{ uploadedFiles[field.id]?.name ?? getAnswer(field.id)?.file_name }}
-                        </a>
+                        </button>
                       </div>
                       <div v-if="canEdit" class="entry-field__upload">
                         <AppFileUpload @change="onFileChange(field.id, $event)" />
@@ -451,6 +452,24 @@ function onFileChange(fieldId: number, file: File) {
   uploadedFiles[fieldId] = file
 }
 
+async function downloadFile(url: string, fileName: string) {
+  if (!url) return
+  const token = decodeURIComponent(
+    document.cookie.split('; ').find(r => r.startsWith('XSRF-TOKEN='))?.split('=')[1] ?? '',
+  )
+  const res = await fetch(url, {
+    credentials: 'include',
+    headers: { 'X-XSRF-TOKEN': token },
+  })
+  const blob = await res.blob()
+  const blobUrl = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = blobUrl
+  a.download = fileName
+  a.click()
+  URL.revokeObjectURL(blobUrl)
+}
+
 async function onAssigneeChange() {
   if (!entry.value?.supplier) return
   try {
@@ -587,7 +606,9 @@ function statusDescription(value: string): string {
 }
 </script>
 
-<style scoped>
+<style scoped lang="scss">
+@use '~/assets/scss/base/variables' as *;
+
 .list-empty {
   display: flex;
   flex-direction: column;
@@ -616,13 +637,14 @@ function statusDescription(value: string): string {
   display: inline-flex;
   align-items: center;
   gap: var(--space-1);
-  padding: var(--space-1) var(--space-3);
-  border-radius: var(--radius-md);
+  padding: var(--space-2);
+  border-radius: var(--radius-sm);
   font-size: var(--text-sm);
   font-weight: 600;
   white-space: nowrap;
   width: fit-content;
   color: var(--color-white);
+  margin-bottom: var(--space-4);
 }
 
 .entry-header__pill[data-status="awaiting_answer"] {
@@ -688,6 +710,9 @@ function statusDescription(value: string): string {
 }
 
 .entry-file-link {
+  padding: 0;
+  background: none;
+  border: none;
   display: inline-flex;
   gap: var(--space-2);
   align-items: center;
@@ -813,6 +838,16 @@ function statusDescription(value: string): string {
   gap: var(--space-3);
   padding-top: var(--space-4);
   margin-top: var(--space-2);
+}
+
+.entry-form-col {
+  order: 1;
+}
+
+@media (min-width: 768px) {
+  .entry-form-col {
+    order: initial;
+  }
 }
 
 .entry-status {

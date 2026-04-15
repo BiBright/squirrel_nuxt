@@ -142,6 +142,7 @@ interface Company {
   is_active: boolean
   plan_expires_at: string | null
   plan: Plan
+  logo_url: string | null
 }
 
 const route = useRoute()
@@ -220,6 +221,7 @@ onMounted(async () => {
       form.address = companyRes.data.address
       form.zip_code = companyRes.data.zip_code
       form.is_active = companyRes.data.is_active
+      if (companyRes.data.logo_url) logoPreview.value = companyRes.data.logo_url
     }
     else {
       const res = await api<{ data: Plan[] }>('/master/plans')

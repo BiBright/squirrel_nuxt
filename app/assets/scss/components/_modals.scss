@@ -1,5 +1,4 @@
 @use '../base/variables' as *;
-@use '../base/viewport' as *;
 
 
 .modal-overlay {
@@ -22,12 +21,12 @@
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
   position: relative;
 
-  @include tablet-up { padding: 32px; }
+  @media (min-width: $bp-sm) { padding: 32px; }
 
   &__header {
     display: flex;
     align-items: center;
-    justify-content: center;
+    justify-content: space-between;
     gap: 16px;
     margin-bottom: 24px;
   }
@@ -64,7 +63,7 @@
     font-size: 14px;
     line-height: 20px;
 
-    @include desktop-up { font-size: 16px; line-height: 24px; }
+    @media (min-width: $bp-md) { font-size: 16px; line-height: 24px; }
   }
 
   &__footer {
@@ -78,6 +77,8 @@
   &--narrow { max-width: 500px; }
 
   &--danger .modal__title { color: $red100; }
+
+  .form-group { margin-bottom: 0; }
 
   &--premium {
     background: $primary100;

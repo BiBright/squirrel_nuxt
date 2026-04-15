@@ -1,5 +1,4 @@
 @use '../base/variables' as *;
-@use '../base/viewport' as *;
 
 // ================================
 // List Toolbar
@@ -12,16 +11,21 @@
   margin-bottom: var(--space-5);
   flex-wrap: wrap;
 
-  @include desktop-up {
+  @media (min-width: $bp-md) {
     margin-bottom: var(--space-6);
     flex-wrap: nowrap;
   }
 
   &__search {
-    flex: 1;
-    min-width: 180px;
+    width: 256px;
+    flex-shrink: 0;
 
-    @include desktop-up {
+    @media (min-width: $bp-sm) {
+      flex: 1;
+      width: auto;
+    }
+
+    @media (min-width: $bp-md) {
       max-width: 232px;
     }
   }
@@ -29,6 +33,11 @@
   &__sort {
     gap: var(--space-3);
     display: flex;
+    margin-left: auto;
+
+    @media (min-width: $bp-sm) {
+      margin-left: 0;
+    }
   }
 
   &__actions {
@@ -44,7 +53,7 @@
     display: none;
     padding-right: var(--space-1);
 
-    @include desktop-up {
+    @media (min-width: $bp-md) {
       display: block;
     }
   }
@@ -53,6 +62,6 @@
     display: none;
     gap: var(--space-1);
 
-    @include tablet-up { display: flex; }
+    @media (min-width: $bp-sm) { display: flex; }
   }
 }

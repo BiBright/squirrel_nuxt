@@ -21,7 +21,9 @@ defineProps<{
 }>()
 </script>
 
-<style scoped>
+<style scoped lang="scss">
+@use '~/assets/scss/base/variables' as *;
+
 .blank-state {
   display: flex;
   flex-direction: column-reverse;

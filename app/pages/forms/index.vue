@@ -63,7 +63,7 @@
                     {{ form.description }}
                   </div>
 
-                  <div v-if="form.has_template" class="list-card__meta-row caption3">
+                  <div v-if="form.template_file_name" class="list-card__meta-row caption3 form-file-row">
                     <span class="material-icons-round">attach_file</span>
                     {{ form.template_file_name }}
                   </div>
@@ -190,6 +190,10 @@ function formatDate(date: string) {
 </script>
 
 <style scoped>
+.form-file-row {
+  margin-top: var(--space-5);
+}
+
 .file-download-link {
   display: inline-flex;
   align-items: center;

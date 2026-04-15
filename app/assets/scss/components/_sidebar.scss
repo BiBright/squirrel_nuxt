@@ -1,56 +1,52 @@
 @use "../base/variables" as *;
-@use "../base/viewport" as *;
 
 .app-sidebar {
   position: fixed;
-  top: 0;
+  top: $header-height-mobile;
   left: 0;
-  bottom: 0;
-  width: $sidebar-width;
+  bottom: auto;
+  height: calc(100vh - #{$header-height-mobile});
+  width: 100%;
   background: $white;
   border: none;
   display: flex;
   flex-direction: column;
   z-index: 200;
-  transform: translateX(-100%);
+  transform: translateY(-110%);
   transition: transform 0.3s ease;
+  box-shadow: none;
 
-  @include desktop-up {
-    transform: translateX(0);
-  }
-
-  @media (min-width: $desktop-l) {
-    width: $sidebar-width-xxl;
-  }
-
-  @media (max-width: #{$desktop - 1px}) {
+  @media (min-width: $bp-sm) {
     top: $header-height;
-    bottom: auto;
-    height: calc(100vh - #{$header-height});
-    width: 100%;
-    border-right: none;
-    border-radius: 0;
-    transform: translateY(-110%);
-    transition: transform 0.3s ease;
-    box-shadow: none;
-  }
-
-  @include tablet-only {
     height: 50vh;
   }
 
-  &.is-open {
+  @media (min-width: $bp-md) {
+    top: 0;
+    bottom: 0;
+    height: auto;
+    width: $sidebar-width;
     transform: translateX(0);
-    box-shadow: 4px 0 20px rgba(0, 0, 0, 0.1);
+  }
 
-    @media (max-width: #{$desktop - 1px}) {
-      transform: translateY(0);
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+  @media (min-width: $bp-xxl) {
+    width: $sidebar-width-xxl;
+  }
+
+  &.is-open {
+    transform: translateY(0);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+
+    @media (min-width: $bp-md) {
+      transform: translateX(0);
+      box-shadow: 4px 0 20px rgba(0, 0, 0, 0.1);
     }
   }
 
   &__close {
-    display: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     position: absolute;
     top: 12px;
     right: 12px;
@@ -73,17 +69,15 @@
       color: $black;
     }
 
-    @include mobile-only {
-      display: flex;
-      align-items: center;
-      justify-content: center;
+    @media (min-width: $bp-md) {
+      display: none;
     }
   }
 
   &__logo {
     display: none;
 
-    @include desktop-up {
+    @media (min-width: $bp-md) {
       height: 108px;
       padding: 0 24px;
       flex-shrink: 0;
@@ -106,7 +100,7 @@
     padding: 16px 24px 16px;
     flex-shrink: 0;
 
-    @include tablet-up {
+    @media (min-width: $bp-sm) {
       display: none;
     }
   }
@@ -232,11 +226,7 @@
     display: block;
   }
 
-  @include desktop-up {
+  @media (min-width: $bp-md) {
     display: none !important;
-  }
-
-  @include tablet-only {
-    top: $header-height;
   }
 }

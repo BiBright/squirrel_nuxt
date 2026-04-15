@@ -1,5 +1,4 @@
 @use "../base/variables" as *;
-@use "../base/viewport" as *;
 
 // ================================
 // Button Components
@@ -24,7 +23,7 @@
     background-color 0.3s,
     color 0.3s;
 
-  @include desktop-up {
+  @media (min-width: $bp-md) {
     font-size: 16px;
     padding: 12px 24px;
   }
@@ -42,7 +41,7 @@
   margin-right: 8px;
   flex-shrink: 0;
 
-  @include desktop-up {
+  @media (min-width: $bp-md) {
     font-size: 20px;
     margin-right: 12px;
   }
@@ -165,10 +164,12 @@
   display: flex;
   justify-content: flex-end;
 
-  @include mobile-only {
-    a,
-    button {
-      width: 100%;
+  a,
+  button {
+    width: 100%;
+
+    @media (min-width: $bp-sm) {
+      width: auto;
     }
   }
 }

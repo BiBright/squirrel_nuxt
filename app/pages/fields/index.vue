@@ -67,6 +67,10 @@
                   <div v-if="field.description" class="list-card__meta-row caption3">
                     {{ field.description }}
                   </div>
+                  <div v-if="field.template_file_name" class="list-card__meta-row caption3 field-file-row">
+                    <span class="material-icons-round">attach_file</span>
+                    {{ field.template_file_name }}
+                  </div>
                 </div>
                 <div class="list-card__footer">
                   <AppBadge variant="neutral">{{ field.type_label }}</AppBadge>
@@ -200,6 +204,10 @@ function formatDate(date: string) {
 </script>
 
 <style scoped>
+.field-file-row {
+  margin-top: var(--space-5);
+}
+
 .file-download-link {
   display: inline-flex;
   align-items: center;

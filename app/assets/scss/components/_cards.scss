@@ -1,5 +1,4 @@
 @use '../base/variables' as *;
-@use '../base/viewport' as *;
 
 .card {
 
@@ -23,7 +22,12 @@
     font-size: 14px;
     line-height: 20px;
 
-    @include desktop-up { font-size: 16px; line-height: 24px; }
+    @media (min-width: $bp-md) { font-size: 16px; line-height: 24px; }
+
+    .form-group {
+      margin-bottom: 0;
+      @media (min-width: $bp-md) { margin-bottom: 36px; }
+    }
   }
 
   &__footer {

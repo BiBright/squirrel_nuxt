@@ -1,5 +1,4 @@
 @use '../base/variables' as *;
-@use '../base/viewport' as *;
 
 .dashboard {
   &__stats {
@@ -8,9 +7,9 @@
     gap: 16px;
     margin-bottom: 32px;
 
-    @include tablet-up      { grid-template-columns: repeat(2, 1fr); gap: 20px; }
-    @include desktop-up     { grid-template-columns: repeat(3, 1fr); gap: 24px; }
-    @include desktop-l-up { grid-template-columns: repeat(4, 1fr); }
+    @media (min-width: $bp-sm)  { grid-template-columns: repeat(2, 1fr); gap: 20px; }
+    @media (min-width: $bp-md)  { grid-template-columns: repeat(3, 1fr); gap: 24px; }
+    @media (min-width: $bp-xxl) { grid-template-columns: repeat(4, 1fr); }
   }
 
   &__stat-card {

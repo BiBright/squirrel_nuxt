@@ -1,5 +1,4 @@
 @use '../base/variables' as *;
-@use '../base/viewport' as *;
 
 .app-layout {
   display: flex;
@@ -9,16 +8,18 @@
 }
 
 .app-main {
-  margin-top: $header-height;
-  height: calc(100vh - #{$header-height});
+  margin-top: $header-height-mobile;
+  height: calc(100vh - #{$header-height-mobile});
   overflow-y: auto;
   background: $white80;
 
-  @include desktop-up {
+  @media (min-width: $bp-md) {
+    margin-top: $header-height;
+    height: calc(100vh - #{$header-height});
     margin-left: $sidebar-width;
   }
 
-  @include desktop-l-up {
+  @media (min-width: $bp-xxl) {
     margin-left: $sidebar-width-xxl;
   }
 }
@@ -30,7 +31,7 @@
   gap: 16px;
   margin-bottom: 24px;
 
-  @include tablet-up { margin-bottom: 32px; }
+  @media (min-width: $bp-sm) { margin-bottom: 32px; }
 
   &__title { color: $black; }
   &__subtitle {

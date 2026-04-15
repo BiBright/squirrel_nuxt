@@ -34,7 +34,7 @@
         <div class="col-12 col-sm-8 col-md-10">
           <section class="settings-content" :class="{ 'settings-content--visible': mobileShowContent }">
             <button type="button" class="settings-back cta2" @click="mobileShowContent = false">
-              <span class="material-icons-round">arrow_back</span>
+              <span class="material-icons-round">chevron_left</span>
               Settings
             </button>
 

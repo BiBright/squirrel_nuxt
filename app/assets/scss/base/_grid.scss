@@ -1,4 +1,5 @@
 @use "sass:math";
+@use 'variables' as *;
 
 // ============================================================
 // Grid System — squirrel_nuxt
@@ -19,12 +20,6 @@
 //     </div>
 //   </div>
 // ============================================================
-
-$bp-sm: 768px;
-$bp-md: 1280px;
-$bp-xl: 1440px;
-$bp-xxl: 1536px;
-
 
 $nav-width-xl: 288px;
 $nav-width-xxl: 324px;

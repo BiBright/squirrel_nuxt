@@ -1,5 +1,4 @@
 @use '../base/variables' as *;
-@use '../base/viewport' as *;
 
 .login-page {
   min-height: 100vh;
@@ -7,7 +6,7 @@
   flex-direction: column;
   background: $white;
 
-  @include desktop-up {
+  @media (min-width: $bp-md) {
     flex-direction: row;
   }
 }
@@ -15,7 +14,7 @@
 .login-visual {
   display: none;
 
-  @include desktop-up {
+  @media (min-width: $bp-md) {
     display: block;
     flex: 1;
     position: relative;
@@ -68,14 +67,14 @@
   padding: 48px 24px;
   background: $white;
 
-  @include desktop-up {
+  @media (min-width: $bp-md) {
     width: 480px;
     flex-shrink: 0;
     padding: 64px 56px;
     border-left: 1px solid $white60;
   }
 
-  @include desktop-up {
+  @media (min-width: $bp-md) {
     width: 520px;
     padding: 80px 64px;
   }
@@ -91,7 +90,7 @@
       object-fit: contain;
     }
 
-    @include tablet-up { display: none; }
+    @media (min-width: $bp-sm) { display: none; }
   }
 
   .title01 {
@@ -102,7 +101,7 @@
     color: $black60;
     margin-bottom: 36px;
 
-    @include desktop-up { margin-bottom: 44px; }
+    @media (min-width: $bp-md) { margin-bottom: 44px; }
   }
 
   form {

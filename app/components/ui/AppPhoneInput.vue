@@ -80,7 +80,15 @@ const prefixRef = ref<HTMLElement | null>(null)
 const searchRef = ref<HTMLInputElement | null>(null)
 const optionRefs = ref<HTMLButtonElement[]>([])
 
-onClickOutside(prefixRef, () => { open.value = false; query.value = '' })
+function handleOutsideMousedown(e: MouseEvent) {
+  if (prefixRef.value && !prefixRef.value.contains(e.target as Node)) {
+    open.value = false
+    query.value = ''
+  }
+}
+
+onMounted(() => document.addEventListener('mousedown', handleOutsideMousedown))
+onBeforeUnmount(() => document.removeEventListener('mousedown', handleOutsideMousedown))
 
 watch(() => open.value, (val) => {
   if (!val) focusedIndex.value = -1
@@ -122,7 +130,9 @@ const filteredPrefixes = computed(() => {
 })
 </script>
 
-<style scoped>
+<style scoped lang="scss">
+@use '~/assets/scss/base/variables' as *;
+
 .app-phone-input {
   display: flex;
 }

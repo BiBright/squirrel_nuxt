@@ -32,17 +32,19 @@ $green25: #cdf1c8;
 
 $modal-overlay: rgba(155, 155, 155, 0.24);
 
-$mobile: 360px;
-$tablet: 768px;
-$desktop: 1280px;
-$desktop-l: 1536px;
-$desktop-xl: 1920px;
+$bp-xs: 360px;
+$bp-sm: 768px;
+$bp-md: 1280px;
+$bp-xl: 1440px;
+$bp-xxl: 1536px;
+$bp-xxxl: 1920px;
 
 $font-base: "Lato", sans-serif;
 
 $sidebar-width: 216px;
 $sidebar-width-xxl: 324px;
 $header-height: 108px;
+$header-height-mobile: 72px;
 
 :root {
   --color-primary: #{$primary100};
@@ -127,9 +129,10 @@ $header-height: 108px;
 
   --sidebar-width: #{$sidebar-width};
   --header-height: #{$header-height};
+  --header-height-mobile: #{$header-height-mobile};
 }
 
-@media (min-width: $desktop-l) {
+@media (min-width: $bp-xxl) {
   :root {
     --sidebar-width: #{$sidebar-width-xxl};
   }

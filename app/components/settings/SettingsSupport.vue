@@ -13,21 +13,24 @@
         <div class="support-cards">
           <button type="button" class="support-card" @click="activeTab = 'faq'">
             <span class="material-icons-round support-card__icon">quiz</span>
-            <p class="support-card__title cta2">FAQs</p>
-            <span class="support-card__divider" />
-            <p class="support-card__sub caption3">Common questions, quick answers.</p>
+            <div class="support-card__info">
+              <p class="support-card__title cta2">FAQs</p>
+              <p class="support-card__sub caption3">Common questions, quick answers.</p>
+            </div>
           </button>
           <button type="button" class="support-card" @click="activeTab = 'tutorials'">
             <span class="material-icons-round support-card__icon">ondemand_video</span>
-            <p class="support-card__title cta2">Tutorials</p>
-            <span class="support-card__divider" />
-            <p class="support-card__sub caption3">Step-by-step guides, easy learning.</p>
+            <div class="support-card__info">
+              <p class="support-card__title cta2">Tutorials</p>
+              <p class="support-card__sub caption3">Step-by-step guides, easy learning.</p>
+            </div>
           </button>
           <button type="button" class="support-card" @click="activeTab = 'contact'">
             <span class="material-icons-round support-card__icon">contact_support</span>
-            <p class="support-card__title cta2">Get in touch</p>
-            <span class="support-card__divider" />
-            <p class="support-card__sub caption3">Reach out for help directly.</p>
+            <div class="support-card__info">
+              <p class="support-card__title cta2">Get in touch</p>
+              <p class="support-card__sub caption3">Reach out for help directly.</p>
+            </div>
           </button>
         </div>
       </div>
@@ -159,21 +162,20 @@ async function onSend() {
 
 .support-cards {
   display: flex;
-  flex-direction: row;
-  gap: var(--space-4);
+  flex-direction: column;
+  gap: var(--space-3);
 }
 
 .support-card {
-  flex: 1;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
-  gap: var(--space-3);
-  padding: var(--space-17) var(--space-16);
+  gap: var(--space-4);
+  padding: var(--space-4) var(--space-5);
   background: var(--color-white80);
   border-radius: var(--radius-md);
   cursor: pointer;
-  text-align: center;
+  text-align: left;
   border: none;
 
   &:hover {
@@ -182,20 +184,22 @@ async function onSend() {
 }
 
 .support-card__icon {
-  font-size: var(--space-14);
+  font-size: 24px;
   color: var(--color-primary);
+  background: var(--color-primary-25);
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+  flex-shrink: 0;
+}
+
+.support-card__info {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
 }
 
 .support-card__title {
   color: var(--color-primary);
-}
-
-.support-card__divider {
-  display: block;
-  width: var(--space-14);
-  height: 1px;
-  background: var(--color-black40);
-  border-radius: 2px;
 }
 
 .support-back {

@@ -1,29 +1,30 @@
 @use '../base/variables' as *;
-@use '../base/viewport' as *;
 
 // ================================
 // Settings Page
 // ================================
 
 .settings-menu {
-  border-right: 1px solid $black20;
-  padding-right: var(--space-6);
+  border-right: none;
+  padding-right: 0;
   display: flex;
   flex-direction: column;
   margin-top: var(--space-5);
 
-  @include mobile-only {
-    border-right: none;
-    padding-right: 0;
+  &--hidden { display: none; }
 
-    &--hidden { display: none; }
+  @media (min-width: $bp-sm) {
+    border-right: 1px solid $black20;
+    padding-right: var(--space-6);
+
+    &--hidden { display: flex; }
   }
 
   &__user {
     text-align: center;
     padding: var(--space-5) 0 var(--space-8);
 
-    @include tablet-up { padding: var(--space-10) 0 var(--space-8); }
+    @media (min-width: $bp-sm) { padding: var(--space-10) 0 var(--space-8); }
 
     .avatar {
       width: 84px;
@@ -118,9 +119,9 @@
 }
 
 .notif-card {
-  width: 360px;
+  width: 100%;
 
-  @include mobile-only { width: 100%; }
+  @media (min-width: $bp-sm) { width: 360px; }
   border: 1px solid $primary50;
   border-radius: 12px;
   overflow: hidden;
@@ -223,9 +224,9 @@
 }
 
 .notif-actions {
-  width: 360px;
+  width: 100%;
 
-  @include mobile-only { width: 100%; }
+  @media (min-width: $bp-sm) { width: 360px; }
   display: flex;
   justify-content: end;
   gap: var(--space-3);
@@ -243,34 +244,35 @@
 }
 
 .settings-back {
-  display: none;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: $font-base;
+  color: $primary100;
+  padding: 0;
+  margin-bottom: var(--space-6);
 
-  @include mobile-only {
-    display: flex;
-    align-items: center;
-    gap: var(--space-2);
-    background: none;
-    border: none;
-    cursor: pointer;
-    font-family: $font-base;
-    color: $primary100;
-    padding: 0;
-    margin-bottom: var(--space-6);
+  .material-icons-round { font-size: 20px; }
+  &:hover { text-decoration: underline; }
 
-    .material-icons-round { font-size: 20px; }
-    &:hover { text-decoration: underline; }
+  @media (min-width: $bp-sm) {
+    display: none;
   }
 }
 
 .settings-content {
   padding-top: 60px;
   overflow-y: auto;
+  padding-left: 0;
+  display: none;
 
-  @include mobile-only {
-    display: none;
-    padding-left: 0;
+  &--visible { display: block; }
 
-    &--visible { display: block; }
+  @media (min-width: $bp-sm) {
+    display: block;
   }
 
   .settings-section {

@@ -1,5 +1,4 @@
 @use '../base/variables' as *;
-@use '../base/viewport' as *;
 
 // ================================
 // List View — shared row/card styles
@@ -83,9 +82,9 @@
 .list-mosaic > .list-card {
   width: 100%;
 
-  @include tablet-up { width: calc(50% - 8px); }
+  @media (min-width: $bp-sm) { width: calc(50% - 8px); }
 
-  @media (min-width: $desktop-xl) {
+  @media (min-width: $bp-xxxl) {
     width: calc(33.333% - 10.667px);
   }
 }

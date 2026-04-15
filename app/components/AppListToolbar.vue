@@ -12,9 +12,8 @@
       <div ref="sortRef" class="sort-dropdown">
         <button class="sort-dropdown__btn" :class="{ 'is-open': sortOpen }" @click="sortOpen = !sortOpen">
           <span class="material-icons-round">sort</span>
-          {{ sortLabel }}
-          <span class="material-icons-round sort-dropdown__chevron">{{ sortOpen ? 'expand_less' : 'expand_more'
-            }}</span>
+          <span class="sort-dropdown__label">{{ sortLabel }}</span>
+          <span class="material-icons-round sort-dropdown__chevron">{{ sortOpen ? 'expand_less' : 'expand_more' }}</span>
         </button>
         <div v-if="sortOpen" class="sort-dropdown__panel">
           <button v-for="opt in sortOptions" :key="opt.value" class="sort-dropdown__option"
@@ -36,9 +35,9 @@
       </div>
     </div>
 
-    <AppButton v-if="inactiveTo" variant="secondary" icon="toggle_off" :to="inactiveTo">Inactive</AppButton>
+    <AppButton v-if="inactiveTo" class="list-toolbar__action-btn" variant="secondary" icon="toggle_off" :to="inactiveTo">Inactive</AppButton>
 
-    <AppButton v-if="!hideAdd" class="add-label-button" icon="add" @click="$emit('add')">{{ addLabel }}</AppButton>
+    <AppButton v-if="!hideAdd" class="list-toolbar__action-btn add-label-button" icon="add" @click="$emit('add')">{{ addLabel }}</AppButton>
   </div>
 </template>
 
@@ -80,7 +79,9 @@ defineEmits<{
 const sortLabel = computed(() => sortOptions.find(o => o.value === props.sort)?.label ?? 'Sort')
 </script>
 
-<style scoped>
+<style scoped lang="scss">
+@use '~/assets/scss/base/variables' as *;
+
 .sort-dropdown {
   position: relative;
 }
@@ -88,10 +89,12 @@ const sortLabel = computed(() => sortOptions.find(o => o.value === props.sort)?.
 .sort-dropdown__btn {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center;
   gap: 6px;
-  height: 44px;
-  padding: 0 12px;
+  width: 40px;
+  min-width: 40px;
+  height: 40px;
+  padding: 0;
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
@@ -100,11 +103,27 @@ const sortLabel = computed(() => sortOptions.find(o => o.value === props.sort)?.
   cursor: pointer;
   transition: border-color 0.15s, background 0.15s;
   white-space: nowrap;
-  min-width: 160px;
 
   .material-icons-round {
     font-size: 18px;
     color: var(--color-text-muted);
+  }
+
+  @media (min-width: $bp-sm) {
+    justify-content: space-between;
+    width: auto;
+    min-width: 160px;
+    height: 44px;
+    padding: 0 12px;
+  }
+}
+
+.sort-dropdown__label,
+.sort-dropdown__chevron {
+  display: none;
+
+  @media (min-width: $bp-sm) {
+    display: inline;
   }
 }
 
@@ -164,7 +183,17 @@ const sortLabel = computed(() => sortOptions.find(o => o.value === props.sort)?.
   color: var(--color-primary);
 }
 
+.list-toolbar__action-btn {
+  width: 100%;
+
+  @media (min-width: $bp-sm) {
+    width: auto;
+  }
+}
+
 .add-label-button {
-  margin-left: auto;
+  @media (min-width: $bp-sm) {
+    margin-left: auto;
+  }
 }
 </style>

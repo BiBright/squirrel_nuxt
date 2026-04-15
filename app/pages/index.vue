@@ -444,7 +444,7 @@ const assignedEntries = computed((): FlatEntry[] => {
 })
 
 const yearlyLabels = computed<string[]>(() => {
-  if (!isSupplier.value && graphicData.value?.allMonths) return graphicData.value.allMonths
+  if (!isSupplier.value && graphicData.value?.allMonths) return graphicData.value.allMonths.map((m: string) => m.substring(0, 3))
   return ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 })
 
@@ -489,9 +489,15 @@ const approvalEntries = computed((): FlatEntry[] => {
 })
 </script>
 
-<style scoped>
+<style scoped lang="scss">
+@use '~/assets/scss/base/variables' as *;
+
 .dash-container {
-  margin-top: 68px;
+  margin-top: var(--header-height-mobile);
+
+  @media (min-width: 1280px) {
+    margin-top: var(--header-height);
+  }
 }
 
 .dash {
@@ -516,7 +522,7 @@ const approvalEntries = computed((): FlatEntry[] => {
 
 .dash__charts {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr;
   gap: var(--space-4);
 }
 
@@ -535,7 +541,7 @@ const approvalEntries = computed((): FlatEntry[] => {
     flex: 1;
   }
 
-  .dash__charts { gap: var(--space-6); }
+  .dash__charts { grid-template-columns: 1fr 1fr; gap: var(--space-6); }
 }
 
 .dash-excel-menu {
@@ -587,6 +593,14 @@ const approvalEntries = computed((): FlatEntry[] => {
   text-align: left;
 
   .material-icons-round { font-size: 18px; }
+}
+
+.dash__stats .row {
+  --gutter-y: var(--space-4);
+
+  @media (min-width: 768px) {
+    --gutter-y: 0;
+  }
 }
 
 .dash-stat {

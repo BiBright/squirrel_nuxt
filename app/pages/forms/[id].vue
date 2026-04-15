@@ -95,17 +95,27 @@
                 <div class="modal-field-list">
                   <div v-for="f in filteredAvailable" :key="f.id" class="modal-field-item"
                     :class="{ 'is-selected': isSelected(f.id) }" @click="addField(f)">
+                    <span class="material-icons-round modal-field-item__action">{{ isSelected(f.id) ? 'check' : 'add' }}</span>
                     <span class="material-icons-round modal-field-item__icon">{{ typeIcon(f.type) }}</span>
                     <div class="modal-field-item__info">
                       <span class="create-select__name">{{ f.name }}</span>
                       <span class="create-select__sub">{{ f.type_label }}</span>
                     </div>
-                    <span class="material-icons-round modal-field-item__action">{{ isSelected(f.id) ? 'check' : 'add' }}</span>
+                  </div>
+                </div>
+                <div v-if="selectedFields.length > 0" class="modal-selected">
+                  <p class="modal-selected__label caption3">Selected ({{ selectedFields.length }})</p>
+                  <div v-for="(sf, idx) in selectedFields" :key="sf.id" class="modal-selected-item">
+                    <span class="modal-selected-item__name">{{ sf.name }}</span>
+                    <button type="button" class="modal-selected-item__remove" @click.stop="removeField(idx)">
+                      <span class="material-icons-round">close</span>
+                    </button>
                   </div>
                 </div>
               </template>
               <template #footer>
-                <AppButton @click="showFieldModal = false">Done</AppButton>
+                <AppButton variant="ghost" @click="showFieldModal = false">Cancel</AppButton>
+                <AppButton @click="showFieldModal = false">Add ({{ selectedFields.length }})</AppButton>
               </template>
             </AppModal>
             </div>
@@ -414,6 +424,49 @@ async function onSubmit() {
 .modal-field-item__action {
   font-size: 18px;
   color: var(--color-text-muted);
+  flex-shrink: 0;
+}
+
+.modal-selected {
+  margin-top: var(--space-3);
+  border-top: 1px solid var(--color-border);
+  padding-top: var(--space-2);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.modal-selected__label {
+  color: var(--color-text-muted);
+  margin-bottom: var(--space-1);
+}
+
+.modal-selected-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-2);
+  font-size: var(--text-sm);
+}
+
+.modal-selected-item__name {
+  flex: 1;
+  font-weight: 500;
+  color: var(--color-text);
+}
+
+.modal-selected-item__remove {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--color-text-muted);
+  display: flex;
+  align-items: center;
+  padding: 0;
+
+  .material-icons-round { font-size: 16px; }
+
+  &:hover { color: var(--color-danger); }
 }
 
 .create-select__name {

@@ -1,5 +1,4 @@
 @use '../base/variables' as *;
-@use '../base/viewport' as *;
 
 // ================================
 // Input Base
@@ -19,7 +18,7 @@
   outline: none;
   appearance: none;
 
-  @include desktop-up { font-size: 16px; }
+  @media (min-width: $bp-md) { font-size: 16px; }
 
   &::placeholder { color: $black40; }
   &:hover        { border-color: $white40; }
@@ -31,7 +30,7 @@
   @extend %input-base;
   height: 40px;
 
-  @include desktop-up { height: 44px; }
+  @media (min-width: $bp-md) { height: 44px; }
 }
 
 // Textarea
@@ -85,7 +84,7 @@
   flex-direction: column;
   margin-bottom: var(--space-6);
 
-  @include desktop-up { margin-bottom: 36px; }
+  @media (min-width: $bp-md) { margin-bottom: 36px; }
 }
 
 // Password field

@@ -79,7 +79,9 @@ const filtered = computed(() => {
 })
 </script>
 
-<style scoped>
+<style scoped lang="scss">
+@use '~/assets/scss/base/variables' as *;
+
 .app-select {
   position: relative;
   display: block;
