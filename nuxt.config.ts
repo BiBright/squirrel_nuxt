@@ -27,8 +27,8 @@ devtools: { enabled: true },
 
   runtimeConfig: {
     public: {
-      apiBase: 'http://localhost:8000/api',
-      apiOrigin: 'http://localhost:8000',
+      apiBase: process.env.NUXT_PUBLIC_API_BASE,
+      apiOrigin: process.env.NUXT_PUBLIC_API_ORIGIN,
     },
   },
 })
