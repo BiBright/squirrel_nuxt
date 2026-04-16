@@ -53,7 +53,7 @@
                   <span class="material-icons-round">local_shipping</span>
                   {{ entry.supplier.name }}
                 </div>
-                
+
                 <hr class="entry-divider">
 
                 <div class="entry-form-info">
@@ -97,7 +97,8 @@
                       <div v-if="canEdit" class="entry-field__upload">
                         <AppFileUpload @change="onFileChange(field.id, $event)" />
                       </div>
-                      <p v-else-if="!getAnswer(field.id)?.file_name" class="entry-field__description">No file uploaded yet.</p>
+                      <p v-else-if="!getAnswer(field.id)?.file_name" class="entry-field__description">No file uploaded
+                        yet.</p>
                     </template>
 
                     <AppInput v-else v-model="answers[field.id]" :type="fieldInputType(field.type)"
@@ -166,11 +167,15 @@
                   <button class="assignee-dropdown__trigger" type="button" @click="assigneeOpen = !assigneeOpen">
                     <span class="material-icons-round">account_circle</span>
                     <span class="assignee-dropdown__value">{{ selectedAssigneeName }}</span>
-                    <span class="material-icons-round assignee-dropdown__chevron" :class="{ 'is-open': assigneeOpen }">expand_more</span>
+                    <span class="material-icons-round assignee-dropdown__chevron"
+                      :class="{ 'is-open': assigneeOpen }">expand_more</span>
                   </button>
                   <ul v-if="assigneeOpen" class="assignee-dropdown__menu">
-                    <li class="assignee-dropdown__option" :class="{ 'is-active': selectedAssigneeId === null }" @click="selectAssignee(null)">Select user</li>
-                    <li v-for="u in availableUsers" :key="u.id" class="assignee-dropdown__option" :class="{ 'is-active': selectedAssigneeId === u.id }" @click="selectAssignee(u.id)">{{ u.name }}</li>
+                    <li class="assignee-dropdown__option" :class="{ 'is-active': selectedAssigneeId === null }"
+                      @click="selectAssignee(null)">Select user</li>
+                    <li v-for="u in availableUsers" :key="u.id" class="assignee-dropdown__option"
+                      :class="{ 'is-active': selectedAssigneeId === u.id }" @click="selectAssignee(u.id)">{{ u.name }}
+                    </li>
                   </ul>
                 </div>
               </div>
@@ -520,7 +525,6 @@ async function onSave() {
 async function onApprove() {
   if (!entry.value) return
   approving.value = true
-  console.log('[onApprove] sending comment:', comment.value)
   try {
     const res = await api<{ data: { status: { value: string; label: string }; comments?: EntryComment[] } }>(`/request-entries/${entry.value.id}/approve`, { method: 'POST', body: { comment: comment.value } })
     if (res.data?.status) entry.value.status = res.data.status
@@ -538,7 +542,6 @@ async function onApprove() {
 async function onReject() {
   if (!entry.value) return
   rejecting.value = true
-  console.log('[onReject] sending comment:', comment.value)
   try {
     const res = await api<{ data: { status: { value: string; label: string }; comments?: EntryComment[] } }>(`/request-entries/${entry.value.id}/reject`, { method: 'POST', body: { comment: comment.value } })
     if (res.data?.status) entry.value.status = res.data.status
@@ -817,8 +820,13 @@ function statusDescription(value: string): string {
   font-weight: 600;
   text-transform: capitalize;
 
-  &[data-action="approved"] { color: var(--color-green); }
-  &[data-action="rejected"] { color: var(--color-danger); }
+  &[data-action="approved"] {
+    color: var(--color-green);
+  }
+
+  &[data-action="rejected"] {
+    color: var(--color-danger);
+  }
 }
 
 .entry-comment__date {
@@ -844,15 +852,28 @@ function statusDescription(value: string): string {
   order: 1;
 }
 
-@media (min-width: 768px) {
+@media (min-width: $bp-md) {
   .entry-form-col {
     order: initial;
   }
 }
 
-@media (min-width: $bp-md) {
-  .entry-col-main { width: 58.3333%; flex: 0 0 auto; }
-  .entry-col-side { width: 41.6667%; flex: 0 0 auto; }
+.entry-col-main {
+  margin-bottom: 32px;
+
+  @media (min-width: $bp-md) {
+    width: 58.3333%;
+    flex: 0 0 auto;
+  }
+}
+
+.entry-col-side {
+  margin-bottom: 32px;
+
+  @media (min-width: $bp-md) {
+    width: 41.6667%;
+    flex: 0 0 auto;
+  }
 }
 
 .entry-status {
@@ -992,7 +1013,11 @@ function statusDescription(value: string): string {
   width: 100%;
   text-align: left;
 
-  .material-icons-round { font-size: 20px; color: var(--color-text-muted); flex-shrink: 0; }
+  .material-icons-round {
+    font-size: 20px;
+    color: var(--color-text-muted);
+    flex-shrink: 0;
+  }
 }
 
 .assignee-dropdown__value {
@@ -1001,7 +1026,10 @@ function statusDescription(value: string): string {
 
 .assignee-dropdown__chevron {
   transition: transform 0.15s;
-  &.is-open { transform: rotate(180deg); }
+
+  &.is-open {
+    transform: rotate(180deg);
+  }
 }
 
 .assignee-dropdown__menu {
@@ -1025,7 +1053,13 @@ function statusDescription(value: string): string {
   color: var(--color-text);
   cursor: pointer;
 
-  &:hover { background: var(--color-surface-hover); }
-  &.is-active { color: var(--color-primary); font-weight: 700; }
+  &:hover {
+    background: var(--color-surface-hover);
+  }
+
+  &.is-active {
+    color: var(--color-primary);
+    font-weight: 700;
+  }
 }
 </style>

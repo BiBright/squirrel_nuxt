@@ -141,7 +141,6 @@ async function fetchData() {
     const api = useApi()
     const res = await api<{ data: Supplier[] | PaginatedResponse<Supplier> }>(`/suppliers?page=${page.value}`)
     const d = res.data
-    console.log('here the suppliers list:' , d);
     if (Array.isArray(d)) { suppliers.value = d }
     else { suppliers.value = d.data; setMeta(d.meta) }
   }

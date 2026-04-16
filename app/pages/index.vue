@@ -349,8 +349,6 @@ const isMaster = computed(() => authStore.user?.roles === 'master')
 const isSupplier = computed(() => authStore.user?.roles === 'supplier')
 
 onMounted(async () => {
-  console.log('[Dashboard] auth user:', authStore.user)
-  console.log('[Dashboard] auth company:', authStore.company)
   const api = useApi()
   try {
     if (isMaster.value) {

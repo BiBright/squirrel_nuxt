@@ -114,7 +114,6 @@ onMounted(async () => {
   try {
     const api = useApi()
     const res = await api<{ data: Company[] }>('/master/companies')
-    console.log('Company:::', JSON.stringify(res.data[0], null, 2))
     companies.value = res.data
   }
   catch (err) {

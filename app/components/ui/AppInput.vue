@@ -98,6 +98,6 @@ const model = computed({
   set: (val) => emit('update:modelValue', val),
 })
 
-const inputId = `input-${Math.random().toString(36).slice(2, 9)}`
+const inputId = useId()
 const showPassword = ref(false)
 </script>

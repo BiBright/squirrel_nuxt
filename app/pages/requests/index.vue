@@ -142,7 +142,6 @@ onMounted(async () => {
     try {
       const res = await api<{ data: unknown }>('/supplier/requests')
       const d = res.data as Record<string, unknown>
-      console.log(d);
       const items: unknown[] = Array.isArray(d) ? d : ((d.data as unknown[]) ?? [])
       supplierRequests.value = (items as Record<string, unknown>[]).filter(req => req.is_active !== false).map(req => ({
         request_id: req.id as number,

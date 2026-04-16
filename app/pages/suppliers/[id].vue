@@ -92,7 +92,6 @@ watch(form, () => { _ready.value && (isDirty.value = true) }, { deep: true })
 onMounted(async () => {
   const api = useApi()
   api<{ data: Country[] }>('/countries').then(res => {
-    console.log('[Suppliers] countries:', res.data)
     countries.value = res.data
   })
 

@@ -7,6 +7,7 @@
   bottom: auto;
   height: calc(100vh - #{$header-height-mobile});
   width: 100%;
+  border-radius: 0 0 8px 8px;
   background: $white;
   border: none;
   display: flex;
@@ -17,11 +18,11 @@
   box-shadow: none;
 
   @media (min-width: $bp-sm) {
-    top: $header-height;
     height: 50vh;
   }
 
   @media (min-width: $bp-md) {
+    border-radius: 0;
     top: 0;
     bottom: 0;
     height: auto;

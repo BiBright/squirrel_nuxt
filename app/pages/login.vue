@@ -111,8 +111,6 @@ async function onSubmit() {
       },
     )
 
-    console.log('[Login] full response:', res)
-    console.log('[Login] user being stored:', res.data.user)
     authStore.setUser(res.data.user)
     if (res.data.company) authStore.setCompany(res.data.company)
 

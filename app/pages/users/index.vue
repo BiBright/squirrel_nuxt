@@ -125,7 +125,6 @@ async function fetchData() {
     const api = useApi()
     const res = await api<{ data: User[] | PaginatedResponse<User> }>(`/users?page=${page.value}`)
     const d = res.data
-    console.log(d);
     if (Array.isArray(d)) { users.value = d }
     else { users.value = d.data; setMeta(d.meta) }
     usersCache.value = users.value

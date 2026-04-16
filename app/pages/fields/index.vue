@@ -142,7 +142,6 @@ async function fetchData() {
     const api = useApi()
     const res = await api<{ data: Field[] | PaginatedResponse<Field> }>(`/fields?page=${page.value}`)
     const d = res.data
-    console.log(d);
     if (Array.isArray(d)) { fields.value = d }
     else { fields.value = d.data; setMeta(d.meta) }
   }
