@@ -264,7 +264,7 @@ async function onSend() {
   align-items: center;
   gap: var(--space-4);
   padding: var(--space-4) var(--space-5);
-  background: $black5;
+  background: $black10;
   border: 1px solid $black10;
   border-radius: var(--radius-md);
 }
