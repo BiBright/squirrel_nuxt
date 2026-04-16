@@ -1,10 +1,7 @@
 @use '../base/variables' as *;
 
-// ================================
-// Input Base
-// ================================
-
 %input-base {
+  box-sizing: border-box;
   width: 100%;
   border: 1px solid $black20;
   font-size: 14px;
@@ -17,15 +14,15 @@
   font-family: $font-base;
   outline: none;
   appearance: none;
+  margin-bottom: 20px;
 
-  @media (min-width: $bp-md) { font-size: 16px; }
+  @media (min-width: $bp-md) { font-size: 16px; margin-bottom: 0;}
 
   &::placeholder { color: $black40; }
   &:hover        { border-color: $white40; }
   &:focus        { border-color: $primary100; box-shadow: none; }
 }
 
-// Text input
 .input-text {
   @extend %input-base;
   height: 40px;
@@ -33,7 +30,6 @@
   @media (min-width: $bp-md) { height: 44px; }
 }
 
-// Textarea
 .input-textarea {
   @extend %input-base;
   min-height: 188px;
@@ -75,10 +71,6 @@
   cursor: pointer;
 }
 
-// ================================
-// Form Group
-// ================================
-
 .form-group {
   display: flex;
   flex-direction: column;
@@ -87,7 +79,6 @@
   @media (min-width: $bp-md) { margin-bottom: 36px; }
 }
 
-// Password field
 .input-password-wrapper {
   position: relative;
 

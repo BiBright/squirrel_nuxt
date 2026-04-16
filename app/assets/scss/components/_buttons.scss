@@ -1,8 +1,5 @@
 @use "../base/variables" as *;
 
-// ================================
-// Button Components
-// ================================
 
 %btn-base {
   display: inline-flex;
@@ -35,7 +32,6 @@
   }
 }
 
-// Icon inside button
 .btn-icon {
   font-size: 16px;
   margin-right: 8px;
@@ -47,7 +43,6 @@
   }
 }
 
-// Primary — filled blue
 .btn-primary {
   @extend %btn-base;
   background: $primary100;
@@ -68,7 +63,6 @@
   }
 }
 
-// Secondary — light blue tint
 .btn-secondary {
   @extend %btn-base;
   background: $primary25;
@@ -85,7 +79,6 @@
   }
 }
 
-// Ghost — transparent / text link
 .btn-ghost {
   @extend %btn-base;
   background: $primary25;
@@ -96,7 +89,6 @@
   }
 }
 
-// Danger — red action
 .btn-danger {
   @extend %btn-base;
   background: $red100;
@@ -111,7 +103,6 @@
   }
 }
 
-// Success — green action
 .btn-success {
   @extend %btn-base;
   background: $green100;
@@ -126,7 +117,6 @@
   }
 }
 
-// View toggle — card / list toggle buttons
 .btn-view {
   display: inline-flex;
   align-items: center;
@@ -159,7 +149,6 @@
   }
 }
 
-// Right-aligned button container
 .btn-container-right {
   display: flex;
   justify-content: flex-end;

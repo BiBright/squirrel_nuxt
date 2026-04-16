@@ -878,7 +878,6 @@ function statusDescription(value: string): string {
 
 .entry-status {
   padding: 0;
-  border-top: 1px solid var(--color-border);
   display: flex;
   flex-direction: column;
   gap: var(--space-4);

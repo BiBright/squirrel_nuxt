@@ -1,9 +1,5 @@
 @use '../base/variables' as *;
 
-// ================================
-// Settings Page
-// ================================
-
 .settings-menu {
   border-right: none;
   padding-right: 0;
@@ -113,7 +109,6 @@
   }
 }
 
-// ── Notifications section ─────────────────────────────
 .notif-loading {
   color: $black60;
 }

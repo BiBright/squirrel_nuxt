@@ -1,9 +1,5 @@
 @use '../base/variables' as *;
 
-// ================================
-// List View — shared row/card styles
-// ================================
-
 .list-container {
   background: $white;
   border: 1px solid $white20;
@@ -28,7 +24,6 @@
   }
 }
 
-// Checkbox cell
 .list-col-check {
   display: flex;
   align-items: center;
@@ -41,7 +36,6 @@
   }
 }
 
-// Row menu (3-dot actions)
 .list-col-menu {
   display: flex;
   align-items: center;
@@ -68,10 +62,6 @@
     .material-icons-round { font-size: 20px; }
   }
 }
-
-// ================================
-// Mosaic / Grid View
-// ================================
 
 .list-mosaic {
   display: flex;
@@ -162,10 +152,6 @@
   }
 }
 
-// ================================
-// AppTable cell helpers
-// ================================
-
 .app-table__cell-link {
   display: block;
   color: var(--color-primary);
@@ -177,10 +163,6 @@
 
   &:hover { color: var(--color-primary-75); }
 }
-
-// ================================
-// Empty state
-// ================================
 
 .list-empty {
   padding: var(--space-12) var(--space-5);

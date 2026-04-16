@@ -17,7 +17,7 @@
           </div>
 
           <form v-else novalidate class="create-form" @submit.prevent="onSubmit">
-            <div class="col-10">
+            <div class="col-12 col-md-10">
             <AppCard>
               <AppInput v-model="form.name" label="Title" placeholder="e.g. Supplier Qualification Form"
                 :error="errors.name" />
