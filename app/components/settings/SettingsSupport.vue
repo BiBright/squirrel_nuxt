@@ -15,20 +15,25 @@
             <span class="material-icons-round support-card__icon">quiz</span>
             <div class="support-card__info">
               <p class="support-card__title cta2">FAQs</p>
+              <span class="support-card__divider" />
               <p class="support-card__sub caption3">Common questions, quick answers.</p>
             </div>
           </button>
+
           <button type="button" class="support-card" @click="activeTab = 'tutorials'">
             <span class="material-icons-round support-card__icon">ondemand_video</span>
             <div class="support-card__info">
               <p class="support-card__title cta2">Tutorials</p>
+              <span class="support-card__divider" />
               <p class="support-card__sub caption3">Step-by-step guides, easy learning.</p>
             </div>
           </button>
+
           <button type="button" class="support-card" @click="activeTab = 'contact'">
             <span class="material-icons-round support-card__icon">contact_support</span>
             <div class="support-card__info">
               <p class="support-card__title cta2">Get in touch</p>
+              <span class="support-card__divider" />
               <p class="support-card__sub caption3">Reach out for help directly.</p>
             </div>
           </button>
@@ -38,7 +43,7 @@
 
     <template v-else>
       <button type="button" class="support-back cta2" @click="activeTab = null">
-        <span class="material-icons-round">arrow_back</span>
+        <span class="material-icons-round">chevron_left</span>
         Back
       </button>
 
@@ -145,6 +150,7 @@ async function onSend() {
 <style lang="scss" scoped>
 @use '~/assets/scss/base/variables' as *;
 
+
 .support-content {
   border-radius: var(--radius-md);
   padding: var(--space-14) var(--space-8);
@@ -154,21 +160,22 @@ async function onSend() {
 .support-hero {
   text-align: center;
   margin-bottom: var(--space-12);
-
-  &__title {
-    color: var(--color-black);
-  }
 }
 
 .support-cards {
   display: flex;
-  flex-direction: column;
+  flex-direction: column; 
   gap: var(--space-3);
+
+  @media (min-width: $bp-md) {
+    flex-direction: row;
+    gap: var(--space-4);
+  }
 }
 
 .support-card {
   display: flex;
-  flex-direction: row;
+  flex-direction: row; 
   align-items: center;
   gap: var(--space-4);
   padding: var(--space-4) var(--space-5);
@@ -177,9 +184,19 @@ async function onSend() {
   cursor: pointer;
   text-align: left;
   border: none;
+  transition: all 0.2s ease;
 
   &:hover {
     background: var(--color-white60);
+  }
+
+  @media (min-width: $bp-md) {
+    flex: 1;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: var(--space-17) var(--space-16);
+    gap: var(--space-3);
   }
 }
 
@@ -190,12 +207,35 @@ async function onSend() {
   padding: var(--space-3);
   border-radius: var(--radius-md);
   flex-shrink: 0;
+
+  @media (min-width: $bp-md) {
+    font-size: var(--space-14);
+    background: transparent;    
+    padding: 0;
+  }
 }
 
 .support-card__info {
   display: flex;
   flex-direction: column;
   gap: var(--space-1);
+
+  @media (min-width: $bp-md) {
+    align-items: center;
+    gap: var(--space-3);
+  }
+}
+
+.support-card__divider {
+  display: none;
+
+  @media (min-width: $bp-md) {
+    display: block;
+    width: var(--space-14);
+    height: 1px;
+    background: var(--color-black40);
+    border-radius: 2px;
+  }
 }
 
 .support-card__title {
@@ -213,10 +253,6 @@ async function onSend() {
   padding: 0;
   margin-bottom: var(--space-6);
   font-family: $font-base;
-
-  &:hover {
-    text-decoration: underline;
-  }
 }
 
 .faq-item {
@@ -313,4 +349,5 @@ async function onSend() {
 .contact-success__sub {
   color: $black60;
 }
+
 </style>
