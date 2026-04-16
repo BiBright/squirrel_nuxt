@@ -1,25 +1,6 @@
 @use "sass:math";
 @use 'variables' as *;
 
-// ============================================================
-// Grid System — squirrel_nuxt
-// Mobile-first · 12 columns · Bootstrap-style padding gutters
-// ============================================================
-//
-// Breakpoint prefixes:
-//   (none)  320–767px   mobile
-//   sm      768px+      tablet
-//   md      1280px+     desktop
-//   xl      1440px+     desktop large  (nav sidebar: 288px)
-//   xxl     1536px+     desktop xlarge (nav sidebar: 324px)
-//
-// Usage:
-//   <div class="container">
-//     <div class="row">
-//       <div class="col-12 col-sm-6 col-md-4">...</div>
-//     </div>
-//   </div>
-// ============================================================
 
 $nav-width-xl: 288px;
 $nav-width-xxl: 324px;

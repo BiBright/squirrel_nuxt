@@ -6,7 +6,12 @@
   flex-direction: column;
   background: $white;
 
+  @media (min-width: $bp-sm) {
+    padding: 416px 68px 0; 
+  }
+
   @media (min-width: $bp-md) {
+    padding: 0;
     flex-direction: row;
   }
 }
@@ -59,7 +64,6 @@
   }
 }
 
-// Right panel — form
 .login-form-wrapper {
   display: flex;
   flex-direction: column;

@@ -7,7 +7,7 @@
           <AppBreadcrumb :items="[{ label: 'Requests', to: '/requests' }, { label: requestTitle }]" />
         </div>
 
-        <div v-if="loading" class="col-12 col-md-7">
+        <div v-if="loading" class="col-12 col-md-7 entry-col-main">
           <div class="skeleton-form">
             <AppSkeleton width="55%" height="22px" />
             <AppSkeleton width="75%" height="13px" />
@@ -33,20 +33,20 @@
 
         <template v-else-if="entry">
 
-          <div class="col-12 col-md-7">
+          <div class="col-12 col-md-7 entry-col-main">
             <div class="entry-header">
               <h1 class="label-01">{{ form?.name ?? entry.form.name }}</h1>
             </div>
           </div>
 
-          <div v-if="!isSupplier || !isCompanyUser" class="col-12 col-md-5">
+          <div v-if="!isSupplier || !isCompanyUser" class="col-12 col-md-5 entry-col-side">
             <div class="entry-header__pill" :data-status="entry.status.value">
               <span class="material-icons-outlined">{{ statusIcon(entry.status.value) }}</span>
               {{ entry.status.label }}
             </div>
           </div>
 
-          <div class="col-12 col-md-7 entry-form-col">
+          <div class="col-12 col-md-7 entry-col-main entry-form-col">
             <div class="request-entry-card">
               <AppCard>
                 <div v-if="entry.supplier?.name" class="entry-supplier">
@@ -116,7 +116,7 @@
             </div>
           </div>
 
-          <div v-if="!isSupplier || !isCompanyUser" class="col-12 col-md-5">
+          <div v-if="!isSupplier || !isCompanyUser" class="col-12 col-md-5 entry-col-side">
             <div class="entry-status">
               <div class="entry-status__card">
                 <div class="entry-status__card-header" :data-status="entry.status.value">
@@ -848,6 +848,11 @@ function statusDescription(value: string): string {
   .entry-form-col {
     order: initial;
   }
+}
+
+@media (min-width: $bp-md) {
+  .entry-col-main { width: 58.3333%; flex: 0 0 auto; }
+  .entry-col-side { width: 41.6667%; flex: 0 0 auto; }
 }
 
 .entry-status {
