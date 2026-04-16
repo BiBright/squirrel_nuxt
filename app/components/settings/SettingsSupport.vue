@@ -142,7 +142,7 @@ async function onSend() {
 }
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
 @use '~/assets/scss/base/variables' as *;
 
 .support-content {
