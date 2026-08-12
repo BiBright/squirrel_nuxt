@@ -4,7 +4,7 @@
       <div class="row">
 
         <div class="col-12">
-          <AppBreadcrumb :items="[{ label: 'Suppliers', to: '/suppliers' }, { label: isEdit ? (form.name || 'Edit Supplier') : 'New Supplier' }]" />
+          <AppBreadcrumb :items="[{ label: 'Suppliers', to: backTo }, { label: isEdit ? (form.name || 'Edit Supplier') : 'New Supplier' }]" />
         </div>
 
         <div class="col-12">
@@ -42,7 +42,7 @@
             </div>
 
             <div class="create-form__actions">
-              <AppButton variant="ghost" to="/suppliers">Cancel</AppButton>
+              <AppButton variant="ghost" :to="backTo">Cancel</AppButton>
               <AppButton type="submit" :loading="loading">{{ isEdit ? 'Update' : 'Save' }}</AppButton>
             </div>
           </form>
@@ -67,6 +67,7 @@ interface Country {
 const route = useRoute()
 const id = computed(() => route.params.id as string | undefined)
 const isEdit = computed(() => !!id.value && id.value !== 'create')
+const backTo = computed(() => route.query.status === 'inactive' ? '/suppliers?status=inactive' : '/suppliers')
 
 const countries = ref<Country[]>([])
 
@@ -155,7 +156,7 @@ async function onSubmit() {
       toast.success('Supplier created', { category: 'supplier' })
     }
     isDirty.value = false
-    await navigateTo('/suppliers')
+    await navigateTo(backTo.value)
   }
   catch (err: unknown) {
     toast.error(err, isEdit.value ? 'Could not update supplier' : 'Could not create supplier', { category: 'supplier' })

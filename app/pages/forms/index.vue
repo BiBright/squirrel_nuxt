@@ -7,12 +7,12 @@
           <AppBreadcrumb :items="[{ label: 'Models' }, { label: 'Forms', to: '/forms' }]" />
         </div>
 
-        <AppPageHeader title="Forms" />
+        <AppPageHeader :title="isInactive ? 'Inactive Forms' : 'Forms'" />
 
         <div class="col-12">
           <AppListToolbar v-model:search="search" v-model:sort="sort" v-model:view="view" label="form"
-            add-label="New Form" inactive-to="/forms/inactive"
-            @add="navigateTo('/forms/create')" />
+            add-label="New Form" show-toggle :is-active="!isInactive"
+            @update:is-active="(v: boolean) => setInactive(!v)" @add="navigateTo('/forms/create')" />
         </div>
 
         <div class="col-12">
@@ -24,7 +24,10 @@
             <div class="skeleton-row"><AppSkeleton width="40%" /><AppSkeleton width="28%" /><AppSkeleton width="15%" /></div>
           </div>
 
-          <AppBlankState v-else-if="blankState.show.value" :image="blankState.image.value"
+          <AppBlankState v-else-if="isInactive && deletedFiltered.length === 0" image="/images/blankPages/noResult.svg"
+            title="Oops!" message="No deleted forms." />
+
+          <AppBlankState v-else-if="!isInactive && blankState.show.value" :image="blankState.image.value"
             :title="blankState.title.value" :message="blankState.message.value">
             <AppButton to="/forms/create">
               <span class="material-icons-round">add</span>
@@ -33,9 +36,9 @@
           </AppBlankState>
 
           <template v-else-if="effectiveView === 'list'">
-            <AppTable :columns="columns" :rows="tableRows" button-edit button-deactivate @edit="(row) => navigateTo(`/forms/${row._raw.id}`)" @deactivate="onDeleteRow">
+            <AppTable v-if="!isInactive" :columns="columns" :rows="tableRows" @edit="(row) => navigateTo(formLink((row._raw as Form).id))" @deactivate="onDeleteRow">
               <template #cell-name="{ value, row }">
-                <NuxtLink :to="`/forms/${row._raw.id}`" class="app-table__cell-link subheading-1">{{ value }}</NuxtLink>
+                <NuxtLink :to="formLink((row._raw as Form).id)" class="app-table__cell-link subheading-1">{{ value }}</NuxtLink>
               </template>
 
               <template #cell-fields="{ value }">
@@ -50,13 +53,20 @@
                 <span v-else class="text-muted">—</span>
               </template>
             </AppTable>
+
+            <AppTable v-else :columns="deletedColumns" :rows="deletedTableRows" :is-active="false"
+              @activate="(row) => onActivate(row._raw as DeletedForm)" @delete="(row) => onDelete(row._raw as DeletedForm)">
+              <template #cell-name="{ value, row }">
+                <NuxtLink :to="formLink((row._raw as DeletedForm).id)" class="app-table__cell-link subheading-1">{{ value }}</NuxtLink>
+              </template>
+            </AppTable>
           </template>
 
-          <template v-else>
+          <template v-else-if="!isInactive">
             <div class="list-mosaic">
               <div v-for="form in filtered" :key="form.id" class="list-card">
                 <div class="list-card__header">
-                  <NuxtLink :to="`/forms/${form.id}`" class="list-card__title cta2">{{ form.name }}</NuxtLink>
+                  <NuxtLink :to="formLink(form.id)" class="list-card__title cta2">{{ form.name }}</NuxtLink>
                 </div>
                 <div class="list-card__meta">
                   <div v-if="form.description" class="list-card__meta-row caption3">
@@ -71,9 +81,30 @@
               </div>
             </div>
           </template>
+
+          <template v-else>
+            <div class="list-mosaic">
+              <div v-for="item in deletedFiltered" :key="item.id" class="list-card">
+                <div class="list-card__header">
+                  <NuxtLink :to="formLink(item.id)" class="list-card__title cta2">{{ item.name }}</NuxtLink>
+                  <div class="list-card__actions">
+                    <button class="list-card__activate" title="Activate" @click="onActivate(item)">
+                      <span class="material-icons-round">toggle_on</span>
+                    </button>
+                    <button class="list-card__delete" title="Delete" @click="onDelete(item)">
+                      <span class="material-icons-round">delete</span>
+                    </button>
+                  </div>
+                </div>
+                <div class="list-card__meta">
+                  <div class="list-card__meta-row caption3">Deleted {{ formatDate(item.updated_at) }}</div>
+                </div>
+              </div>
+            </div>
+          </template>
         </div>
 
-        <div class="col-12">
+        <div v-if="!isInactive" class="col-12">
           <AppPagination :page="page" :last-page="lastPage" :total="total" @go="goTo" />
         </div>
       </div>
@@ -90,12 +121,27 @@ interface Form {
   description: string | null
   template_file_name: string | null
   template_file_url: string | null
+  fields_count: number
+  is_active: boolean
+  has_template: boolean
+  created_at: string
+}
+
+interface DeletedForm {
+  id: number
+  name: string
+  updated_at: string
 }
 
 const columns = [
   { key: 'name', label: 'Name', primary: true },
   { key: 'description', label: 'Description' },
   { key: 'template', label: 'File' },
+]
+
+const deletedColumns = [
+  { key: 'name', label: 'Name', primary: true },
+  { key: 'deleted', label: 'Deleted' },
 ]
 
 interface PaginationMeta {
@@ -110,9 +156,14 @@ interface PaginatedResponse<T> {
   meta: PaginationMeta
 }
 
+const route = useRoute()
+const router = useRouter()
+const isInactive = computed(() => route.query.status === 'inactive')
+
 const toast = useAppToast()
 const forms = ref<Form[]>([])
-const loading = ref(true)
+const deletedForms = ref<DeletedForm[]>([])
+const { loading, withMinTime } = useMinLoadingTime()
 const { search, sort, view } = useListToolbar()
 const isMobile = ref(false)
 onMounted(() => {
@@ -123,21 +174,42 @@ onMounted(() => {
 const effectiveView = computed(() => isMobile.value ? 'grid' : view.value)
 const { page, lastPage, total, setMeta, goTo } = useListPagination()
 
+function setInactive(value: boolean) {
+  const query = { ...route.query }
+  if (value) query.status = 'inactive'
+  else delete query.status
+  router.replace({ query })
+}
+
+function formLink(id: number) {
+  return isInactive.value ? `/forms/${id}?status=inactive` : `/forms/${id}`
+}
+
 async function fetchData() {
-  loading.value = true
-  try {
-    const api = useApi()
-    const res = await api<{ data: Form[] | PaginatedResponse<Form> }>(`/forms?page=${page.value}`)
-    const d = res.data
-    if (Array.isArray(d)) { forms.value = d }
-    else { forms.value = d.data; setMeta(d.meta) }
-  }
-  catch { forms.value = [] }
-  finally { loading.value = false }
+  await withMinTime(async () => {
+    try {
+      const api = useApi()
+      if (isInactive.value) {
+        const res = await api<{ data: DeletedForm[] }>('/forms/inactive')
+        deletedForms.value = res.data ?? []
+      }
+      else {
+        const res = await api<{ data: Form[] | PaginatedResponse<Form> }>(`/forms?page=${page.value}`)
+        const d = res.data
+        if (Array.isArray(d)) { forms.value = d }
+        else { forms.value = d.data; setMeta(d.meta) }
+      }
+    }
+    catch {
+      if (isInactive.value) deletedForms.value = []
+      else forms.value = []
+    }
+  })
 }
 
 onMounted(fetchData)
 watch(page, fetchData)
+watch(isInactive, fetchData)
 
 const filtered = computed(() => {
   let result = [...forms.value]
@@ -149,6 +221,19 @@ const filtered = computed(() => {
   else if (sort.value === 'za') result.sort((a, b) => b.name.localeCompare(a.name))
   else if (sort.value === 'oldest') result.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
   else result.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+  return result
+})
+
+const deletedFiltered = computed(() => {
+  let result = [...deletedForms.value]
+  if (search.value) {
+    const q = search.value.toLowerCase()
+    result = result.filter(f => f.name.toLowerCase().includes(q))
+  }
+  if (sort.value === 'az') result.sort((a, b) => a.name.localeCompare(b.name))
+  else if (sort.value === 'za') result.sort((a, b) => b.name.localeCompare(a.name))
+  else if (sort.value === 'oldest') result.sort((a, b) => new Date(a.updated_at).getTime() - new Date(b.updated_at).getTime())
+  else result.sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime())
   return result
 })
 
@@ -171,17 +256,45 @@ const tableRows = computed(() =>
   })),
 )
 
+const deletedTableRows = computed(() =>
+  deletedFiltered.value.map(f => ({
+    name: f.name,
+    deleted: formatDate(f.updated_at),
+    _raw: f,
+  })),
+)
+
 async function onDeleteRow(row: Record<string, unknown>, _idx: number) {
   const form = row._raw as Form
   try {
     const api = useApi()
     await api(`/forms/${form.id}/toggle-active`, { method: 'PATCH' })
     toast.success('Form deactivated', { category: 'form' })
-    await navigateTo('/forms/inactive')
+    await fetchData()
   }
   catch (err) {
     toast.error(err, 'Could not deactivate form', { category: 'form' })
   }
+}
+
+async function onActivate(item: DeletedForm) {
+  try {
+    const api = useApi()
+    await api(`/forms/${item.id}/toggle-active`, { method: 'PATCH' })
+    deletedForms.value = deletedForms.value.filter(i => i.id !== item.id)
+    toast.success('Form activated', { category: 'form' })
+  }
+  catch (err) { toast.error(err, 'Failed to activate form', { category: 'form' }) }
+}
+
+async function onDelete(item: DeletedForm) {
+  try {
+    const api = useApi()
+    await api(`/forms/${item.id}/archive`, { method: 'DELETE' })
+    deletedForms.value = deletedForms.value.filter(i => i.id !== item.id)
+    toast.success('Form deleted', { category: 'form' })
+  }
+  catch (err) { toast.error(err, 'Failed to delete form', { category: 'form' }) }
 }
 
 function formatDate(date: string) {

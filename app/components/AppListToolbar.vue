@@ -35,9 +35,12 @@
       </div>
     </div>
 
-    <AppButton v-if="inactiveTo" class="list-toolbar__action-btn" variant="secondary" icon="toggle_off" :to="inactiveTo">Inactive</AppButton>
+    <AppButton v-if="showToggle" class="list-toolbar__action-btn" :variant="isActive ? 'secondary' : 'danger'"
+      :icon="isActive ? 'toggle_on' : 'toggle_off'" @click="$emit('update:isActive', !isActive)">
+      {{ isActive ? 'Active' : 'Inactive' }}
+    </AppButton>
 
-    <AppButton v-if="!hideAdd" class="list-toolbar__action-btn add-label-button" icon="add" @click="$emit('add')">{{ addLabel }}</AppButton>
+    <AppButton v-if="isActive" class="list-toolbar__action-btn add-label-button" icon="add" @click="$emit('add')">{{ addLabel }}</AppButton>
   </div>
 </template>
 
@@ -60,19 +63,21 @@ const props = withDefaults(defineProps<{
   label?: string
   addLabel?: string
   hideViewToggle?: boolean
-  hideAdd?: boolean
-  inactiveTo?: string
+  showToggle?: boolean
+  isActive?: boolean
 }>(), {
   label: 'item',
   addLabel: 'Add',
   hideViewToggle: false,
-  hideAdd: false,
+  showToggle: false,
+  isActive: true,
 })
 
 defineEmits<{
   'update:search': [value: string]
   'update:sort': [value: string]
   'update:view': [value: 'list' | 'grid']
+  'update:isActive': [value: boolean]
   'add': []
 }>()
 

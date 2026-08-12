@@ -6,12 +6,12 @@
           <AppBreadcrumb :items="[{ label: 'Models' }, { label: 'Fields', to: '/fields' }]" />
         </div>
 
-        <AppPageHeader title="Fields" />
+        <AppPageHeader :title="isInactive ? 'Inactive Fields' : 'Fields'" />
 
         <div class="col-12">
           <AppListToolbar v-model:search="search" v-model:sort="sort" v-model:view="view" label="field"
-            add-label="New Field" inactive-to="/fields/inactive"
-            @add="navigateTo('/fields/create')" />
+            add-label="New Field" show-toggle :is-active="!isInactive"
+            @update:is-active="(v: boolean) => setInactive(!v)" @add="navigateTo('/fields/create')" />
         </div>
 
         <div class="col-12">
@@ -23,7 +23,10 @@
             <div class="skeleton-row"><AppSkeleton width="40%" /><AppSkeleton width="28%" /><AppSkeleton width="15%" /></div>
           </div>
 
-          <AppBlankState v-else-if="blankState.show.value" :image="blankState.image.value"
+          <AppBlankState v-else-if="isInactive && deletedFiltered.length === 0" image="/images/blankPages/noResult.svg"
+            title="Oops!" message="No deleted fields." />
+
+          <AppBlankState v-else-if="!isInactive && blankState.show.value" :image="blankState.image.value"
             :title="blankState.title.value" :message="blankState.message.value">
             <AppButton to="/fields/create">
               <span class="material-icons-round">add</span>
@@ -32,11 +35,11 @@
           </AppBlankState>
 
           <template v-else-if="effectiveView === 'list'">
-            <AppTable :columns="columns" button-edit button-deactivate :rows="tableRows"
-              @edit="(row) => navigateTo(`/fields/${row._raw.id}`)" @deactivate="onDeleteRow">
+            <AppTable v-if="!isInactive" :columns="columns" :rows="tableRows"
+              @edit="(row) => navigateTo(fieldLink((row._raw as Field).id))" @deactivate="onDeleteRow">
 
               <template #cell-name="{ value, row }">
-                <NuxtLink :to="`/fields/${row._raw.id}`" class="app-table__cell-link subheading-1">{{ value }}</NuxtLink>
+                <NuxtLink :to="fieldLink((row._raw as Field).id)" class="app-table__cell-link subheading-1">{{ value }}</NuxtLink>
               </template>
 
               <template #cell-file="{ value, row }">
@@ -55,13 +58,20 @@
                 <AppBadge :variant="value === 'Active' ? 'success' : 'danger'">{{ value }}</AppBadge>
               </template>
             </AppTable>
+
+            <AppTable v-else :columns="deletedColumns" :rows="deletedTableRows" :is-active="false"
+              @activate="(row) => onActivate(row._raw as DeletedField)" @delete="(row) => onDelete(row._raw as DeletedField)">
+              <template #cell-name="{ value, row }">
+                <NuxtLink :to="fieldLink((row._raw as DeletedField).id)" class="app-table__cell-link subheading-1">{{ value }}</NuxtLink>
+              </template>
+            </AppTable>
           </template>
 
-          <template v-else>
+          <template v-else-if="!isInactive">
             <div class="list-mosaic">
               <div v-for="field in filtered" :key="field.id" class="list-card">
                 <div class="list-card__header">
-                  <NuxtLink :to="`/fields/${field.id}`" class="list-card__title cta2">{{ field.name }}</NuxtLink>
+                  <NuxtLink :to="fieldLink(field.id)" class="list-card__title cta2">{{ field.name }}</NuxtLink>
                 </div>
                 <div class="list-card__meta">
                   <div v-if="field.description" class="list-card__meta-row caption3">
@@ -78,9 +88,30 @@
               </div>
             </div>
           </template>
+
+          <template v-else>
+            <div class="list-mosaic">
+              <div v-for="item in deletedFiltered" :key="item.id" class="list-card">
+                <div class="list-card__header">
+                  <NuxtLink :to="fieldLink(item.id)" class="list-card__title cta2">{{ item.name }}</NuxtLink>
+                  <div class="list-card__actions">
+                    <button class="list-card__activate" title="Activate" @click="onActivate(item)">
+                      <span class="material-icons-round">toggle_on</span>
+                    </button>
+                    <button class="list-card__delete" title="Delete" @click="onDelete(item)">
+                      <span class="material-icons-round">delete</span>
+                    </button>
+                  </div>
+                </div>
+                <div class="list-card__meta">
+                  <div class="list-card__meta-row caption3">Deleted {{ formatDate(item.updated_at) }}</div>
+                </div>
+              </div>
+            </div>
+          </template>
         </div>
 
-        <div class="col-12">
+        <div v-if="!isInactive" class="col-12">
           <AppPagination :page="page" :last-page="lastPage" :total="total" @go="goTo" />
         </div>
       </div>
@@ -103,10 +134,21 @@ interface Field {
   template_file_url: string | null
 }
 
+interface DeletedField {
+  id: number
+  name: string
+  updated_at: string
+}
+
 const columns = [
   { key: 'name', label: 'Field Name', primary: true },
   { key: 'description', label: 'Description' },
   { key: 'file', label: 'File' }
+]
+
+const deletedColumns = [
+  { key: 'name', label: 'Field Name', primary: true },
+  { key: 'deleted', label: 'Deleted' },
 ]
 
 interface PaginationMeta {
@@ -121,9 +163,14 @@ interface PaginatedResponse<T> {
   meta: PaginationMeta
 }
 
+const route = useRoute()
+const router = useRouter()
+const isInactive = computed(() => route.query.status === 'inactive')
+
 const toast = useAppToast()
 const fields = ref<Field[]>([])
-const loading = ref(true)
+const deletedFields = ref<DeletedField[]>([])
+const { loading, withMinTime } = useMinLoadingTime()
 const { search, sort, view } = useListToolbar()
 const isMobile = ref(false)
 
@@ -136,21 +183,42 @@ onMounted(() => {
 const effectiveView = computed(() => isMobile.value ? 'grid' : view.value)
 const { page, lastPage, total, setMeta, goTo } = useListPagination()
 
+function setInactive(value: boolean) {
+  const query = { ...route.query }
+  if (value) query.status = 'inactive'
+  else delete query.status
+  router.replace({ query })
+}
+
+function fieldLink(id: number) {
+  return isInactive.value ? `/fields/${id}?status=inactive` : `/fields/${id}`
+}
+
 async function fetchData() {
-  loading.value = true
-  try {
-    const api = useApi()
-    const res = await api<{ data: Field[] | PaginatedResponse<Field> }>(`/fields?page=${page.value}`)
-    const d = res.data
-    if (Array.isArray(d)) { fields.value = d }
-    else { fields.value = d.data; setMeta(d.meta) }
-  }
-  catch { fields.value = [] }
-  finally { loading.value = false }
+  await withMinTime(async () => {
+    try {
+      const api = useApi()
+      if (isInactive.value) {
+        const res = await api<{ data: DeletedField[] }>('/fields/inactive')
+        deletedFields.value = res.data ?? []
+      }
+      else {
+        const res = await api<{ data: Field[] | PaginatedResponse<Field> }>(`/fields?page=${page.value}`)
+        const d = res.data
+        if (Array.isArray(d)) { fields.value = d }
+        else { fields.value = d.data; setMeta(d.meta) }
+      }
+    }
+    catch {
+      if (isInactive.value) deletedFields.value = []
+      else fields.value = []
+    }
+  })
 }
 
 onMounted(fetchData)
 watch(page, fetchData)
+watch(isInactive, fetchData)
 
 const filtered = computed(() => {
   let result = [...fields.value]
@@ -162,6 +230,19 @@ const filtered = computed(() => {
   else if (sort.value === 'za') result.sort((a, b) => b.name.localeCompare(a.name))
   else if (sort.value === 'oldest') result.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
   else result.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+  return result
+})
+
+const deletedFiltered = computed(() => {
+  let result = [...deletedFields.value]
+  if (search.value) {
+    const q = search.value.toLowerCase()
+    result = result.filter(f => f.name.toLowerCase().includes(q))
+  }
+  if (sort.value === 'az') result.sort((a, b) => a.name.localeCompare(b.name))
+  else if (sort.value === 'za') result.sort((a, b) => b.name.localeCompare(a.name))
+  else if (sort.value === 'oldest') result.sort((a, b) => new Date(a.updated_at).getTime() - new Date(b.updated_at).getTime())
+  else result.sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime())
   return result
 })
 
@@ -184,17 +265,45 @@ const tableRows = computed(() =>
   })),
 )
 
+const deletedTableRows = computed(() =>
+  deletedFiltered.value.map(f => ({
+    name: f.name,
+    deleted: formatDate(f.updated_at),
+    _raw: f,
+  })),
+)
+
 async function onDeleteRow(row: Record<string, unknown>, _idx: number) {
   const field = row._raw as Field
   try {
     const api = useApi()
     await api(`/fields/${field.id}/toggle-active`, { method: 'PATCH' })
     toast.success('Field deactivated', { category: 'field' })
-    await navigateTo('/fields/inactive')
+    await fetchData()
   }
   catch (err) {
     toast.error(err, 'Could not deactivate field', { category: 'field' })
   }
+}
+
+async function onActivate(item: DeletedField) {
+  try {
+    const api = useApi()
+    await api(`/fields/${item.id}/toggle-active`, { method: 'PATCH' })
+    deletedFields.value = deletedFields.value.filter(i => i.id !== item.id)
+    toast.success('Field activated', { category: 'field' })
+  }
+  catch (err) { toast.error(err, 'Failed to activate field', { category: 'field' }) }
+}
+
+async function onDelete(item: DeletedField) {
+  try {
+    const api = useApi()
+    await api(`/fields/${item.id}/archive`, { method: 'DELETE' })
+    deletedFields.value = deletedFields.value.filter(i => i.id !== item.id)
+    toast.success('Field deleted', { category: 'field' })
+  }
+  catch (err) { toast.error(err, 'Failed to delete field', { category: 'field' }) }
 }
 
 function formatDate(date: string) {

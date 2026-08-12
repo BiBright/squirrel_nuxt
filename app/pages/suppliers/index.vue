@@ -7,12 +7,12 @@
           <AppBreadcrumb :items="[{ label: 'Suppliers' }]" />
         </div>
 
-        <AppPageHeader title="Suppliers" />
+        <AppPageHeader :title="isInactive ? 'Inactive Suppliers' : 'Suppliers'" />
 
         <div class="col-12">
           <AppListToolbar v-model:search="search" v-model:sort="sort" v-model:view="view" label="supplier"
-            add-label="New Supplier" inactive-to="/suppliers/inactive"
-            @add="navigateTo('/suppliers/create')" />
+            add-label="New Supplier" show-toggle :is-active="!isInactive"
+            @update:is-active="(v: boolean) => setInactive(!v)" @add="navigateTo('/suppliers/create')" />
         </div>
 
         <div class="col-12">
@@ -24,7 +24,10 @@
             <div class="skeleton-row"><AppSkeleton width="40%" /><AppSkeleton width="28%" /><AppSkeleton width="15%" /></div>
           </div>
 
-          <AppBlankState v-else-if="blankState.show.value" :image="blankState.image.value"
+          <AppBlankState v-else-if="isInactive && deletedFiltered.length === 0" image="/images/blankPages/suppliers.svg"
+            title="No inactive suppliers" message="Suppliers that are deactivated will appear here." />
+
+          <AppBlankState v-else-if="!isInactive && blankState.show.value" :image="blankState.image.value"
             :title="blankState.title.value" :message="blankState.message.value">
             <AppButton to="/suppliers/create">
               <span class="material-icons-round">add</span>
@@ -33,10 +36,10 @@
           </AppBlankState>
 
           <template v-else-if="effectiveView === 'list'">
-            <AppTable :columns="columns" :rows="tableRows" button-edit button-deactivate
-              @edit="(row) => navigateTo(`/suppliers/${row._raw.id}`)" @deactivate="onDeleteRow">
+            <AppTable v-if="!isInactive" :columns="columns" :rows="tableRows"
+              @edit="(row) => navigateTo(supplierLink((row._raw as Supplier).id))" @deactivate="onDeleteRow">
               <template #cell-name="{ value, row }">
-                <NuxtLink :to="`/suppliers/${row._raw.id}`" class="app-table__cell-link subheading-1">{{ value }}</NuxtLink>
+                <NuxtLink :to="supplierLink((row._raw as Supplier).id)" class="app-table__cell-link subheading-1">{{ value }}</NuxtLink>
               </template>
 
               <template #cell-contact="{ row }">
@@ -54,13 +57,20 @@
                 <span v-else class="text-muted">—</span>
               </template>
             </AppTable>
+
+            <AppTable v-else :columns="deletedColumns" :rows="deletedTableRows" :is-active="false"
+              @activate="(row) => onActivate(row._raw as DeletedSupplier)" @delete="(row) => onDelete(row._raw as DeletedSupplier)">
+              <template #cell-name="{ value, row }">
+                <NuxtLink :to="supplierLink((row._raw as DeletedSupplier).id)" class="app-table__cell-link subheading-1">{{ value }}</NuxtLink>
+              </template>
+            </AppTable>
           </template>
 
-          <template v-else>
+          <template v-else-if="!isInactive">
             <div class="list-mosaic">
               <div v-for="supplier in filtered" :key="supplier.id" class="list-card">
                 <div class="list-card__header">
-                  <NuxtLink :to="`/suppliers/${supplier.id}`" class="list-card__title cta2">{{ supplier.name }}</NuxtLink>
+                  <NuxtLink :to="supplierLink(supplier.id)" class="list-card__title cta2">{{ supplier.name }}</NuxtLink>
                   <button class="list-card__delete" type="button" @click.prevent="onDeleteRow({ _raw: supplier }, 0)">
                     <span class="material-icons-round">delete_outline</span>
                   </button>
@@ -78,9 +88,30 @@
               </div>
             </div>
           </template>
+
+          <template v-else>
+            <div class="list-mosaic">
+              <div v-for="item in deletedFiltered" :key="item.id" class="list-card">
+                <div class="list-card__header">
+                  <NuxtLink :to="supplierLink(item.id)" class="list-card__title cta2">{{ item.name }}</NuxtLink>
+                  <div class="list-card__actions">
+                    <button class="list-card__activate" title="Activate" @click="onActivate(item)">
+                      <span class="material-icons-round">toggle_on</span>
+                    </button>
+                    <button class="list-card__delete" title="Delete" @click="onDelete(item)">
+                      <span class="material-icons-round">delete</span>
+                    </button>
+                  </div>
+                </div>
+                <div class="list-card__meta">
+                  <div class="list-card__meta-row caption3">Deleted {{ formatDate(item.updated_at) }}</div>
+                </div>
+              </div>
+            </div>
+          </template>
         </div>
 
-        <div class="col-12">
+        <div v-if="!isInactive" class="col-12">
           <AppPagination :page="page" :last-page="lastPage" :total="total" @go="goTo" />
         </div>
       </div>
@@ -102,12 +133,25 @@ interface Supplier {
   contact_email: string | null
   phone_code: string | null
   contact_phone: string | null
+  country: string | null
+  created_at: string
+}
+
+interface DeletedSupplier {
+  id: number
+  name: string
+  updated_at: string
 }
 
 const columns = [
   { key: 'name', label: 'Supplier', primary: true },
   { key: 'email', label: 'Email' },
   { key: 'contact', label: 'Contact' }
+]
+
+const deletedColumns = [
+  { key: 'name', label: 'Supplier', primary: true },
+  { key: 'deleted', label: 'Deleted' },
 ]
 
 interface PaginationMeta {
@@ -122,9 +166,14 @@ interface PaginatedResponse<T> {
   meta: PaginationMeta
 }
 
+const route = useRoute()
+const router = useRouter()
+const isInactive = computed(() => route.query.status === 'inactive')
+
 const toast = useAppToast()
 const suppliers = ref<Supplier[]>([])
-const loading = ref(true)
+const deletedSuppliers = ref<DeletedSupplier[]>([])
+const { loading, withMinTime } = useMinLoadingTime()
 const { search, sort, view } = useListToolbar()
 const isMobile = ref(false)
 onMounted(() => {
@@ -135,21 +184,42 @@ onMounted(() => {
 const effectiveView = computed(() => isMobile.value ? 'grid' : view.value)
 const { page, lastPage, total, setMeta, goTo } = useListPagination()
 
+function setInactive(value: boolean) {
+  const query = { ...route.query }
+  if (value) query.status = 'inactive'
+  else delete query.status
+  router.replace({ query })
+}
+
+function supplierLink(id: number) {
+  return isInactive.value ? `/suppliers/${id}?status=inactive` : `/suppliers/${id}`
+}
+
 async function fetchData() {
-  loading.value = true
-  try {
-    const api = useApi()
-    const res = await api<{ data: Supplier[] | PaginatedResponse<Supplier> }>(`/suppliers?page=${page.value}`)
-    const d = res.data
-    if (Array.isArray(d)) { suppliers.value = d }
-    else { suppliers.value = d.data; setMeta(d.meta) }
-  }
-  catch { suppliers.value = [] }
-  finally { loading.value = false }
+  await withMinTime(async () => {
+    try {
+      const api = useApi()
+      if (isInactive.value) {
+        const res = await api<{ data: DeletedSupplier[] }>('/suppliers/inactive')
+        deletedSuppliers.value = res.data ?? []
+      }
+      else {
+        const res = await api<{ data: Supplier[] | PaginatedResponse<Supplier> }>(`/suppliers?page=${page.value}`)
+        const d = res.data
+        if (Array.isArray(d)) { suppliers.value = d }
+        else { suppliers.value = d.data; setMeta(d.meta) }
+      }
+    }
+    catch {
+      if (isInactive.value) deletedSuppliers.value = []
+      else suppliers.value = []
+    }
+  })
 }
 
 onMounted(fetchData)
 watch(page, fetchData)
+watch(isInactive, fetchData)
 
 const filtered = computed(() => {
   let result = [...suppliers.value]
@@ -165,6 +235,19 @@ const filtered = computed(() => {
   else if (sort.value === 'za') result.sort((a, b) => b.name.localeCompare(a.name))
   else if (sort.value === 'oldest') result.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
   else result.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+  return result
+})
+
+const deletedFiltered = computed(() => {
+  let result = [...deletedSuppliers.value]
+  if (search.value) {
+    const q = search.value.toLowerCase()
+    result = result.filter(s => s.name.toLowerCase().includes(q))
+  }
+  if (sort.value === 'az') result.sort((a, b) => a.name.localeCompare(b.name))
+  else if (sort.value === 'za') result.sort((a, b) => b.name.localeCompare(a.name))
+  else if (sort.value === 'oldest') result.sort((a, b) => new Date(a.updated_at).getTime() - new Date(b.updated_at).getTime())
+  else result.sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime())
   return result
 })
 
@@ -186,17 +269,45 @@ const tableRows = computed(() =>
   })),
 )
 
+const deletedTableRows = computed(() =>
+  deletedFiltered.value.map(s => ({
+    name: s.name,
+    deleted: formatDate(s.updated_at),
+    _raw: s,
+  })),
+)
+
 async function onDeleteRow(row: Record<string, unknown>, _idx: number) {
   const supplier = row._raw as Supplier
   try {
     const api = useApi()
     await api(`/suppliers/${supplier.id}/toggle-active`, { method: 'PATCH' })
     toast.success('Supplier deactivated', { category: 'supplier' })
-    await navigateTo('/suppliers/inactive')
+    await fetchData()
   }
   catch (err) {
     toast.error(err, 'Could not deactivate supplier', { category: 'supplier' })
   }
+}
+
+async function onActivate(item: DeletedSupplier) {
+  try {
+    const api = useApi()
+    await api(`/suppliers/${item.id}/toggle-active`, { method: 'PATCH' })
+    deletedSuppliers.value = deletedSuppliers.value.filter(i => i.id !== item.id)
+    toast.success('Supplier activated', { category: 'supplier' })
+  }
+  catch (err) { toast.error(err, 'Failed to activate supplier', { category: 'supplier' }) }
+}
+
+async function onDelete(item: DeletedSupplier) {
+  try {
+    const api = useApi()
+    await api(`/suppliers/${item.id}/archive`, { method: 'DELETE' })
+    deletedSuppliers.value = deletedSuppliers.value.filter(i => i.id !== item.id)
+    toast.success('Supplier deleted', { category: 'supplier' })
+  }
+  catch (err) { toast.error(err, 'Failed to delete supplier', { category: 'supplier' }) }
 }
 
 function formatDate(date: string) {

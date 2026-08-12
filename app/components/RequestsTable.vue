@@ -100,7 +100,7 @@
               <input type="checkbox" :checked="selectedEntries.has(entry.id)" @change="toggleEntry(entry.id)" />
             </div>
             <div class="request-table__col request-table__col--supplier">
-              <NuxtLink :to="`/requests/${req.id}/entries/${entry.id}`" class="request-table__supplier-link">{{ entry.supplier?.name ?? '—' }}
+              <NuxtLink :to="entryLink(req.id, entry.id)" class="request-table__supplier-link">{{ entry.supplier?.name ?? '—' }}
               </NuxtLink>
             </div>
             <div class="request-table__col request-table__col--date">{{ formatDate(entry.created_at) }}</div>
@@ -167,7 +167,7 @@
                     <div class="request-table__more-item request-table__more-item--section">This Request</div>
                   </template>
 
-                  <NuxtLink :to="`/requests/${req.id}/entries/${entry.id}${inactive ? '?inactive=1' : ''}`" class="request-table__more-item request-table__more-item--link"
+                  <NuxtLink :to="entryLink(req.id, entry.id)" class="request-table__more-item request-table__more-item--link"
                     @click="closeEntryMenu()">
                     <span class="material-icons-round">edit</span>
                     Edit Request
@@ -277,6 +277,10 @@ const flatItems = computed(() =>
 
 function groupKey(req: Request, form: RequestForm): string {
   return `${req.id}-${form.form_id}`
+}
+
+function entryLink(requestId: number, entryId: number): string {
+  return `/requests/${requestId}/entries/${entryId}${props.inactive ? '?status=inactive' : ''}`
 }
 
 const expanded = ref<Set<string>>(new Set())

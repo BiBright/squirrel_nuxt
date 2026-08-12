@@ -4,7 +4,7 @@
       <div class="row">
 
         <div class="col-12">
-          <AppBreadcrumb :items="[{ label: 'Requests', to: '/requests' }, { label: requestTitle }]" />
+          <AppBreadcrumb :items="[{ label: 'Requests', to: backTo }, { label: requestTitle }]" />
         </div>
 
         <div v-if="loading" class="col-12 col-md-7 entry-col-main">
@@ -110,7 +110,7 @@
 
 
                 <div v-if="canEdit" class="entry-actions">
-                  <AppButton variant="ghost" to="/requests">Cancel</AppButton>
+                  <AppButton variant="ghost" :to="backTo">Cancel</AppButton>
                   <AppButton :loading="saving" @click="onSave">Submit</AppButton>
                 </div>
               </AppCard>
@@ -333,7 +333,9 @@ const apiBase = config.public.apiBase as string
 const isSupplier = computed(() => authStore.user?.roles === 'supplier')
 const isCompanyUser = computed(() => authStore.user?.roles === 'company-user')
 const requestTitle = computed(() => request.value?.title ?? entry.value?.form.name ?? 'Request')
-const canEdit = computed(() => !route.query.inactive && request.value?.is_active !== false)
+const isInactive = computed(() => route.query.status === 'inactive')
+const backTo = computed(() => isInactive.value ? '/requests?status=inactive' : '/requests')
+const canEdit = computed(() => !isInactive.value && request.value?.is_active !== false)
 
 function getAnswer(fieldId: number): EntryAnswer | undefined {
   return entry.value?.answers?.find(a => a.field_id === fieldId)

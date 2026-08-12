@@ -4,7 +4,7 @@
       <div class="row">
 
         <div class="col-12">
-          <AppBreadcrumb :items="[{ label: 'Models' }, { label: 'Fields', to: '/fields' }, { label: isEdit ? (form.name || 'Edit Field') : 'New Field' }]" />
+          <AppBreadcrumb :items="[{ label: 'Models' }, { label: 'Fields', to: backTo }, { label: isEdit ? (form.name || 'Edit Field') : 'New Field' }]" />
         </div>
 
         <div class="col-12">
@@ -86,7 +86,7 @@
             </div>
 
             <div class="create-form__actions">
-              <AppButton variant="ghost" to="/fields">Cancel</AppButton>
+              <AppButton variant="ghost" :to="backTo">Cancel</AppButton>
               <AppButton type="submit" :loading="loading">{{ isEdit ? 'Update' : 'Save' }}</AppButton>
             </div>
           </form>
@@ -104,6 +104,7 @@ definePageMeta({ middleware: ['auth'] })
 const route = useRoute()
 const id = computed(() => route.params.id as string | undefined)
 const isEdit = computed(() => !!id.value && id.value !== 'create')
+const backTo = computed(() => route.query.status === 'inactive' ? '/fields?status=inactive' : '/fields')
 
 const FIELD_TYPES = [
   { value: 'short_text', label: 'Short Text', icon: 'short_text' },
@@ -179,7 +180,7 @@ async function onSubmit() {
       toast.success('Field created', { category: 'field' })
     }
     isDirty.value = false
-    await navigateTo('/fields')
+    await navigateTo(backTo.value)
   }
   catch (err: unknown) {
     toast.error(err, isEdit.value ? 'Could not update field' : 'Could not create field', { category: 'field' })

@@ -4,7 +4,7 @@
       <div class="row">
 
         <div class="col-12">
-          <AppBreadcrumb :items="[{ label: 'Users', to: '/users' }, { label: isEdit ? (form.name || 'Edit User') : 'New User' }]" />
+          <AppBreadcrumb :items="[{ label: 'Users', to: backTo }, { label: isEdit ? (form.name || 'Edit User') : 'New User' }]" />
         </div>
 
         <div class="col-12">
@@ -29,7 +29,7 @@
             </div>
 
             <div class="create-form__actions">
-              <AppButton variant="ghost" to="/users">Cancel</AppButton>
+              <AppButton variant="ghost" :to="backTo">Cancel</AppButton>
               <AppButton type="submit" :loading="loading">{{ isEdit ? 'Update' : 'Save' }}</AppButton>
             </div>
           </form>
@@ -47,6 +47,7 @@ definePageMeta({ middleware: ['auth', 'admin'] })
 const route = useRoute()
 const id = computed(() => route.params.id as string | undefined)
 const isEdit = computed(() => !!id.value && id.value !== 'create')
+const backTo = computed(() => route.query.status === 'inactive' ? '/users?status=inactive' : '/users')
 
 const form = reactive({ name: '', email: '', phone: '', job_sector: '', role: '' })
 const roleOptions = [
@@ -136,7 +137,7 @@ async function onSubmit() {
       toast.success('User created', { category: 'user' })
     }
     isDirty.value = false
-    await navigateTo('/users')
+    await navigateTo(backTo.value)
   }
   catch (err: unknown) {
     toast.error(err, isEdit.value ? 'Could not update user' : 'Could not create user', { category: 'user' })

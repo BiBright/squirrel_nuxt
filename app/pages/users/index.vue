@@ -7,11 +7,12 @@
           <AppBreadcrumb :items="[{ label: 'Users' }]" />
         </div>
 
-        <AppPageHeader title="Users" />
+        <AppPageHeader :title="isInactive ? 'Inactive Users' : 'Users'" />
 
         <div class="col-12">
           <AppListToolbar v-model:search="search" v-model:sort="sort" v-model:view="view" label="user"
-            add-label="Create User" inactive-to="/users/inactive" @add="onAdd" />
+            add-label="Create User" show-toggle :is-active="!isInactive"
+            @update:is-active="(v: boolean) => setInactive(!v)" @add="onAdd" />
         </div>
 
         <div class="col-12">
@@ -23,7 +24,10 @@
             <div class="skeleton-row"><AppSkeleton width="40%" /><AppSkeleton width="28%" /><AppSkeleton width="15%" /></div>
           </div>
 
-          <AppBlankState v-else-if="blankState.show.value" :image="blankState.image.value"
+          <AppBlankState v-else-if="isInactive && deletedFiltered.length === 0" image="/images/blankPages/users.svg"
+            title="No inactive users" message="Users that are deactivated will appear here." />
+
+          <AppBlankState v-else-if="!isInactive && blankState.show.value" :image="blankState.image.value"
             :title="blankState.title.value" :message="blankState.message.value">
             <AppButton @click="onAdd">
               <span class="material-icons-round">add</span>
@@ -32,22 +36,29 @@
           </AppBlankState>
 
           <template v-else-if="effectiveView === 'list'">
-            <AppTable button-edit button-deactivate :columns="columns" :rows="tableRows" @edit="(row) => navigateTo(`/users/${(row._raw as User).id}`)" @deactivate="onDeleteRow">
+            <AppTable v-if="!isInactive" :columns="columns" :rows="tableRows" @edit="(row) => navigateTo(userLink((row._raw as User).id))" @deactivate="onDeleteRow">
               <template #cell-name="{ value, row }">
-                <NuxtLink :to="`/users/${(row._raw as User).id}`" class="app-table__cell-link subheading-1">{{ value }}</NuxtLink>
+                <NuxtLink :to="userLink((row._raw as User).id)" class="app-table__cell-link subheading-1">{{ value }}</NuxtLink>
               </template>
 
               <template #cell-role="{ value }">
                 <AppBadge :variant="roleVariant(value as string)">{{ value }}</AppBadge>
               </template>
             </AppTable>
+
+            <AppTable v-else :columns="deletedColumns" :rows="deletedTableRows" :is-active="false"
+              @activate="(row) => onActivate(row._raw as DeletedUser)" @delete="(row) => onDelete(row._raw as DeletedUser)">
+              <template #cell-name="{ value, row }">
+                <NuxtLink :to="userLink((row._raw as DeletedUser).id)" class="app-table__cell-link subheading-1">{{ value }}</NuxtLink>
+              </template>
+            </AppTable>
           </template>
 
-          <template v-else>
+          <template v-else-if="!isInactive">
             <div class="list-mosaic">
               <div v-for="user in filtered" :key="user.id" class="list-card">
                 <div class="list-card__header">
-                  <NuxtLink :to="`/users/${user.id}`" class="list-card__title cta2">{{ user.name }}</NuxtLink>
+                  <NuxtLink :to="userLink(user.id)" class="list-card__title cta2">{{ user.name }}</NuxtLink>
                 </div>
                 <div class="list-card__meta-row caption3">
                   {{ user.phone }}
@@ -64,9 +75,30 @@
               </div>
             </div>
           </template>
+
+          <template v-else>
+            <div class="list-mosaic">
+              <div v-for="item in deletedFiltered" :key="item.id" class="list-card">
+                <div class="list-card__header">
+                  <NuxtLink :to="userLink(item.id)" class="list-card__title cta2">{{ item.name }}</NuxtLink>
+                  <div class="list-card__actions">
+                    <button class="list-card__activate" title="Activate" @click="onActivate(item)">
+                      <span class="material-icons-round">toggle_on</span>
+                    </button>
+                    <button class="list-card__delete" title="Delete" @click="onDelete(item)">
+                      <span class="material-icons-round">delete</span>
+                    </button>
+                  </div>
+                </div>
+                <div class="list-card__meta">
+                  <div class="list-card__meta-row caption3">Deleted {{ formatDate(item.updated_at) }}</div>
+                </div>
+              </div>
+            </div>
+          </template>
         </div>
 
-        <div class="col-12">
+        <div v-if="!isInactive" class="col-12">
           <AppPagination :page="page" :last-page="lastPage" :total="total" @go="goTo" />
         </div>
       </div>
@@ -85,11 +117,22 @@ interface User {
   roles: string | null
 }
 
+interface DeletedUser {
+  id: number
+  name: string
+  updated_at: string
+}
+
 const columns = [
   { key: 'name', label: 'Name', primary: true },
   { key: 'contact', label: 'Contact' },
   { key: 'email', label: 'Email' },
   { key: 'role', label: 'Role' },
+]
+
+const deletedColumns = [
+  { key: 'name', label: 'Name', primary: true },
+  { key: 'deleted', label: 'Deleted' },
 ]
 
 interface PaginationMeta {
@@ -104,11 +147,16 @@ interface PaginatedResponse<T> {
   meta: PaginationMeta
 }
 
+const route = useRoute()
+const router = useRouter()
+const isInactive = computed(() => route.query.status === 'inactive')
+
 const toast = useAppToast()
 const authStore = useAuthStore()
 const usersCache = useState<User[]>('users-list', () => [])
 const users = ref<User[]>([])
-const loading = ref(true)
+const deletedUsers = ref<DeletedUser[]>([])
+const { loading, withMinTime } = useMinLoadingTime()
 const { search, sort, view } = useListToolbar()
 const isMobile = ref(false)
 onMounted(() => {
@@ -119,22 +167,43 @@ onMounted(() => {
 const effectiveView = computed(() => isMobile.value ? 'grid' : view.value)
 const { page, lastPage, total, setMeta, goTo } = useListPagination()
 
+function setInactive(value: boolean) {
+  const query = { ...route.query }
+  if (value) query.status = 'inactive'
+  else delete query.status
+  router.replace({ query })
+}
+
+function userLink(id: number) {
+  return isInactive.value ? `/users/${id}?status=inactive` : `/users/${id}`
+}
+
 async function fetchData() {
-  loading.value = true
-  try {
-    const api = useApi()
-    const res = await api<{ data: User[] | PaginatedResponse<User> }>(`/users?page=${page.value}`)
-    const d = res.data
-    if (Array.isArray(d)) { users.value = d }
-    else { users.value = d.data; setMeta(d.meta) }
-    usersCache.value = users.value
-  }
-  catch { users.value = [] }
-  finally { loading.value = false }
+  await withMinTime(async () => {
+    try {
+      const api = useApi()
+      if (isInactive.value) {
+        const res = await api<{ data: DeletedUser[] }>('/users/inactive')
+        deletedUsers.value = res.data ?? []
+      }
+      else {
+        const res = await api<{ data: User[] | PaginatedResponse<User> }>(`/users?page=${page.value}`)
+        const d = res.data
+        if (Array.isArray(d)) { users.value = d }
+        else { users.value = d.data; setMeta(d.meta) }
+        usersCache.value = users.value
+      }
+    }
+    catch {
+      if (isInactive.value) deletedUsers.value = []
+      else users.value = []
+    }
+  })
 }
 
 onMounted(fetchData)
 watch(page, fetchData)
+watch(isInactive, fetchData)
 
 const filtered = computed(() => {
   let result = [...users.value]
@@ -145,6 +214,7 @@ const filtered = computed(() => {
       id: me.id as number,
       name: me.name as string,
       email: me.email as string,
+      phone: (me.phone as string | null) ?? null,
       roles: me.roles as string | null,
     })
   }
@@ -158,6 +228,19 @@ const filtered = computed(() => {
   }
   if (sort.value === 'az') result.sort((a, b) => a.name.localeCompare(b.name))
   else if (sort.value === 'za') result.sort((a, b) => b.name.localeCompare(a.name))
+  return result
+})
+
+const deletedFiltered = computed(() => {
+  let result = [...deletedUsers.value]
+  if (search.value) {
+    const q = search.value.toLowerCase()
+    result = result.filter(u => u.name.toLowerCase().includes(q))
+  }
+  if (sort.value === 'az') result.sort((a, b) => a.name.localeCompare(b.name))
+  else if (sort.value === 'za') result.sort((a, b) => b.name.localeCompare(a.name))
+  else if (sort.value === 'oldest') result.sort((a, b) => new Date(a.updated_at).getTime() - new Date(b.updated_at).getTime())
+  else result.sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime())
   return result
 })
 
@@ -177,6 +260,13 @@ const tableRows = computed(() =>
   })),
 )
 
+const deletedTableRows = computed(() =>
+  deletedFiltered.value.map(u => ({
+    name: u.name,
+    deleted: formatDate(u.updated_at),
+    _raw: u,
+  })),
+)
 
 function onAdd() { navigateTo('/users/create') }
 
@@ -186,11 +276,35 @@ async function onDeleteRow(row: Record<string, unknown>, _idx: number) {
     const api = useApi()
     await api(`/users/${user.id}/toggle-active`, { method: 'PATCH' })
     toast.success('User deactivated', { category: 'user' })
-    await navigateTo('/users/inactive')
+    await fetchData()
   }
   catch (err) {
     toast.error(err, 'Could not deactivate user', { category: 'user' })
   }
+}
+
+async function onActivate(item: DeletedUser) {
+  try {
+    const api = useApi()
+    await api(`/users/${item.id}/toggle-active`, { method: 'PATCH' })
+    deletedUsers.value = deletedUsers.value.filter(i => i.id !== item.id)
+    toast.success('User activated', { category: 'user' })
+  }
+  catch (err) { toast.error(err, 'Failed to activate user', { category: 'user' }) }
+}
+
+async function onDelete(item: DeletedUser) {
+  try {
+    const api = useApi()
+    await api(`/users/${item.id}/archive`, { method: 'DELETE' })
+    deletedUsers.value = deletedUsers.value.filter(i => i.id !== item.id)
+    toast.success('User deleted', { category: 'user' })
+  }
+  catch (err) { toast.error(err, 'Failed to delete user', { category: 'user' }) }
+}
+
+function formatDate(date: string) {
+  return new Date(date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
 }
 
 type BadgeVariant = 'warning' | 'primary' | 'success' | 'danger' | 'neutral'

@@ -7,9 +7,9 @@
             :class="{ 'app-table__th--primary': col.primary }">
             {{ col.label }}
           </th>
-          <th v-if="buttonEdit" class="app-table__th app-table__th--action">Edit</th>
-          <th v-if="buttonDeactivate" class="app-table__th app-table__th--action" />
-          <th v-if="buttonDelete" class="app-table__th app-table__th--action" />
+          <th v-if="isActive" class="app-table__th app-table__th--action">Edit</th>
+          <th class="app-table__th app-table__th--action">Status</th>
+          <th v-if="!isActive" class="app-table__th app-table__th--action" />
           <th v-if="dropDownActions.length" :colspan="dropDownActions.length"
             class="app-table__th app-table__th--action" />
         </tr>
@@ -26,26 +26,37 @@
               </slot>
             </td>
 
-            <td v-if="buttonEdit" class="app-table__td app-table__td--action">
-              <button class="app-table__action-btn app-table__action-btn--edit" title="Edit"
-                @click="emit('edit', row, rowIdx)">
-                <span class="material-icons-round">edit</span>
-              </button>
-            </td>
+            <template v-if="isActive">
+              <td class="app-table__td app-table__td--action">
+                <button class="app-table__action-btn app-table__action-btn--edit" title="Edit"
+                  @click="emit('edit', row, rowIdx)">
+                  <span class="material-icons-round">edit</span>
+                </button>
+              </td>
 
-            <td v-if="buttonDeactivate" class="app-table__td app-table__td--action">
-              <button class="app-table__action-btn app-table__action-btn--deactivate" title="Deactivate"
-                @click="emit('deactivate', row, rowIdx)">
-                <span class="material-icons-round">toggle_off</span>
-              </button>
-            </td>
+              <td class="app-table__td app-table__td--action">
+                <button class="app-table__action-btn app-table__action-btn--deactivate" title="Deactivate"
+                  @click="emit('deactivate', row, rowIdx)">
+                  <span class="material-icons-round">toggle_on</span>
+                </button>
+              </td>
+            </template>
 
-            <td v-if="buttonDelete" class="app-table__td app-table__td--action">
-              <button class="app-table__action-btn app-table__action-btn--danger" title="Delete"
-                @click="emit('delete', row, rowIdx)">
-                <span class="material-icons-round">delete</span>
-              </button>
-            </td>
+            <template v-else>
+              <td class="app-table__td app-table__td--action">
+                <button class="app-table__action-btn app-table__action-btn--activate" title="Activate"
+                  @click="emit('activate', row, rowIdx)">
+                  <span class="material-icons-round">toggle_off</span>
+                </button>
+              </td>
+
+              <td class="app-table__td app-table__td--action">
+                <button class="app-table__action-btn app-table__action-btn--danger" title="Delete"
+                  @click="emit('delete', row, rowIdx)">
+                  <span class="material-icons-round">delete</span>
+                </button>
+              </td>
+            </template>
 
             <td v-for="action in dropDownActions" :key="action.key" class="app-table__td app-table__td--action">
               <button class="app-table__action-btn"
@@ -89,18 +100,19 @@ interface DropDownAction {
   label?: string
 }
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
   columns: Column[]
   rows: Record<string, unknown>[]
-  buttonEdit?: boolean
-  buttonDeactivate?: boolean
-  buttonDelete?: boolean
+  isActive?: boolean
   dropDown?: boolean | DropDownAction[]
-}>()
+}>(), {
+  isActive: true,
+})
 
 const emit = defineEmits<{
   edit: [row: Record<string, unknown>, index: number]
   deactivate: [row: Record<string, unknown>, index: number]
+  activate: [row: Record<string, unknown>, index: number]
   delete: [row: Record<string, unknown>, index: number]
 }>()
 
@@ -113,10 +125,7 @@ const dropDownActions = computed<DropDownAction[]>(() => {
 const openPanel = ref<{ rowIdx: number, key: string } | null>(null)
 
 const totalCols = computed(() => {
-  let count = props.columns.length
-  if (props.buttonEdit) count++
-  if (props.buttonDeactivate) count++
-  if (props.buttonDelete) count++
+  let count = props.columns.length + 2
   count += dropDownActions.value.length
   return count
 })
@@ -279,23 +288,14 @@ function closePanel() {
   font-size: 20px;
 }
 
-.app-table__action-btn--deactivate {
-  opacity: 0;
-  transition: opacity 0.2s, color 0.2s, background 0.15s;
+.app-table__action-btn--activate .material-icons-round {
+  color: var(--color-danger);
+  font-size: 20px;
 }
 
 .app-table__action-btn--deactivate .material-icons-round {
-  color: var(--color-text-muted);
+  color: var(--color-primary);
   font-size: 20px;
-  transition: color 0.2s;
-}
-
-.app-table__row:hover .app-table__action-btn--deactivate {
-  opacity: 1;
-}
-
-.app-table__action-btn--deactivate:hover .material-icons-round {
-  color: var(--color-danger);
 }
 
 .app-table__action-btn--danger .material-icons-round {
