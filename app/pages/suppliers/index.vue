@@ -7,11 +7,13 @@
           <AppBreadcrumb :items="[{ label: 'Suppliers' }]" />
         </div>
 
-        <AppPageHeader :title="isInactive ? 'Inactive Suppliers' : 'Suppliers'" />
+        <AppPageHeader :title="isInactive ? 'Inactive Suppliers' : 'Suppliers'">
+          <AppButton icon="add" class="d-none d-md-flex" to="/suppliers/create">New Supplier</AppButton>
+        </AppPageHeader>
 
         <div class="col-12">
           <AppListToolbar v-model:search="search" v-model:sort="sort" v-model:view="view" label="supplier"
-            add-label="New Supplier" show-toggle :is-active="!isInactive"
+            add-label="New Supplier" :show-toggle="hasInactiveSuppliers" :is-active="!isInactive"
             @update:is-active="(v: boolean) => setInactive(!v)" @add="navigateTo('/suppliers/create')" />
         </div>
 
@@ -173,6 +175,7 @@ const isInactive = computed(() => route.query.status === 'inactive')
 const toast = useAppToast()
 const suppliers = ref<Supplier[]>([])
 const deletedSuppliers = ref<DeletedSupplier[]>([])
+const hasInactiveFlag = ref(false)
 const { loading, withMinTime } = useMinLoadingTime()
 const { search, sort, view } = useListToolbar()
 const isMobile = ref(false)
@@ -204,10 +207,11 @@ async function fetchData() {
         deletedSuppliers.value = res.data ?? []
       }
       else {
-        const res = await api<{ data: Supplier[] | PaginatedResponse<Supplier> }>(`/suppliers?page=${page.value}`)
+        const res = await api<{ data: Supplier[] | PaginatedResponse<Supplier>, has_inactive?: boolean }>(`/suppliers?page=${page.value}`)
         const d = res.data
         if (Array.isArray(d)) { suppliers.value = d }
         else { suppliers.value = d.data; setMeta(d.meta) }
+        hasInactiveFlag.value = res.has_inactive ?? false
       }
     }
     catch {
@@ -220,6 +224,8 @@ async function fetchData() {
 onMounted(fetchData)
 watch(page, fetchData)
 watch(isInactive, fetchData)
+
+const hasInactiveSuppliers = computed(() => isInactive.value || hasInactiveFlag.value)
 
 const filtered = computed(() => {
   let result = [...suppliers.value]

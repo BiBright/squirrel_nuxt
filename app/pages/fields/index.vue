@@ -6,11 +6,13 @@
           <AppBreadcrumb :items="[{ label: 'Models' }, { label: 'Fields', to: '/fields' }]" />
         </div>
 
-        <AppPageHeader :title="isInactive ? 'Inactive Fields' : 'Fields'" />
+        <AppPageHeader :title="isInactive ? 'Inactive Fields' : 'Fields'">
+          <AppButton icon="add" class="d-none d-md-flex" to="/fields/create">New Field</AppButton>
+        </AppPageHeader>
 
         <div class="col-12">
           <AppListToolbar v-model:search="search" v-model:sort="sort" v-model:view="view" label="field"
-            add-label="New Field" show-toggle :is-active="!isInactive"
+            add-label="New Field" :show-toggle="hasInactiveFields" :is-active="!isInactive"
             @update:is-active="(v: boolean) => setInactive(!v)" @add="navigateTo('/fields/create')" />
         </div>
 
@@ -170,6 +172,7 @@ const isInactive = computed(() => route.query.status === 'inactive')
 const toast = useAppToast()
 const fields = ref<Field[]>([])
 const deletedFields = ref<DeletedField[]>([])
+const hasInactiveFlag = ref(false)
 const { loading, withMinTime } = useMinLoadingTime()
 const { search, sort, view } = useListToolbar()
 const isMobile = ref(false)
@@ -203,10 +206,11 @@ async function fetchData() {
         deletedFields.value = res.data ?? []
       }
       else {
-        const res = await api<{ data: Field[] | PaginatedResponse<Field> }>(`/fields?page=${page.value}`)
+        const res = await api<{ data: Field[] | PaginatedResponse<Field>, has_inactive?: boolean }>(`/fields?page=${page.value}`)
         const d = res.data
         if (Array.isArray(d)) { fields.value = d }
         else { fields.value = d.data; setMeta(d.meta) }
+        hasInactiveFlag.value = res.has_inactive ?? false
       }
     }
     catch {
@@ -219,6 +223,8 @@ async function fetchData() {
 onMounted(fetchData)
 watch(page, fetchData)
 watch(isInactive, fetchData)
+
+const hasInactiveFields = computed(() => isInactive.value || hasInactiveFlag.value)
 
 const filtered = computed(() => {
   let result = [...fields.value]

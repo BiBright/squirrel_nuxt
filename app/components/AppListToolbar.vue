@@ -34,13 +34,15 @@
         </button>
       </div>
     </div>
-
-    <AppButton v-if="showToggle" class="list-toolbar__action-btn" :variant="isActive ? 'secondary' : 'danger'"
-      :icon="isActive ? 'toggle_on' : 'toggle_off'" @click="$emit('update:isActive', !isActive)">
-      {{ isActive ? 'Active' : 'Inactive' }}
-    </AppButton>
-
+    
     <AppButton v-if="isActive" class="list-toolbar__action-btn add-label-button" icon="add" @click="$emit('add')">{{ addLabel }}</AppButton>
+
+    <div v-if="showToggle" class="list-toolbar__segmented" role="tablist" :aria-label="`${pluralLabel} status filter`">
+      <button type="button" class="segmented__btn segmented__btn--active" :class="{ 'is-selected': isActive }"
+        role="tab" :aria-selected="isActive" @click="$emit('update:isActive', true)">Active</button>
+      <button type="button" class="segmented__btn segmented__btn--inactive" :class="{ 'is-selected': !isActive }"
+        role="tab" :aria-selected="!isActive" @click="$emit('update:isActive', false)">Inactive</button>
+    </div>
   </div>
 </template>
 
@@ -82,6 +84,7 @@ defineEmits<{
 }>()
 
 const sortLabel = computed(() => sortOptions.find(o => o.value === props.sort)?.label ?? 'Sort')
+const pluralLabel = computed(() => `${props.label.charAt(0).toUpperCase()}${props.label.slice(1)}s`)
 </script>
 
 <style scoped lang="scss">
@@ -198,7 +201,48 @@ const sortLabel = computed(() => sortOptions.find(o => o.value === props.sort)?.
 
 .add-label-button {
   @media (min-width: $bp-sm) {
-    margin-left: auto;
+    display: none;
   }
+}
+
+.list-toolbar__segmented {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 3px;
+  background: var(--color-border);
+  border-radius: var(--radius-md);
+  margin-left: auto;
+}
+
+.segmented__btn {
+  border: none;
+  outline: none;
+  background: none;
+  cursor: pointer;
+  padding: 6px 14px;
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--color-text-muted);
+  border-radius: calc(var(--radius-md) - 2px);
+  white-space: nowrap;
+  transition: background 0.15s, color 0.15s;
+
+  &:hover:not(.is-selected) { color: var(--color-text); }
+
+  &:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+}
+
+.segmented__btn--active.is-selected {
+  background: var(--color-primary);
+  color: var(--color-white);
+}
+
+.segmented__btn--inactive.is-selected {
+  background: var(--color-danger);
+  color: var(--color-white);
 }
 </style>

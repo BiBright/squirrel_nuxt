@@ -7,11 +7,13 @@
           <AppBreadcrumb :items="[{ label: 'Users' }]" />
         </div>
 
-        <AppPageHeader :title="isInactive ? 'Inactive Users' : 'Users'" />
+        <AppPageHeader :title="isInactive ? 'Inactive Users' : 'Users'">
+          <AppButton icon="add" class="d-none d-md-flex" @click="onAdd">Create User</AppButton>
+        </AppPageHeader>
 
         <div class="col-12">
           <AppListToolbar v-model:search="search" v-model:sort="sort" v-model:view="view" label="user"
-            add-label="Create User" show-toggle :is-active="!isInactive"
+            add-label="Create User" :show-toggle="hasInactiveUsers" :is-active="!isInactive"
             @update:is-active="(v: boolean) => setInactive(!v)" @add="onAdd" />
         </div>
 
@@ -156,6 +158,7 @@ const authStore = useAuthStore()
 const usersCache = useState<User[]>('users-list', () => [])
 const users = ref<User[]>([])
 const deletedUsers = ref<DeletedUser[]>([])
+const hasInactiveFlag = ref(false)
 const { loading, withMinTime } = useMinLoadingTime()
 const { search, sort, view } = useListToolbar()
 const isMobile = ref(false)
@@ -187,11 +190,12 @@ async function fetchData() {
         deletedUsers.value = res.data ?? []
       }
       else {
-        const res = await api<{ data: User[] | PaginatedResponse<User> }>(`/users?page=${page.value}`)
+        const res = await api<{ data: User[] | PaginatedResponse<User>, has_inactive?: boolean }>(`/users?page=${page.value}`)
         const d = res.data
         if (Array.isArray(d)) { users.value = d }
         else { users.value = d.data; setMeta(d.meta) }
         usersCache.value = users.value
+        hasInactiveFlag.value = res.has_inactive ?? false
       }
     }
     catch {
@@ -204,6 +208,8 @@ async function fetchData() {
 onMounted(fetchData)
 watch(page, fetchData)
 watch(isInactive, fetchData)
+
+const hasInactiveUsers = computed(() => isInactive.value || hasInactiveFlag.value)
 
 const filtered = computed(() => {
   let result = [...users.value]

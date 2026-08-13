@@ -7,10 +7,12 @@
           <div class="col-12">
             <AppBreadcrumb :items="[{ label: 'Requests' }]" />
           </div>
-          <AppPageHeader title="Requests" />
+          <AppPageHeader title="Requests">
+            <AppButton v-if="!isSupplier" icon="add" class="d-none d-md-flex" @click="onAdd">New Request</AppButton>
+          </AppPageHeader>
 
           <AppListToolbar v-if="!isSupplier" v-model:search="search" v-model:sort="sort" :view="'list'" hide-view-toggle label="request"
-            add-label="New Request" show-toggle :is-active="true" @update:is-active="(v: boolean) => setInactive(!v)" @add="onAdd" />
+            add-label="New Request" :show-toggle="hasInactiveRequests" :is-active="true" @update:is-active="(v: boolean) => setInactive(!v)" @add="onAdd" />
 
           <div v-if="loading" class="skeleton-rows">
             <div class="skeleton-row"><AppSkeleton width="45%" height="18px" /><AppSkeleton width="8%" height="18px" /></div>
@@ -241,6 +243,7 @@ const toast = useAppToast()
 const isSupplier = computed(() => authStore.user?.roles === 'supplier')
 const requests = ref<Request[]>([])
 const requestsInactive = ref<Request[]>([])
+const hasInactiveFlag = ref(false)
 const supplierRequests = ref<SupplierRequest[]>([])
 const supplierItemsInactive = ref<SupplierItem[]>([])
 const users = ref<User[]>([])
@@ -332,9 +335,10 @@ async function fetchData() {
     }
 
     try {
-      const res = await api<{ data: Request[] | { data: Request[] } }>('/requests')
+      const res = await api<{ data: Request[] | { data: Request[] }, has_inactive?: boolean }>('/requests')
       const d = res.data
       requests.value = Array.isArray(d) ? d : d.data
+      hasInactiveFlag.value = res.has_inactive ?? false
     }
     catch { requests.value = [] }
 
@@ -351,6 +355,8 @@ async function fetchData() {
 
 onMounted(fetchData)
 watch(isInactive, fetchData)
+
+const hasInactiveRequests = computed(() => isInactive.value || hasInactiveFlag.value)
 
 const filtered = computed(() => {
   let result = [...requests.value]

@@ -6,7 +6,9 @@
       </div>
 
       <div class="col-12">
-        <AppPageHeader title="Companies" subtitle="Manage platform companies and their plans" />
+        <AppPageHeader title="Companies" subtitle="Manage platform companies and their plans">
+          <AppButton icon="add" class="d-none d-md-flex" to="/admin/companies/new">Create company</AppButton>
+        </AppPageHeader>
 
         <AppListToolbar v-model:search="search" v-model:sort="sort" v-model:view="view" label="company"
           add-label="Create company" :hide-view-toggle="true" @add="navigateTo('/admin/companies/new')" />

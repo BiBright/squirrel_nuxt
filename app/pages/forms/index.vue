@@ -7,11 +7,13 @@
           <AppBreadcrumb :items="[{ label: 'Models' }, { label: 'Forms', to: '/forms' }]" />
         </div>
 
-        <AppPageHeader :title="isInactive ? 'Inactive Forms' : 'Forms'" />
+        <AppPageHeader :title="isInactive ? 'Inactive Forms' : 'Forms'">
+          <AppButton icon="add" class="d-none d-md-flex" to="/forms/create">New Form</AppButton>
+        </AppPageHeader>
 
         <div class="col-12">
           <AppListToolbar v-model:search="search" v-model:sort="sort" v-model:view="view" label="form"
-            add-label="New Form" show-toggle :is-active="!isInactive"
+            add-label="New Form" :show-toggle="hasInactiveForms" :is-active="!isInactive"
             @update:is-active="(v: boolean) => setInactive(!v)" @add="navigateTo('/forms/create')" />
         </div>
 
@@ -163,6 +165,7 @@ const isInactive = computed(() => route.query.status === 'inactive')
 const toast = useAppToast()
 const forms = ref<Form[]>([])
 const deletedForms = ref<DeletedForm[]>([])
+const hasInactiveFlag = ref(false)
 const { loading, withMinTime } = useMinLoadingTime()
 const { search, sort, view } = useListToolbar()
 const isMobile = ref(false)
@@ -194,10 +197,11 @@ async function fetchData() {
         deletedForms.value = res.data ?? []
       }
       else {
-        const res = await api<{ data: Form[] | PaginatedResponse<Form> }>(`/forms?page=${page.value}`)
+        const res = await api<{ data: Form[] | PaginatedResponse<Form>, has_inactive?: boolean }>(`/forms?page=${page.value}`)
         const d = res.data
         if (Array.isArray(d)) { forms.value = d }
         else { forms.value = d.data; setMeta(d.meta) }
+        hasInactiveFlag.value = res.has_inactive ?? false
       }
     }
     catch {
@@ -210,6 +214,8 @@ async function fetchData() {
 onMounted(fetchData)
 watch(page, fetchData)
 watch(isInactive, fetchData)
+
+const hasInactiveForms = computed(() => isInactive.value || hasInactiveFlag.value)
 
 const filtered = computed(() => {
   let result = [...forms.value]
